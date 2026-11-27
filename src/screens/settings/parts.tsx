@@ -120,12 +120,15 @@ export function TrustedList({
   onRevoke,
   autoLearn,
   onToggleAutoLearn,
+  locked = false,
 }: {
   addrs: string[] | null;
   onAdd: (addr: string) => Promise<string | null>;
   onRevoke: (addr: string) => Promise<void>;
   autoLearn: boolean;
   onToggleAutoLearn: () => void;
+  /** 폼의 네트워크가 저장된 네트워크와 다르다 — 목록은 저장된 쪽 것이라 넣고 빼기를 막는다. */
+  locked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   // 빼기는 실수 방지로 행별 2단계 확인.
@@ -162,6 +165,12 @@ export function TrustedList({
       </button>
       {open && (
         <div className="px-4 pb-4 win:pt-0">
+          {locked && (
+            <p className="mb-3 text-sm text-[var(--color-ink-500)]">
+              {t("네트워크를 저장한 뒤 바꿀 수 있어요.", "Save the network first, then edit the list.")}
+            </p>
+          )}
+          <fieldset disabled={locked} className={cn("border-0 p-0 m-0 min-w-0", locked && "opacity-40")}>
           {addrs && addrs.length > 0 && (
             <ul className="-mx-2 mb-3 space-y-0.5">
               {addrs.map((addr) => (
@@ -227,6 +236,7 @@ export function TrustedList({
             </button>
           </div>
           {err && <p className="mt-1.5 text-sm text-[var(--color-danger)]">{err}</p>}
+          </fieldset>
           <div className="mt-3 flex items-center justify-between">
             <p className="text-md tracking-tight pr-3">
               {t("결제 승인 시 자동으로 화이트리스트에 추가", "Add to the whitelist automatically when I approve a payment")}

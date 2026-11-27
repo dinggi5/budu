@@ -19,7 +19,7 @@ use crate::keys::SolKeypair;
 use crate::limits::{parse_limit_usdc, parse_usdc_nonneg, refund_spend, reserve_spend};
 use crate::lock::read_lock;
 use crate::policy::{SvmSigned, SvmTerms};
-use crate::settings::{effective_rpc, read_settings, redact_urls};
+use crate::settings::{effective_rpc, redact_urls};
 use crate::solana::{self, encode_pubkey, parse_pubkey};
 use crate::svm_x402::{self, PayTerms, MAX_MEMO_BYTES};
 use crate::trusted::record_trusted;
@@ -201,7 +201,7 @@ async fn do_sign_x402_inner(
     }
 
     // 한도 검사 + 예약. 락은 빠른 파일 I/O 구간만 잡는다. 한도 초과면 여기서 거부.
-    let settings = read_settings();
+    let settings = crate::settings::read_settings_for_active_chain();
     let single: u128 = parse_limit_usdc(&settings.single_usdc, dec)?;
     let daily: u128 = parse_limit_usdc(&settings.daily_usdc, dec)?;
     let reserved_day = match reserve_spend("USDC", value, single, daily, dec).await {

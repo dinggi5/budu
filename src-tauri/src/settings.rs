@@ -94,8 +94,8 @@ pub(crate) struct Settings {
     /// 기본 꺼짐(기존 동작 보존 — 금액이 한눈에 보이는 쪽이 사후 인지엔 더 낫다).
     #[serde(default)]
     pub(crate) notify_hide_amount: bool,
-    /// 자율 결제는 신뢰 주소(비번으로 승인한 적 있는 받는 주소)만. 기본 켜짐 —
-    /// 끄면 한도 이하 금액이면 처음 보는 주소에도 비번 없이 나간다.
+    /// 자율 결제는 화이트리스트 주소만. 기본 켜짐 — 끄면 한도 이하 금액이면 목록에 없는 주소에도 비번 없이 나간다.
+    /// 목록은 사용자가 직접 넣는다(자동 학습은 `auto_learn_trusted`, 기본 꺼짐).
     #[serde(default = "default_true")]
     pub(crate) auto_trusted_only: bool,
     /// 활성 클러스터 번호 — 데브넷(103) ↔ 메인넷(101) 런타임 전환. chain::active_chain() 이 이 값을 읽는다.
@@ -386,6 +386,19 @@ pub(crate) fn save_settings(settings: &Settings) -> Result<(), String> {
     write_json(settings_path()?, settings)
 }
 
+/// 결제 경로용 — 평평한 한도 칸을 **지금 고정된 체인**(`active_chain()`, 결제 중이면 PINNED_CHAIN) 값으로 맞춘다.
+/// `read_settings` 는 파일의 활성 체인으로 비추므로, 결제 도중 다른 창이 네트워크를 바꾸면 메인넷 결제에 데브넷 한도가
+/// 걸릴 수 있었다(한도가 체인별이 된 뒤 생긴 틈). 한도·자율 금액을 읽는 결제·세션 경로는 이걸 쓴다.
+pub(crate) fn read_settings_for_active_chain() -> Settings {
+    let mut s = read_settings();
+    if let Some(l) = s.limits.get(&active_chain().chain_id.to_string()).cloned() {
+        s.single_usdc = l.single_usdc;
+        s.daily_usdc = l.daily_usdc;
+        s.auto_approve_usdc = l.auto_approve_usdc;
+    }
+    s
+}
+
 /// 설정 파일이 없고 지갑도 없으면(진짜 신규) 신규 기본을 저장한다. 그 밖엔 아무것도 안 한다.
 pub(crate) fn pin_new_install() {
     if settings_file() == SettingsFile::Missing && !wallet_exists() {
@@ -498,10 +511,23 @@ pub(crate) fn set_settings(mut settings: Settings) -> Result<(), String> {
     // 음수 거부(parse_usdc_nonneg) — 옛 alloy 시절 음수 한도가 거대 U256 = "사실상 무제한"으로 둔갑해 가드레일이
     // 조용히 무력화되는 함정 차단. 0 은 정상(=무제한 의도). 모르는 체인 키는 normalize 가 남기지만 검증은 아는 체인만.
     settings = settings.normalize();
+    let active = settings.chain_id.to_string();
     for (id, l) in &settings.limits {
         let Some(c) = id.parse::<u64>().ok().and_then(chain_by_id) else {
             continue;
         };
+        // 화면에 안 보이는 체인의 「모름」(깨진 파일에서 살리지 못한 칸)은 그대로 둔다 — 결제 단계가 막으니 안전하고,
+        // 여기서 거절하면 보이는 칸을 다 채워도 저장이 안 풀린다. 보이는(활성) 체인은 끝까지 검증한다.
+        if id != &active {
+            let unknown = |v: &str| v.trim() == crate::limits::LIMIT_UNKNOWN;
+            let l2 = NetLimits {
+                single_usdc: if unknown(&l.single_usdc) { "0".into() } else { l.single_usdc.clone() },
+                daily_usdc: if unknown(&l.daily_usdc) { "0".into() } else { l.daily_usdc.clone() },
+                auto_approve_usdc: l.auto_approve_usdc.clone(),
+            };
+            validate_limits(&l2, c.usdc_decimals)?;
+            continue;
+        }
         validate_limits(l, c.usdc_decimals)?;
     }
     settings.auto_lock_mins.trim().parse::<u64>().map_err(|_| {

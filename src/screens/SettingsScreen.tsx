@@ -102,10 +102,16 @@ export function SettingsScreen({
   // 이미 닫혔는지 — 저장 invoke 가 늦게 resolve 돼도(닫기를 그 사이 눌렀을 때) 늦은 상태 변경을 막는다.
   const closed = useRef(false);
 
+  // 화이트리스트는 체인별 — 저장된 네트워크가 바뀌면(이 창의 저장이든 다른 창이든) 다시 읽는다.
+  const savedChain = current?.chain_id;
   useEffect(() => {
+    setTrusted(null);
     invoke<string[]>("get_trusted_addrs")
       .then(setTrusted)
       .catch(() => setTrusted([]));
+  }, [savedChain]);
+
+  useEffect(() => {
     invoke<boolean>("get_autostart")
       .then(setAutostart)
       .catch(() => setAutostart(false));
@@ -149,7 +155,7 @@ export function SettingsScreen({
 
   async function revokeTrusted(addr: string) {
     try {
-      await invoke("remove_trusted_addr", { to: addr });
+      await invoke("remove_trusted_addr", { to: addr, chainId: savedChain });
       setTrusted((prev) => (prev ? prev.filter((a) => a !== addr) : prev));
     } catch {
       /* 철회 실패는 목록 유지 — 다음 시도에서 다시 */
@@ -160,7 +166,7 @@ export function SettingsScreen({
   async function addTrusted(addr: string): Promise<string | null> {
     const a = addr.trim();
     try {
-      await invoke("add_trusted_addr", { to: a });
+      await invoke("add_trusted_addr", { to: a, chainId: savedChain });
       setTrusted((prev) => (prev && !prev.includes(a) ? [...prev, a] : prev));
       return null;
     } catch (e) {
@@ -178,8 +184,13 @@ export function SettingsScreen({
   }, [onGuard, busy, dirty]);
   useEffect(() => () => onGuard?.({ busy: false, dirty: false }), [onGuard]);
 
+  // 저장 직후 아직 옛 current 가 내려와 있는 동안은 갈아 끼우지 않는다 — 저장한 값이 잠깐 옛 값으로 돌아가 보이고,
+  // 그 사이 고치면 옛 체인을 기준으로 보내 «다른 창에서 네트워크가 바뀌었어요» 로 거절됐다.
+  const staleCurrent = useRef<Settings | null>(null);
   // 다른 창이 저장해 current 가 바뀌었고 이 폼은 손대지 않았다면 새 값으로 갈아 끼운다.
   useEffect(() => {
+    if (current && current === staleCurrent.current) return;
+    staleCurrent.current = null;
     if (current && s && !dirty && !busy && current !== base.current) {
       base.current = current;
       setS(current);
@@ -260,6 +271,8 @@ export function SettingsScreen({
       const changed: string[] = (Object.keys(s) as (keyof Settings)[]).filter(
         (k) => k !== "limits" && !(LIMIT_KEYS as readonly string[]).includes(k) && (!from || s[k] !== from[k]),
       );
+      // 네트워크를 바꾼 저장이면 RPC 는 늘 보낸다 — 옛 체인용 커스텀 RPC(다른 창이 넣었을 수도)가 새 체인에 남지 않게.
+      if (from && s.chain_id !== from.chain_id && !changed.includes("rpc_url")) changed.push("rpc_url");
       // 체인별 한도는 칸 하나씩 — 다른 창이 고친 다른 네트워크 한도를 되돌리지 않게.
       for (const [id, l] of Object.entries(s.limits ?? {})) {
         for (const k of LIMIT_KEYS) {
@@ -274,6 +287,7 @@ export function SettingsScreen({
       if (closed.current) return; // 저장 도중 닫혔으면 늦은 setState 를 막는다
       // 설정에 머문다. 폼 기준을 지금 값으로 — 부모가 다시 읽어 온 값(백엔드가 정규화한 것)이 오면 위 effect 가 갈아 끼운다.
       base.current = s;
+      staleCurrent.current = current;
       setSaved(true);
       setDirty(false);
       setBusy(false);
@@ -436,6 +450,7 @@ export function SettingsScreen({
                 onRevoke={revokeTrusted}
                 autoLearn={s.auto_learn_trusted ?? false}
                 onToggleAutoLearn={() => toggle("auto_learn_trusted")}
+                locked={s.chain_id !== savedChain}
               />
             </Section>
 

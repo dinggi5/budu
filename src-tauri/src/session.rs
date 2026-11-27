@@ -211,7 +211,7 @@ async fn auto_approve_pinned(
     // 자율 한도 판정 — USDC 표시 결제(x402 서명·USDC 송금)만, 한도 이하만.
     // 음수 한도는 0(자율 꺼짐)으로, 음수 금액은 오류로 — 거대 수 둔갑 함정 차단(parse_usdc_nonneg).
     let dec = active_chain().usdc_decimals;
-    let settings = read_settings();
+    let settings = crate::settings::read_settings_for_active_chain();
     let auto_limit: u128 =
         parse_usdc_nonneg(&settings.auto_approve_usdc, dec).unwrap_or(0);
     let amount: u128 = parse_usdc_nonneg(&req.amount, dec)?;
@@ -219,8 +219,8 @@ async fn auto_approve_pinned(
         return Err(NEEDS_PASSWORD.into());
     }
 
-    // 신뢰 주소 가드 — 사람이 비번으로 승인한 적 없는 새 주소는 자율 대상이
-    // 아니다(금액 한도만으로는 처음 보는 주소로도 비번 없이 나가는 구멍). 첫 1회만 비번.
+    // 화이트리스트 가드 — 목록에 없는 주소는 자율 대상이 아니다(금액 한도만으로는 처음 보는 주소로도 비번 없이
+    // 나가는 구멍). 목록은 사용자가 직접 넣는다(승인 때 자동 학습은 옵션, 기본 꺼짐).
     if settings.auto_trusted_only && !is_trusted(&req.to) {
         return Err(NEEDS_PASSWORD.into());
     }

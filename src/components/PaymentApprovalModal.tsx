@@ -289,12 +289,12 @@ export function PaymentApprovalModal({
             <span className="font-mono text-sm text-[var(--color-ink-900)] dark:text-[#E8E5DD]" title={request.to}>
               {shortenAddress(request.to)}
             </span>
-            {/* 신뢰 여부 — 보호자가 승인 판단에 쓰는 핵심 신호 */}
+            {/* 화이트리스트 여부 — 개발 14 부터 승인해도 저절로 들어가지 않아 «승인한 적 있음» 은 거짓이 된다. 목록 기준으로만 말한다. */}
             {trusted === true && (
-              <span className="ml-2 text-sm text-[var(--color-ink-500)]">{t("· 승인한 적 있음", "· approved before")}</span>
+              <span className="ml-2 text-sm text-[var(--color-ink-500)]">{t("· 화이트리스트", "· on whitelist")}</span>
             )}
             {trusted === false && (
-              <span className="ml-2 text-sm text-[var(--color-danger)]">{t("· 처음 보는 주소", "· new address")}</span>
+              <span className="ml-2 text-sm text-[var(--color-danger)]">{t("· 화이트리스트 밖", "· not on whitelist")}</span>
             )}
           </dd>
           {job && (

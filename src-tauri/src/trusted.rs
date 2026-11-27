@@ -13,8 +13,8 @@ use crate::chain::chain_file;
 use crate::i18n::tf;
 use crate::store::{budu_dir, write_json};
 
-// 화이트리스트도 체인별로 분리(chain_file) — 테스트넷에서 학습한 신뢰 주소가 메인넷 자율 결제를
-// 비번 없이 통과시키면 안 된다(실돈 가드). 메인넷은 빈 목록에서 시작 → 첫 결제마다 비번 → 재학습.
+// 화이트리스트도 체인별로 분리(chain_file) — 테스트넷에 넣은 주소가 메인넷 자율 결제를 비번 없이 통과시키면
+// 안 된다(실돈 가드). 메인넷은 빈 목록에서 시작한다.
 fn trusted_path() -> Result<PathBuf, String> {
     Ok(budu_dir()?.join(chain_file("trusted")))
 }
@@ -85,7 +85,21 @@ pub(crate) fn is_trusted_addr(to: String) -> bool {
     is_trusted(&to)
 }
 
-/// 설정 화면 관리용 신뢰 주소 목록. 받는 주소 = 공개 정보라 비번 불필요.
+/// 설정 화면이 보고 있는 체인이 지금 저장된 체인과 같은지 — 다르면 고치지 않는다.
+/// 화면이 메인넷 목록을 그린 채 다른 창이 데브넷으로 바꿨으면, «빼기» 가 데브넷 파일에서 못 찾고 성공처럼 보이며
+/// 메인넷 주소는 계속 자율 결제를 통과했다. `None` = 옛 호출(체인을 모름) — 지금 체인으로 본다.
+fn check_chain(chain_id: Option<u64>) -> Result<(), String> {
+    match chain_id {
+        Some(c) if c != crate::chain::active_chain().chain_id => Err(crate::i18n::ts!(
+            "네트워크가 바뀌었어요. 설정을 다시 열어 주세요.",
+            "The network changed. Reopen Settings."
+        )
+        .to_string()),
+        _ => Ok(()),
+    }
+}
+
+/// 설정 화면 관리용 화이트리스트 목록과 그 목록의 체인. 받는 주소 = 공개 정보라 비번 불필요.
 #[tauri::command]
 pub(crate) fn get_trusted_addrs() -> Vec<String> {
     read_trusted()
@@ -94,7 +108,8 @@ pub(crate) fn get_trusted_addrs() -> Vec<String> {
 /// 사용자가 직접 주소를 넣는다. 보내기와 같은 규칙 — base58 32바이트 공개키여야 한다.
 /// 곡선 위 여부는 보지 않는다: x402 판매자의 받는 주소가 프로그램 소유(PDA) 금고일 수도 있다.
 #[tauri::command]
-pub(crate) fn add_trusted_addr(to: String) -> Result<(), String> {
+pub(crate) fn add_trusted_addr(to: String, chain_id: Option<u64>) -> Result<(), String> {
+    check_chain(chain_id)?;
     let a = normalize_addr(&to);
     if crate::solana::parse_pubkey(&a).is_none() {
         return Err(crate::i18n::ts!(
@@ -126,7 +141,8 @@ fn remove_trusted(list: &mut Vec<String>, addr: &str) -> bool {
 
 /// 신뢰 철회 — 이후 이 주소로의 자율 결제는 다시 비번 승인이 필요하다.
 #[tauri::command]
-pub(crate) fn remove_trusted_addr(to: String) -> Result<(), String> {
+pub(crate) fn remove_trusted_addr(to: String, chain_id: Option<u64>) -> Result<(), String> {
+    check_chain(chain_id)?;
     let _g = trusted_guard();
     let mut list = read_trusted_checked().map_err(|e| {
         tf!(

@@ -424,3 +424,18 @@ fn new_install_is_mainnet_with_limits() {
     // 지갑만 있는 옛 설치는 여전히 데브넷.
     assert_eq!(settings_for_read(&SettingsFile::Missing, true).chain_id, policy::FALLBACK_CHAIN_ID);
 }
+
+// 2차 리뷰 전 반영(개발 14 1차 P2-1) — 깨진 파일에서 살리지 못한 **숨은 체인**의 「모름」 때문에 저장이 막히면 안 된다.
+// 보이는(활성) 체인 칸만 채우면 저장된다. 숨은 체인의 「모름」은 그대로 남아 결제 단계가 막는다.
+#[test]
+fn save_passes_with_unknown_hidden_network() {
+    let _d = crate::store::test_dir::use_temp("settings-unknown-hidden");
+    let mut s = Settings::default().normalize(); // 메인넷 활성
+    let dev = s.limits.get_mut("103").unwrap();
+    dev.single_usdc = crate::limits::LIMIT_UNKNOWN.into();
+    dev.daily_usdc = crate::limits::LIMIT_UNKNOWN.into();
+    assert!(set_settings(s.clone()).is_ok());
+    // 보이는 체인의 「모름」은 여전히 거절.
+    s.limits.get_mut("101").unwrap().daily_usdc = crate::limits::LIMIT_UNKNOWN.into();
+    assert!(set_settings(s).is_err());
+}

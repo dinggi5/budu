@@ -411,7 +411,7 @@ pub(crate) enum Precheck {
 pub(crate) fn precheck_usdc(amount_usdc: &str) -> Result<LimitRoom, Precheck> {
     let dec = active_chain().usdc_decimals;
     let amount = parse_usdc_nonneg(amount_usdc.trim(), dec).map_err(Precheck::Unreadable)?;
-    let settings = crate::settings::read_settings();
+    let settings = crate::settings::read_settings_for_active_chain();
     let single = parse_limit_usdc(&settings.single_usdc, dec).map_err(Precheck::Unreadable)?;
     let daily = parse_limit_usdc(&settings.daily_usdc, dec).map_err(Precheck::Unreadable)?;
     let spend = spend_for_reserve().map(Ok).unwrap_or_else(|| Err(Precheck::Unreadable(
