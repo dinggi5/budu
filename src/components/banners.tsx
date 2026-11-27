@@ -7,20 +7,30 @@ import { cn } from "@/lib/cn";
 import { enter } from "@/components/ui";
 import { t } from "@/lib/i18n";
 
-/** 시드 백업 알림 — 면·테두리·아이콘 없이 한 줄. 빨간 점 하나로 신호를 주고 «백업하기» 는 글자 단추. */
 export function BackupNag({ onBackup }: { onBackup: () => void }) {
   return (
-    <motion.div {...enter} className="w-full max-w-md flex items-center gap-2.5 py-1">
-      <span aria-hidden className="shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--color-danger)]" />
-      <p className="flex-1 min-w-0 text-sm leading-snug text-[var(--color-ink-700)] dark:text-[#B5AFA2]">
-        {t("시드 12단어를 백업하세요.", "Back up your 12-word seed.")}
+    <motion.div
+      {...enter}
+      className={cn(
+        "w-full max-w-md flex items-center gap-3 px-4 py-3",
+        "rounded-[var(--radius-card)]",
+        "bg-[var(--color-danger-tint)]",
+      )}
+    >
+      <AlertTriangle size={16} className="shrink-0 text-[var(--color-danger)]" />
+      <p className="flex-1 min-w-0 text-sm leading-snug text-[var(--color-danger)]">
+        {t(
+          "시드 12단어를 백업하세요.",
+          "Back up your 12-word seed.",
+        )}
       </p>
       <button
         type="button"
         onClick={onBackup}
         className={cn(
-          "shrink-0 text-sm font-medium tracking-tight text-[var(--color-danger)]",
-          "hover:opacity-70 transition-opacity duration-[var(--duration-base)]",
+          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-sm tracking-tight",
+          "bg-[var(--color-danger)] text-white hover:bg-[var(--color-danger-active)]",
+          "transition-colors duration-[var(--duration-base)]",
         )}
       >
         {t("백업하기", "Back up")}
