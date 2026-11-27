@@ -130,7 +130,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     body: t(
       <ul className="space-y-2">
         <li>
-          <b className={em}>한도</b> — 결제당 한도, 하루 한도 등을 자세히 설정할 수 있습니다. 한도는 AI 의 결제에 걸립니다 — 홈의 «보내기»(USDC·SOL 을 직접 보내는 것)는 한도 밖이고 언제나 비밀번호를 묻습니다.
+          <b className={em}>한도</b> — 결제당 한도, 하루 한도 등을 설정할 수 있습니다.
         </li>
         <li>
           <b className={em}>긴급 잠금</b> — 헤더의 방패 버튼을 누르면 모든 결제를 즉시 막아 사용자를 보호합니다.
@@ -144,7 +144,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       </ul>,
       <ul className="space-y-2">
         <li>
-          <b className={em}>Limits</b> — set a per-payment limit, a daily limit and more, in detail. Limits apply to the AI's payments — «Send» on Home (sending USDC or SOL yourself) is outside them and always asks for your password.
+          <b className={em}>Limits</b> — set a per-payment limit, a daily limit and more.
         </li>
         <li>
           <b className={em}>Emergency lock</b> — press the shield button in the header to block every payment at once and protect you.
