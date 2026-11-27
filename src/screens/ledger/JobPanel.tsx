@@ -1,14 +1,14 @@
-// 오른쪽 작업 패널 — 열린 작업 + 일지. 홈에선 늘 있고, 다른 페이지에선 단추로 열어 둔다.
+// 오른쪽 작업 패널 — 열린 작업 + 일지. 홈에만 있다.
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Download, X } from "lucide-react";
+import { ChevronDown, Download } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { t } from "@/lib/i18n";
 import { renameJob, useJobNames } from "@/lib/jobNames";
-import { entryFacts, journalLine, money, ratio, when } from "@/lib/ledger";
+import { entryFacts, journalLine, money, when } from "@/lib/ledger";
 import type { HistoryEntry, JobView } from "@/lib/types";
-import { Gauge, GhostButton, IconButton, RenameField, faint, ink, inkSoft, muted, sunken, usePref } from "@/components/win";
+import { GhostButton, RenameField, faint, ink, inkSoft, muted, sunken, usePref } from "@/components/win";
 import { useReceipt } from "./parts";
 
 // ── 오른쪽 작업 패널 ──────────────────────────────────────────────────────────────────
@@ -16,15 +16,13 @@ import { useReceipt } from "./parts";
 /** 일지에 그리는 줄 수 — 판 높이(720 창)에 넘치지 않을 만큼. 나머지는 레일의 장부에서. */
 const JOURNAL_ROWS = 7;
 
-/** 오른쪽 패널 — 열린 작업 + 일지. 홈에선 늘 있고, 다른 페이지에선 단추로 열어 둔다(Claude Code 의 오른쪽 패널처럼). */
+/** 오른쪽 패널 — 열린 작업 + 일지. 홈에만 있고, 닫고 여는 단추는 홈(WindowHome)이 쥔다. */
 export function JobPanel({
   job,
   locked,
   entries,
   onEnd,
   onOpenJob,
-  onClose,
-  gauge = true,
   className,
 }: {
   job: JobView | null;
@@ -33,10 +31,6 @@ export function JobPanel({
   onEnd: () => void;
   /** 작업 이름을 누르면 장부의 그 작업으로. */
   onOpenJob: (label: string) => void;
-  /** 다른 페이지에서만 — 패널 닫기. */
-  onClose?: () => void;
-  /** 홈엔 가운데에 작업 예산 게이지가 이미 있다 — 두 번 그리지 않는다. */
-  gauge?: boolean;
   className?: string;
 }) {
   const names = useJobNames();
@@ -48,30 +42,16 @@ export function JobPanel({
     <aside className={cn("min-w-0 px-6 pt-14 pb-6 overflow-y-auto", sunken, className)} aria-label={t("작업과 일지", "Job and journal")}>
       <div className="flex items-center justify-between mb-3 min-h-8">
         <h2 className={cn("text-[13px] font-semibold", inkSoft)}>{t("진행 중인 작업", "Job in progress")}</h2>
-        {onClose && (
-          <IconButton label={t("패널 닫기", "Hide panel")} onClick={onClose}>
-            <X size={15} />
-          </IconButton>
-        )}
       </div>
       {job ? (
         <div>
           <RenameField size="sm" key={job.job} value={names.label(job.job)} placeholder={job.job} onSave={(n) => renameJob(job.job, n)} />
           <p className={cn("mt-1 text-[12px] num", muted)}>
             {receipt.note(job.job) ??
-              (locked && !gauge
+              (locked
                 ? t("긴급 잠금 중, 결제 멈춤", "Emergency lock on, payments paused")
                 : t(`${mins}분 남음 · 판매자 ${job.sellers}곳`, `${mins} min left · ${job.sellers} seller(s)`))}
           </p>
-          {gauge && <div className="mt-4">
-            <Gauge
-              title={t("예산", "Budget")}
-              total={money(job.budget)}
-              value={locked ? t("긴급 잠금 중, 결제 멈춤", "Emergency lock on, paused") : t(`${money(job.left)} 남음`, `${money(job.left)} left`)}
-              fill={locked ? 0 : ratio(job.spent, job.budget)}
-              muted={locked}
-            />
-          </div>}
           <div className="mt-4 flex flex-wrap gap-2">
             <GhostButton onClick={() => onOpenJob(job.job)}>{t("결제 보기", "Payments")}</GhostButton>
             <GhostButton onClick={() => void receipt.save(job.job)}>

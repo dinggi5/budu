@@ -408,8 +408,15 @@ pub(crate) fn connect_claude_desktop(app: tauri::AppHandle) -> Result<(), String
 ///   claude mcp add --scope user budu -- <이 번들의 budu-mcp>
 /// --scope user 인 이유: 기본(local)은 "지금 폴더"에만 살아서, GUI 앱이 대신 등록하면
 /// 앱의 cwd 라는 아무 데도 아닌 곳에 등록된다. 지갑은 어느 폴더에서든 쓰는 도구다.
+/// 프로세스를 기다리는 동안 화면이 얼지 않게 블로킹 스레드에서 돈다(Codex 와 같은 모양).
 #[tauri::command]
-pub(crate) fn connect_claude_code() -> Result<(), ConnectError> {
+pub(crate) async fn connect_claude_code() -> Result<(), ConnectError> {
+    tauri::async_runtime::spawn_blocking(connect_claude_code_blocking)
+        .await
+        .unwrap_or_else(|e| Err(ConnectError { message: e.to_string(), restore_command: None }))
+}
+
+fn connect_claude_code_blocking() -> Result<(), ConnectError> {
     // 아직 아무것도 안 지운 실패들 — 되돌릴 게 없으니 restore_command 도 없다.
     let bare = |message: String| ConnectError {
         message,
@@ -471,9 +478,9 @@ enum AddWith<'a> {
 /// 건너뛰면 add 가 "already exists" 로 죽는다. 없어서 실패하는 remove 는 정상.
 fn reregister(cli: &std::path::Path, add: AddWith) -> Result<(), ConnectError> {
     let old_entry = registered_cli_entry();
-    let _ = Command::new(cli)
-        .args(["mcp", "remove", "--scope", "user", "budu"])
-        .output();
+    let mut rm = Command::new(cli);
+    rm.args(["mcp", "remove", "--scope", "user", "budu"]);
+    let _ = output_within(rm, 30);
     let mut cmd = Command::new(cli);
     match &add {
         AddWith::Path(mcp) => cmd
@@ -483,7 +490,7 @@ fn reregister(cli: &std::path::Path, add: AddWith) -> Result<(), ConnectError> {
             .args(["mcp", "add-json", "--scope", "user", "budu"])
             .arg(json),
     };
-    let failure = match cmd.output() {
+    let failure = match output_within(cmd, 30) {
         Ok(out) if out.status.success() => return Ok(()),
         Ok(out) => tf!(
             "등록 실패: {}",
@@ -495,11 +502,9 @@ fn reregister(cli: &std::path::Path, add: AddWith) -> Result<(), ConnectError> {
     let (restore_note, restore_command) = match old_entry {
         Some(old) => {
             let old_json = old.to_string();
-            let restored = Command::new(cli)
-                .args(["mcp", "add-json", "--scope", "user", "budu"])
-                .arg(&old_json)
-                .output()
-                .is_ok_and(|o| o.status.success());
+            let mut back = Command::new(cli);
+            back.args(["mcp", "add-json", "--scope", "user", "budu"]).arg(&old_json);
+            let restored = output_within(back, 30).is_ok_and(|o| o.status.success());
             let note = if restored {
                 ts!(
                     " 기존 등록은 그대로 되돌려 놨어요.",
@@ -550,12 +555,53 @@ pub(crate) fn get_connect_ready() -> bool {
 // codex CLI 는 node 스크립트(`#!/usr/bin/env node`)라 GUI 앱의 PATH(node 없음)로는 못 뜬다 — CLI 가 든 폴더
 // (nvm·Homebrew 는 node 가 같은 폴더에 있다)를 PATH 앞에 붙여 실행한다.
 
-/// codex 가 실제로 읽는 설정 폴더 — CODEX_HOME 이 잡혀 있으면 그쪽.
+/// 로그인 셸이 가진 CODEX_HOME — Finder·Dock 으로 띄운 앱은 `.zshrc` 의 export 를 못 본다.
+/// 셸을 띄우는 건 느려서(수백 ms~) 앱 시작 때 딴 스레드에서 한 번만 읽고(`spawn_codex_home_probe`),
+/// 몇 초마다 묻는 상태 조회는 읽혀 있으면 쓰고 아직이면 기다리지 않는다.
+static SHELL_CODEX_HOME: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
+
+/// 셸 출력에서 표지 사이 값을 꺼낸다 — 순수 심장부(테스트 대상). `-i` 셸은 rc 파일이 찍는 글자가 섞일 수 있다.
+pub(crate) fn parse_shell_codex_home(out: &str) -> Option<String> {
+    let start = out.find(SHELL_MARK)? + SHELL_MARK.len();
+    let end = start + out[start..].find(SHELL_MARK)?;
+    let v = out[start..end].trim();
+    (!v.is_empty()).then(|| v.to_string())
+}
+
+const SHELL_MARK: &str = "__BUDU_CODEX_HOME__";
+
+fn probe_shell_codex_home() -> Option<String> {
+    // 앱 자신의 환경에 있으면 그게 답이다(터미널에서 띄운 경우).
+    if std::env::var("CODEX_HOME").is_ok_and(|v| !v.trim().is_empty()) {
+        return None;
+    }
+    let shell = std::env::var("SHELL").ok().filter(|s| s.starts_with('/')).unwrap_or_else(|| "/bin/zsh".into());
+    let mut cmd = Command::new(shell);
+    cmd.args(["-ilc", &format!("printf '{SHELL_MARK}%s{SHELL_MARK}' \"${{CODEX_HOME-}}\"")]);
+    let out = output_within(cmd, 5).ok()?;
+    parse_shell_codex_home(&String::from_utf8_lossy(&out.stdout))
+}
+
+fn shell_codex_home_blocking() -> Option<String> {
+    SHELL_CODEX_HOME.get_or_init(probe_shell_codex_home).clone()
+}
+
+/// 앱 시작 때 부른다 — 로그인 셸의 CODEX_HOME 을 미리 읽어 둔다.
+pub(crate) fn spawn_codex_home_probe() {
+    std::thread::spawn(|| {
+        let _ = shell_codex_home_blocking();
+    });
+}
+
+/// codex 가 실제로 읽는 설정 폴더 — CODEX_HOME(앱 환경 → 로그인 셸) 이 잡혀 있으면 그쪽, 아니면 ~/.codex.
 fn codex_home() -> Option<PathBuf> {
     if let Ok(dir) = std::env::var("CODEX_HOME") {
         if !dir.trim().is_empty() {
             return Some(PathBuf::from(dir));
         }
+    }
+    if let Some(Some(dir)) = SHELL_CODEX_HOME.get() {
+        return Some(PathBuf::from(dir));
     }
     dirs::home_dir().map(|h| h.join(".codex"))
 }
@@ -637,6 +683,10 @@ fn find_codex_cli() -> Option<PathBuf> {
 
 fn codex_command(cli: &std::path::Path) -> Command {
     let mut cmd = Command::new(cli);
+    // codex 가 앱이 읽는 것과 같은 설정 폴더에 쓰게 — 로그인 셸에서만 잡힌 CODEX_HOME 을 넘긴다.
+    if let Some(dir) = SHELL_CODEX_HOME.get().cloned().flatten() {
+        cmd.env("CODEX_HOME", dir);
+    }
     if let Some(dir) = cli.parent() {
         let rest = std::env::var_os("PATH").unwrap_or_default();
         let mut paths = vec![dir.to_path_buf(), PathBuf::from("/opt/homebrew/bin"), PathBuf::from("/usr/local/bin")];
@@ -679,6 +729,8 @@ pub(crate) async fn connect_codex() -> Result<(), ConnectError> {
 
 fn connect_codex_blocking() -> Result<(), ConnectError> {
     let bare = |message: String| ConnectError { message, restore_command: None };
+    // 등록 전에 설정 폴더를 확정한다 — 시작 때 읽기가 아직이면 여기서 기다린다(블로킹 스레드라 괜찮다).
+    let _ = shell_codex_home_blocking();
     let Some(cli) = find_codex_cli() else {
         return Err(bare(
             ts!(

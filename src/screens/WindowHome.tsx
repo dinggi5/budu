@@ -1,7 +1,7 @@
 // 큰 창의 홈 — 시안 B «장부». 개발 9 부터 모든 페이지가 이 화면을 기준으로 맞춘다.
 //
 // 모양: 왼쪽 64px 아이콘 레일 / 가운데 잔액 숫자 하나(64px) + 게이지 둘(오늘 한도·작업 예산) + 맨 아래 받는 주소 /
-// 오른쪽 320px 회색 판 = 작업 패널(열린 작업 + 일지, WindowPages 의 JobPanel — 다른 페이지에서도 열어 둔다).
+// 오른쪽 320px 회색 판 = 작업 패널(열린 작업 + 일지, ledger/JobPanel — 홈에만 있다).
 // 카드·테두리를 빼고 숫자와 여백으로 위계를 세운다. 보라는 돈이 걸린 곳(게이지 채움·작업 아이콘)에만.
 //
 // 데이터는 WalletScreen 이 이미 폴링하는 것을 그대로 받는다. 금액·상태 규칙은 lib/ledger.ts 한 곳.
@@ -188,7 +188,7 @@ export function WindowHome({
   onOpenJob: (label: string) => void;
   onReceive: () => void;
   onSendSol: () => void;
-  /** 오른쪽 작업 패널 — 홈에서도 닫고 연다. */
+  /** 오른쪽 작업 패널 — 홈에만 있고, 오른쪽 위 단추로 닫고 연다. */
   panelOpen: boolean;
   onPanel: (open: boolean) => void;
   /** 잠금·백업·자율 결제·설정 고장 띠 — WalletScreen 이 고른 것을 그대로 받는다. */
@@ -208,13 +208,15 @@ export function WindowHome({
         panelOpen && "min-[880px]:grid-cols-[1fr_320px]",
       )}
     >
-      {!panelOpen && (
-        <div className="fixed top-3 right-4 z-40">
-          <IconButton label={t("작업 패널 열기", "Show job panel")} onClick={() => onPanel(true)}>
-            <PanelRight size={16} />
-          </IconButton>
-        </div>
-      )}
+      {/* 패널 토글 — 열려 있든 닫혀 있든 같은 자리의 네모 단추 하나(장부의 목록 접기와 같은 모양). */}
+      <div className="hidden min-[880px]:block fixed top-3 right-4 z-40">
+        <IconButton
+          label={panelOpen ? t("작업 패널 닫기", "Hide job panel") : t("작업 패널 열기", "Show job panel")}
+          onClick={() => onPanel(!panelOpen)}
+        >
+          <PanelRight size={16} />
+        </IconButton>
+      </div>
       <section className="min-w-0 flex flex-col px-8 min-[880px]:px-14 pt-[72px] pb-10 min-[880px]:overflow-y-auto">
         {/* 눈썹 — 지금 어느 계정·어느 체인인지, AI 가 붙어 있는지. 잔액보다 먼저 읽혀야 하는 사실. */}
         <div className="flex items-center gap-2 text-[13px] text-[var(--color-ink-500)] min-w-0">
@@ -316,8 +318,6 @@ export function WindowHome({
           entries={history}
           onEnd={onEndJob}
           onOpenJob={onOpenJob}
-          onClose={() => onPanel(false)}
-          gauge={false}
           className="min-[880px]:h-screen"
         />
       )}

@@ -28,8 +28,9 @@ function BackupGuide() {
     [t("종이에 적기", "Write it on paper"), t("종이에 적은 후 안전한 금고에 보관하세요.", "Write it on paper, then keep it in a safe.")],
     [t("외부 저장 금지", "Never store it elsewhere"), t("스크린샷·메모 앱·메일 등에 시드 기록을 남기지 마세요.", "Don't leave your seed in screenshots, notes apps, email or anywhere else.")],
   ];
+  // 최소 폭 — 옆 판이 폭을 먹어도 글자가 한 자씩 세로로 떨어지지 않게.
   return (
-    <div className="min-w-0">
+    <div className="min-w-[220px]">
       <Eyebrow className="mb-3">{t("지키는 법", "Keeping it safe")}</Eyebrow>
       <ol className="flex flex-col gap-6">
         {items.map(([h, b], i) => (
@@ -133,7 +134,7 @@ export function BackupFlow({
       />
 
       {/* 큰 창 — 왼쪽 = 지키는 법 안내, 오른쪽 = 단계 판(가라앉은 둥근 면). 넓은 판에 칸 하나만 떠 있던 «폰 화면을 아이패드에 띄운» 모양을 걷는다. */}
-      <div className={cn(wideReview ? "w-full grid" : "contents", wideReview && " grid-cols-1 min-[820px]:grid-cols-[minmax(0,1fr)_minmax(0,440px)] gap-10 min-[1100px]:gap-16 items-start")}>
+      <div className={cn(wideReview ? "w-full grid" : "contents", wideReview && " grid-cols-1 min-[820px]:grid-cols-[minmax(220px,1fr)_minmax(0,440px)] gap-10 min-[1100px]:gap-16 items-start")}>
       {wideReview && <BackupGuide />}
       <motion.section {...enter} className={cn(
           mode === "review" ? flatCard : cardBase,

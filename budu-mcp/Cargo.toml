@@ -1,6 +1,6 @@
 [package]
 name = "budu-mcp"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 description = "부두 MCP 어댑터 — AI 에이전트가 로컬 지갑을 조회·결제"
 

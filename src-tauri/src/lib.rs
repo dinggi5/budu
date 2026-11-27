@@ -165,6 +165,8 @@ pub fn run() {
             autostart::reconcile(app.handle());
             // Claude Code 등록이 이 설치본을 가리키는지 보고 어긋났으면 고친다. 새 등록은 안 만든다.
             connect::spawn_heal();
+            // 로그인 셸의 CODEX_HOME — Codex 등록 확인이 맞는 설정 폴더를 보게.
+            connect::spawn_codex_home_probe();
             // 생존 감시 — 하트비트를 러스트가 찍고, 프론트가 잠든 사이 온 결제 요청에
             // 창을 깨운다. 트레이가 만들어진 뒤여야 창을 트레이 아래로 배치할 수 있다.
             ipc::spawn_watchdog(app.handle());

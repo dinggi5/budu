@@ -57,7 +57,7 @@ export function HelpScreen({ onClose }: { onClose: () => void }) {
 
 /** 큰 창 — 왼쪽 단 = 주제 목록(고르면 회색 둥근 면), 오른쪽 = 고른 주제 하나(장부와 같은 2단). 본문 14px. */
 function HelpWindow() {
-  // 창 폭이 아니라 실제 자리(레일·오른쪽 패널 뺀 것) — 장부와 같은 기준.
+  // 창 폭이 아니라 실제 자리(레일 뺀 것) — 장부와 같은 기준.
   const [page, pageW] = useWidth<HTMLDivElement>();
   const wide = pageW >= 690;
   const [id, setId] = useState(HELP_SECTIONS[0]?.id);

@@ -99,6 +99,13 @@ export function nounOf(e: HistoryEntry): string {
   return e.resource ? t("데이터", "data") : t("결제", "payment");
 }
 
+/** 목적격 조사 — 끝 글자에 받침이 있으면 «을», 없으면 «를»(«계산을», «정보를»). */
+function objParticle(word: string): string {
+  const c = word.charCodeAt(word.length - 1);
+  if (c < 0xac00 || c > 0xd7a3) return "를";
+  return (c - 0xac00) % 28 ? "을" : "를";
+}
+
 function cap(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -110,9 +117,9 @@ export function journalLine(e: HistoryEntry): string {
   if (undelivered) return t(`${n} — 내용을 못 받았어요`, `${cap(n)} — content never arrived`);
   switch (e.status) {
     case "settled":
-      // «받았어요» 라고 쓰지 않는다 — 체인 확인(confirm.rs)으로만 정산된 기록도 settle_tx 가 채워져, 지금 기록으론
-      // 내용을 받았는지 가를 신호가 없다(못 받은 게 확실한 건 위 undelivered 갈래). 신호를 내역에 싣는 건 개발 12.
-      return t(`${n} 결제 완료`, `Paid for ${n}`);
+      // «받았어요» 는 MCP 가 응답 내용을 끝까지 받았다고 알린 기록(delivered)에만 — 체인 확인(confirm.rs)으로만
+      // 정산된 기록은 돈이 나간 것만 확실하다. 작업 예산의 «같은 결제 10분» 예외와 같은 긍정 신호다.
+      return e.delivered && e.resource ? t(`${n}${objParticle(n)} 받았어요`, `Received ${n}`) : t(`${n} 결제 완료`, `Paid for ${n}`);
     case "signed":
       return t(`${n} — 정산 기다리는 중`, `${cap(n)} — awaiting settlement`);
     case "settle_failed":

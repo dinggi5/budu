@@ -293,3 +293,15 @@ args = []
     assert_eq!(codex_toml_budu_command("[mcp_servers.budu]\nargs = []\n[x]\ncommand = \"/y\"\n"), None);
     assert_eq!(codex_toml_budu_command(""), None);
 }
+
+#[test]
+fn shell_codex_home_is_read_between_marks() {
+    // rc 파일이 찍은 글자가 앞뒤에 섞여도 표지 사이만 읽는다.
+    let out = "Welcome!\n__BUDU_CODEX_HOME__/Users/a/.codex-work__BUDU_CODEX_HOME__\n";
+    assert_eq!(parse_shell_codex_home(out).as_deref(), Some("/Users/a/.codex-work"));
+    // 비어 있으면(셸에도 없음) None → ~/.codex 로 물러선다.
+    assert_eq!(parse_shell_codex_home("__BUDU_CODEX_HOME____BUDU_CODEX_HOME__"), None);
+    // 표지가 없거나 하나뿐이면(셸 오류) None.
+    assert_eq!(parse_shell_codex_home("zsh: command not found"), None);
+    assert_eq!(parse_shell_codex_home("__BUDU_CODEX_HOME__/x"), None);
+}

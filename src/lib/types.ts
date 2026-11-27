@@ -86,6 +86,8 @@ export type HistoryEntry = {
   checked?: boolean;
   /** 돈은 나갔거나 나갔을 수 있는데 응답 내용을 못 받았다. */
   undelivered?: boolean;
+  /** MCP 가 정산된 응답의 내용을 끝까지 받았다고 알렸다(긍정 신호). 없으면 «모름». */
+  delivered?: boolean;
 };
 
 /** 열린 작업 예산(백엔드 `job::JobView`) — 사람이 승인 창에서 연 것. */

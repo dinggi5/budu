@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { Maximize2, PanelRight, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Maximize2, ShieldAlert, ShieldCheck } from "lucide-react";
 import type {
   Account,
   AgentStatus,
@@ -32,11 +32,10 @@ import { JobBar } from "@/components/JobBar";
 import { BackupFlow } from "@/screens/BackupFlow";
 import { ConnectScreen } from "@/screens/ConnectScreen";
 import { HelpScreen } from "@/screens/HelpScreen";
-import { JobPanel } from "@/screens/ledger/JobPanel";
 import { LedgerPage } from "@/screens/ledger/LedgerPage";
 import { SellersPage } from "@/screens/ledger/SellersPage";
 import type { Scope } from "@/screens/ledger/parts";
-import { IconButton, useMedia, usePref } from "@/components/win";
+import { usePref } from "@/components/win";
 import { SettingsScreen } from "@/screens/SettingsScreen";
 import { t, takeReturnPage } from "@/lib/i18n";
 import { isApprover, isWindow } from "@/lib/win";
@@ -545,16 +544,9 @@ export function WalletScreen({
     }
     leavePage(p);
   };
-  // 오른쪽 작업 패널(다른 페이지에서도 열어 둔다) — 홈엔 늘 있고(일지 판), 장부엔 왼쪽 작업 단이
-  // 같은 일을 해서 없다. 나머지 페이지는 오른쪽 위 단추로 열고 닫는다. 정하지 않았으면 넓을 때(≥1280)만 저절로 연다 —
-  // 기본 크기(960)의 모습은 그대로 두고, 창을 키우면 빈 오른쪽을 패널이 채운다.
-  const [panelPref, setPanelPref] = usePref<"auto" | "open" | "closed">("panel", "auto");
-  const roomy = useMedia("(min-width: 1280px)");
-  // 홈의 패널은 따로 기억한다 — 홈에선 기본으로 열려 있고(일지 판), 닫으면 오른쪽 위 단추로 다시 연다.
+  // 오른쪽 작업 패널은 홈에만 있다 — 다른 페이지에 끼우면 그 페이지의 폭을 먹는다(시드 백업 단이 한 글자 폭으로 눌렸다).
+  // 장부엔 왼쪽 작업 단이 같은 일을 한다. 홈에선 기본으로 열려 있고, 오른쪽 위 네모 단추 하나로 닫고 연다.
   const [homePanel, setHomePanel] = usePref<"open" | "closed">("homePanel", "open");
-  const fits = useMedia("(min-width: 900px)");
-  const panelOpen = fits && (panelPref === "open" || (panelPref === "auto" && roomy));
-  // framed 가 패널에서 부르므로 그보다 먼저(const 는 선언 전에 못 쓴다).
   const endJob = () => {
     invoke("end_job").catch(() => {});
     setJobView(null);
@@ -563,29 +555,11 @@ export function WalletScreen({
     setLedgerScope(`job:${label}`);
     goPage("history");
   };
-  const framed = (node: React.ReactNode, panel = true) =>
+  const framed = (node: React.ReactNode) =>
     isWindow ? (
       <div className="flex h-screen">
         <Rail page={railPage} onPage={goPage} locked={locked} onToggleLock={toggleLock} backedUp={backedUp} />
         <div className="flex-1 min-w-0 flex">{node}</div>
-        {panel && panelOpen && (
-          <JobPanel
-            job={jobHere}
-            locked={locked}
-            entries={history}
-            onEnd={endJob}
-            onOpenJob={openJob}
-            onClose={() => setPanelPref("closed")}
-            className="h-screen w-[300px] shrink-0"
-          />
-        )}
-        {panel && fits && !panelOpen && (
-          <div className="fixed top-3 right-4 z-40">
-            <IconButton label={t("작업 패널 열기", "Show job panel")} onClick={() => setPanelPref("open")}>
-              <PanelRight size={16} />
-            </IconButton>
-          </div>
-        )}
         <AnimatePresence>
           {leaveTo && (
             <motion.div
@@ -679,7 +653,6 @@ export function WalletScreen({
           onMore={partial ? () => setHistoryPage(historyLimit + HISTORY_PAGE) : undefined}
           partial={partial}
         />,
-        false,
       ),
     );
   }
@@ -745,7 +718,6 @@ export function WalletScreen({
             onPanel={(o) => setHomePanel(o ? "open" : "closed")}
             notices={anyNotice ? notices : null}
           />,
-          false,
         )}
         <AnimatePresence>
           {mode === "receive" && (
