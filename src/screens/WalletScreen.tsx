@@ -348,7 +348,8 @@ export function WalletScreen({
           if (active && seq === jobSeq.current && v) setEndedJob(null);
           if (active && seq === jobSeq.current)
             setJobView((prev) =>
-              prev && v && prev.job === v.job && prev.spent === v.spent && prev.budget === v.budget
+              prev && v && prev.job === v.job && prev.spent === v.spent && prev.budget === v.budget &&
+              prev.chain_id === v.chain_id && prev.from === v.from && prev.seller_addrs.join() === v.seller_addrs.join()
                 ? prev
                 : v,
             );
@@ -572,15 +573,22 @@ export function WalletScreen({
       })
       .catch(() => {});
   };
-  // 긴급 잠금은 끝낸 예산도 버린다(job::clear) — «다시 열기» 도 거둔다.
-  useEffect(() => {
-    if (locked) setEndedJob(null);
-  }, [locked]);
-  // 되돌릴 시간(10분)이 지나면 «다시 열기» 도 거둔다 — 백엔드도 그때 버린다.
+  // «다시 열기» 를 보이는 동안 1초마다 백엔드에 묻는다 — 되돌릴 시간·시간 상한이 지났거나 잠금(긴급·세션·자리비움)이
+  // 끝낸 예산을 버렸으면 버튼도 거둔다. 묻는 쪽(can_resume_job)이 시간이 지난 키를 치운다.
   useEffect(() => {
     if (!endedJob) return;
-    const h = setTimeout(() => setEndedJob(null), 10 * 60 * 1000);
-    return () => clearTimeout(h);
+    let live = true;
+    const check = () =>
+      invoke<boolean>("can_resume_job")
+        .then((ok) => {
+          if (live && !ok) setEndedJob(null);
+        })
+        .catch(() => {});
+    const h = setInterval(check, 1000);
+    return () => {
+      live = false;
+      clearInterval(h);
+    };
   }, [endedJob]);
   const openJob = (label: string) => {
     setLedgerScope(`job:${label}`);

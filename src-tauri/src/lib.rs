@@ -258,6 +258,7 @@ pub fn run() {
             job::job_status,
             job::end_job,
             job::resume_job,
+            job::can_resume_job,
             job_names::get_job_names,
             job_names::rename_job,
             receipt::export_job_receipt,

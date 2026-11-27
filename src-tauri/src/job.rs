@@ -5,8 +5,9 @@
 //
 // 불변식:
 //   - 🔴 예산은 **사람만** 연다 — 승인 창의 비번 승인에서만 생긴다. AI 가 보낸 `job` 문자열은 이름표일 뿐이다.
-//   - 키는 디스크에 안 나간다(zeroize). 앱 종료·긴급 잠금·수동 세션 잠금·자리비움 잠금·「작업 끝내기」·시간 상한이면 소멸.
-//     (자율 결제 세션의 유휴 타임아웃과는 따로다 — 작업 예산은 자기 시간 상한 60분을 쓴다.)
+//   - 키는 디스크에 안 나간다(zeroize). 앱 종료·긴급 잠금·수동 세션 잠금·자리비움 잠금·시간 상한이면 소멸.
+//     「작업 끝내기」 는 «다시 열기» 를 위해 `RESUME_SECS`(또는 시간 상한 중 먼저 오는 것)까지만 들고 있다가 버린다.
+//     시간 상한 = 설정의 자동 잠금(마지막 사용부터). 0 이면 시간으로는 안 닫힌다(예산 상한·끝내기·잠금·앱 종료만).
 //   - 예산을 돌려주는 건 **그 예산에 실제로 넣은 서명**만이다 — 이름이 같다고 다른 결제의 만료로 예산을 늘리지 않는다.
 //   - 작업 예산 결제도 `do_sign_x402` 를 그대로 거친다 — 긴급 잠금 · 건당/일일 한도 · 내역 · 자체 검증이 같다.
 //   - 예산 차감은 서명 **전에** 잡고(두 결제가 겹쳐도 예산을 넘지 않게), 서명이 안 됐으면(Err = 확실히 안 나감) 돌려준다.
@@ -286,6 +287,12 @@ pub(crate) struct JobView {
 #[tauri::command]
 pub(crate) fn job_status() -> Option<JobView> {
     let idle = idle_secs();
+    {
+        let mut e = ended();
+        if e.as_ref().is_some_and(|x| !resumable(x, idle)) {
+            *e = None; // 끝낸 예산의 키를 되돌릴 시간 뒤까지 들고 있지 않게(1초 폴링이 치운다)
+        }
+    }
     let mut g = guard();
     expire(&mut g, idle);
     g.as_ref().map(|x| JobView {
@@ -304,28 +311,49 @@ pub(crate) fn job_status() -> Option<JobView> {
 /// 「작업 끝내기」 — 예산을 닫는다. 결제는 지금부터 다시 승인 창으로 가고, `RESUME_SECS` 동안만 «다시 열기» 로 되돌릴 수 있다.
 #[tauri::command]
 pub(crate) fn end_job() {
-    let taken = guard().take();
+    let idle = idle_secs();
+    let taken = {
+        let mut g = guard();
+        expire(&mut g, idle); // 이미 시간이 지난 예산은 끝내기로 옮기지 않는다(다시 열기로 되살아나지 않게)
+        g.take()
+    };
     if let Some(grant) = taken {
         *ended() = Some(Ended { grant, at: now_secs() });
     }
 }
 
-/// 「다시 열기」 — 방금 끝낸 예산을 그대로 되살린다(사용액·판매자·키 그대로, 마지막 사용 시각은 지금).
-/// 되돌릴 시간이 지났거나, 그 사이 잠겼거나, 다른 예산이 열렸으면 false.
+/// 끝낸 예산이 아직 되돌릴 수 있는가 — 되돌릴 시간(`RESUME_SECS`)과 시간 상한(마지막 사용부터) 둘 다 안 지났어야 한다.
+fn resumable(e: &Ended, idle: u64) -> bool {
+    let now = now_secs();
+    now.saturating_sub(e.at) < RESUME_SECS && (idle == 0 || now.saturating_sub(e.grant.last_active) < idle)
+}
+
+/// 시간이 지난 끝낸 예산(과 키)을 버린다. 되돌릴 수 있으면 true. 프론트가 «다시 열기» 를 보이는 동안 1초마다 부른다.
+#[tauri::command]
+pub(crate) fn can_resume_job() -> bool {
+    let idle = idle_secs();
+    let mut e = ended();
+    if e.as_ref().is_some_and(|x| !resumable(x, idle)) {
+        *e = None;
+    }
+    e.is_some()
+}
+
+/// 「다시 열기」 — 방금 끝낸 예산을 그대로 되살린다(사용액·판매자·키·마지막 사용 시각 그대로 — 끝낸 동안도 유휴로 센다).
+/// 되돌릴 시간이 지났거나, 시간 상한이 지났거나, 그 사이 잠겼거나, 다른 예산이 열렸으면 false.
 #[tauri::command]
 pub(crate) fn resume_job() -> bool {
+    let idle = idle_secs();
     let taken = ended().take();
     let Some(e) = taken else { return false };
-    if now_secs().saturating_sub(e.at) >= RESUME_SECS {
+    if !resumable(&e, idle) {
         return false;
     }
     let mut g = guard();
     if g.is_some() {
         return false;
     }
-    let mut grant = e.grant;
-    grant.last_active = now_secs();
-    *g = Some(grant);
+    *g = Some(e.grant);
     true
 }
 
@@ -507,8 +535,23 @@ mod tests {
 
         open("0.20");
         end_job();
+        assert!(can_resume_job());
         ended().as_mut().unwrap().at = 0;
+        assert!(!can_resume_job());
+        assert!(ended().is_none()); // 시간이 지나면 키째 버린다
         assert!(!resume_job());
+
+        // 끝낸 동안도 유휴로 센다 — 시간 상한이 지난 예산은 다시 열 수 없다.
+        open("0.20");
+        end_job();
+        ended().as_mut().unwrap().grant.last_active = 0;
+        assert!(!resume_job());
+
+        // 이미 시간이 지난 예산은 끝내기로 옮겨지지도 않는다.
+        open("0.20");
+        guard().as_mut().unwrap().last_active = 0;
+        end_job();
+        assert!(ended().is_none());
         clear();
     }
 }
