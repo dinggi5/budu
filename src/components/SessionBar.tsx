@@ -27,13 +27,13 @@ export function SessionBar({
         {...enter}
         className={cn(
           "w-full max-w-md flex items-center gap-3 px-4 py-3",
-          "rounded-[var(--radius-card)] border border-[var(--color-accent)]",
+          "rounded-[var(--radius-card)] border border-[var(--color-ok)]",
           "bg-[var(--color-ivory-50)] dark:bg-[var(--color-night-800)]",
         )}
       >
-        <Zap size={16} className="shrink-0 text-[var(--color-accent)]" />
+        <Zap size={16} className="shrink-0 text-[var(--color-ok)]" />
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] leading-snug tracking-tight text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
+          <p className="text-sm leading-snug tracking-tight text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
             {t(
               <>
                 자율 결제 켜짐 · 한도 <span className="num">{limit}</span> USDC
@@ -44,7 +44,7 @@ export function SessionBar({
             )}
           </p>
           {session.remaining_secs > 0 && (
-            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-[var(--color-ink-300)]">
+            <p className="mt-0.5 flex items-center gap-1 text-sm text-[var(--color-ink-300)]">
               <Clock size={10} />
               {t(
                 <>
@@ -61,7 +61,7 @@ export function SessionBar({
           type="button"
           onClick={onLock}
           className={cn(
-            "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-[12px] tracking-tight",
+            "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-sm tracking-tight",
             "border border-[var(--color-ivory-400)] dark:border-[var(--color-night-700)]",
             "text-[var(--color-ink-500)] dark:text-[#B5AFA2]",
             "hover:bg-[var(--color-ivory-200)] dark:hover:bg-[var(--color-night-700)]",
@@ -84,7 +84,7 @@ export function SessionBar({
       )}
     >
       <Zap size={16} className="shrink-0 text-[var(--color-ink-300)]" />
-      <p className="flex-1 min-w-0 text-[12px] leading-snug text-[var(--color-ink-500)] dark:text-[#B5AFA2]">
+      <p className="flex-1 min-w-0 text-sm leading-snug text-[var(--color-ink-500)] dark:text-[#B5AFA2]">
         {t(
           <>
             자율 결제 잠김 — 해제하면 <span className="num">{limit}</span> USDC까지 AI가 비번 없이
@@ -100,8 +100,8 @@ export function SessionBar({
         type="button"
         onClick={onUnlock}
         className={cn(
-          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-[12px] tracking-tight inline-flex items-center gap-1.5",
-          "bg-[var(--color-accent)] text-white hover:opacity-90",
+          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-sm tracking-tight inline-flex items-center gap-1.5",
+          "bg-[var(--color-ok)] text-white hover:opacity-90",
           "transition-opacity duration-[var(--duration-base)]",
         )}
       >
@@ -154,11 +154,11 @@ export function UnlockSessionModal({
         transition={{ type: "spring", stiffness: 340, damping: 24 }}
         className={cn(modalCard, "px-8 py-7")}
       >
-        <span className="flex items-center gap-1.5 text-[11px] tracking-[0.04em] text-[var(--color-accent)]">
+        <span className="flex items-center gap-1.5 text-sm tracking-[0.04em] text-[var(--color-ok)]">
           <Zap size={13} />
           {t("자율 결제 잠금 해제", "Unlock autopay")}
         </span>
-        <p className="mt-4 text-[13px] leading-relaxed text-[var(--color-ink-700)] dark:text-[#B5AFA2]">
+        <p className="mt-4 text-md leading-relaxed text-[var(--color-ink-700)] dark:text-[#B5AFA2]">
           {t(
             <>
               비밀번호를 한 번 입력하면, <span className="num">{fmtExact(autoLimit)}</span> USDC
@@ -171,7 +171,7 @@ export function UnlockSessionModal({
             </>,
           )}
         </p>
-        <p className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--color-ink-300)]">
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-[var(--color-ink-300)]">
           <Clock size={11} />
           {t(
             "앱 종료·긴급 잠금·유휴 시간이 지나면 자동으로 다시 잠겨요.",
@@ -189,7 +189,7 @@ export function UnlockSessionModal({
           />
         </div>
 
-        {error && <p className="mt-3 text-[12px] text-red-500 font-mono break-all">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[var(--color-danger)] font-mono break-all">{error}</p>}
 
         <div className="mt-5 grid grid-cols-[1fr_1.8fr] gap-2">
           <button type="button" onClick={onClose} disabled={busy} className={cn(secondaryBtn, "w-full")}>

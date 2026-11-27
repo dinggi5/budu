@@ -1,8 +1,8 @@
-// 큰 창의 장부 — 3단(Ulysses 구조): 왼쪽 = 작업 목록(한눈에 보기 · 진행 중인 작업 · 지난 작업 · 작업 없음) /
-// 가운데 = 고른 범위의 결제 / 오른쪽 = 고른 결제의 상세. 작업과 내역이 같은 장부라 한 페이지에 둔다.
+// 큰 창의 «작업 내역» — 2단: 왼쪽 = 작업 목록(한눈에 보기 · 진행 중인 작업 · 지난 작업 · 작업 없음) /
+// 오른쪽 = 고른 범위의 결제. 결제를 누르면 그 줄 아래로 세부가 펼쳐진다(옆에 셋째 단을 만들지 않는다).
 // 고른 항목은 회색 둥근 면, 목록 사이 선은 아주 옅게, 묶음 머리엔 선이 없다.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Download, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { t } from "@/lib/i18n";
@@ -10,7 +10,7 @@ import { renameJob, useJobNames } from "@/lib/jobNames";
 import { fromUnits, groupEntries, money, ratio, type Group } from "@/lib/ledger";
 import type { HistoryEntry, JobView } from "@/lib/types";
 import { Eyebrow, Gauge, GhostButton, IconButton, PageTitle, RenameField, faint, ink, muted, usePref, useWidth } from "@/components/win";
-import { Fact, Library, LibraryItem, PartialNote, ListWithDetail, groupMeta, useReceipt, type Scope } from "./parts";
+import { Fact, Library, LibraryItem, PartialNote, PaymentList, groupMeta, useReceipt, type Scope } from "./parts";
 
 // ── 왼쪽 단 ───────────────────────────────────────────────────────────────────────────
 
@@ -42,10 +42,7 @@ export function LedgerPage({
   const [page, pageW] = useWidth<HTMLDivElement>();
   const wide = pageW >= 690;
   const [lib, setLib] = usePref<"open" | "closed">("ledger.lib", "open");
-  // 기본 크기(960)에서 상세까지 열면 세 단이 다 좁아진다 — 상세가 열린 동안만 왼쪽 단을 비켜 둔다(Ulysses 처럼).
-  const roomy = pageW >= 1130;
-  const [detail, setDetail] = useState(false);
-  const showLib = wide && lib === "open" && (roomy || !detail);
+  const showLib = wide && lib === "open";
 
   const groups = useMemo(() => (entries ? groupEntries(entries) : []), [entries]);
   const jobGroups = groups.filter((g) => g.job);
@@ -94,9 +91,9 @@ export function LedgerPage({
       )}
       <Eyebrow className="px-3 mt-6 mb-1">{t("지난 작업", "Past jobs")}</Eyebrow>
       {entries == null ? (
-        <p className={cn("px-3 text-[12px]", faint)}>…</p>
+        <p className={cn("px-3 text-sm", faint)}>…</p>
       ) : past.length === 0 ? (
-        <p className={cn("px-3 text-[12px]", faint)}>{t("아직 없어요", "None yet")}</p>
+        <p className={cn("px-3 text-sm", faint)}>{t("아직 없어요", "None yet")}</p>
       ) : (
         <ul className="flex flex-col gap-0.5">
           {past.map((g) => (
@@ -130,7 +127,7 @@ export function LedgerPage({
         onChange={(e) => onScope(e.target.value as Scope)}
         aria-label={t("볼 작업", "Job to show")}
         className={cn(
-          "h-8 max-w-full rounded-full px-3 text-[13px] outline-none",
+          "h-8 max-w-full rounded-full px-3 text-md outline-none",
           "bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)]",
           ink,
         )}
@@ -172,7 +169,7 @@ export function LedgerPage({
         <Eyebrow className="mb-1">{isOpen ? t("진행 중인 작업", "Job in progress") : t("지난 작업", "Past job")}</Eyebrow>
         <RenameField key={label} value={names.label(label)} placeholder={label} onSave={(n) => renameJob(label, n)} />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-          <p className={cn("min-w-0 text-[13px] num", muted)}>
+          <p className={cn("min-w-0 text-md num", muted)}>
             {note ??
               [names.renamed(label) ? t(`AI 이름표 ${label}`, `AI label ${label}`) : null, g ? `${groupMeta(g)} · ${fromUnits(g.paid)} USDC` : null]
                 .filter(Boolean)
@@ -199,7 +196,7 @@ export function LedgerPage({
               <Fact title={t("남은 시간", "Time left")} value={t(`${mins}분`, `${mins} min`)} />
               <Fact title={t("승인한 판매자", "Approved sellers")} value={t(`${job!.sellers}곳`, `${job!.sellers}`)} />
             </div>
-            <p className={cn("mt-6 text-[13px] leading-relaxed", muted)}>
+            <p className={cn("mt-6 text-md leading-relaxed", muted)}>
               {t(
                 "예산 안에서, 승인한 판매자에게, 60분 동안만 창 없이 나가요. 같은 데이터를 10분 안에 다시 사도 앞 결제가 정산되고 내용까지 받았으면 그대로 나가요.",
                 "Within the budget, to approved sellers, for 60 minutes, payments go through without a prompt. Buying the same data again within 10 minutes goes through if the earlier one settled and its content arrived.",
@@ -214,7 +211,7 @@ export function LedgerPage({
   return (
     <div ref={page} className="flex h-screen min-w-0 flex-1 bg-[var(--color-ivory-100)] dark:bg-[var(--color-night-900)]">
       {showLib && library}
-      <ListWithDetail
+      <PaymentList
         key={scope}
         head={
           <>
@@ -223,9 +220,7 @@ export function LedgerPage({
           </>
         }
         entries={listEntries}
-        allEntries={entries}
         groupDays
-        onDetail={setDetail}
         showJob={scope === "all"}
         footer={<PartialNote n={partial} onMore={onMore} />}
       />

@@ -33,12 +33,12 @@ const em = "text-[var(--color-ink-700)] dark:text-[#E8E5DD]";
 /** 명령·경로를 보여주는 모노 박스 (helpContent 의 코드 박스와 같은 결). */
 /** 큰 창 상황판의 명령 한 줄 — 복사하기 전에 무엇이 복사되는지 보이게. */
 function Mono({ text }: { text: string }) {
-  return <p className={cn("mt-1.5 font-mono text-[12px] break-all select-text", muted)}>{text}</p>;
+  return <p className={cn("mt-1.5 font-mono text-sm break-all select-text", muted)}>{text}</p>;
 }
 
 function CodeBox({ text }: { text: string }) {
   return (
-    <div className="px-3 py-2 rounded-[10px] bg-[var(--color-ivory-100)] dark:bg-[var(--color-night-900)] border border-[var(--color-ivory-300)] dark:border-[var(--color-night-700)] font-mono text-[11px] leading-relaxed text-[var(--color-ink-900)] dark:text-[#E8E5DD] select-all break-all">
+    <div className="px-3 py-2 rounded-[10px] bg-[var(--color-ivory-100)] dark:bg-[var(--color-night-900)] border border-[var(--color-ivory-300)] dark:border-[var(--color-night-700)] font-mono text-sm leading-relaxed text-[var(--color-ink-900)] dark:text-[#E8E5DD] select-all break-all">
       {text}
     </div>
   );
@@ -58,11 +58,10 @@ function StaleInstallNote({ installed, running }: { installed: string; running: 
     <div
       className={cn(
         "px-4 py-3 rounded-[var(--radius-card)]",
-        "bg-amber-50 dark:bg-amber-950/30",
-        "border border-amber-200 dark:border-amber-900/50",
+        "bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)]",
       )}
     >
-      <p className="text-[12px] leading-relaxed text-amber-800 dark:text-amber-300">
+      <p className="text-sm leading-relaxed text-[var(--color-ink-700)] dark:text-[#B5AFA2]">
         {t(
           <>
             지금 이 앱은 <b>{running}</b> 버전인데, 이 맥에 설치된 Budu는 <b>{installed}</b> 버전이에요.
@@ -104,10 +103,10 @@ function BoardRow({
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className={cn("text-[15px] font-semibold", ink)}>{name}</span>
+          <span className={cn("text-md font-semibold", ink)}>{name}</span>
           {tag}
         </div>
-        {sub && <p className={cn("mt-0.5 text-[13px] leading-relaxed", muted)}>{sub}</p>}
+        {sub && <p className={cn("mt-0.5 text-md leading-relaxed", muted)}>{sub}</p>}
         {children}
       </div>
       {action && <div className="shrink-0 pt-0.5">{action}</div>}
@@ -119,8 +118,8 @@ function StateTag({ ok, label }: { ok?: boolean; label: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-[11px] tracking-tight",
-        ok ? "text-[var(--color-accent)]" : "text-[var(--color-ink-300)]",
+        "inline-flex items-center gap-1 text-sm tracking-tight",
+        ok ? "text-[var(--color-ok)]" : "text-[var(--color-ink-300)]",
       )}
     >
       {ok && <Check size={11} />}
@@ -145,20 +144,20 @@ function ClientCard({
     return (
       <section className="w-full">
         <LedgerHead title={title} tag={tag} />
-        <div className="pt-3.5 text-[14px] leading-relaxed text-[var(--color-ink-500)]">{children}</div>
+        <div className="pt-3.5 text-md leading-relaxed text-[var(--color-ink-500)]">{children}</div>
       </section>
     );
   }
   return (
     <section className={cn(flatCard, "px-5 py-4")}>
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-[13px] tracking-tight text-[var(--color-ink-700)] dark:text-[#E8E5DD]">
+        <h2 className="flex items-center gap-2 text-md tracking-tight text-[var(--color-ink-700)] dark:text-[#E8E5DD]">
           <span className="text-[var(--color-ink-300)]">{icon}</span>
           {title}
         </h2>
         {tag}
       </div>
-      <div className="mt-3 text-[12px] leading-relaxed text-[var(--color-ink-500)]">{children}</div>
+      <div className="mt-3 text-sm leading-relaxed text-[var(--color-ink-500)]">{children}</div>
     </section>
   );
 }
@@ -300,8 +299,8 @@ export function ConnectScreen({
     return (
       <main className="h-screen min-w-0 flex-1 overflow-y-auto px-6 min-[1100px]:px-10 pt-14 pb-12 bg-[var(--color-ivory-100)] dark:bg-[var(--color-night-900)]">
         <PageTitle title={t("AI 연결", "Connect an AI")} />
-        <div className="mt-6 flex items-center gap-2 text-[13px]">
-          <span className={cn("w-2 h-2 rounded-full", agent.connected ? "bg-emerald-500" : isReady ? "bg-[var(--color-accent)]" : "bg-[var(--color-ink-300)]")} aria-hidden />
+        <div className="mt-6 flex items-center gap-2 text-md">
+          <span className={cn("w-2 h-2 rounded-full", agent.connected ? "bg-[var(--color-ok)]" : isReady ? "bg-[var(--color-ok)]" : "bg-[var(--color-ink-300)]")} aria-hidden />
           <span className={inkSoft}>
             {agent.connected
               ? t(`지금 ${agent.client || "AI"} 가 붙어 있어요`, `${agent.client || "An AI"} is attached now`)
@@ -316,7 +315,7 @@ export function ConnectScreen({
           </div>
         )}
         {tempNoPath && (
-          <p className="mt-4 text-[13px] text-amber-600 dark:text-amber-500">
+          <p className="mt-4 text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2]">
             {t("디스크 이미지에서 실행 중이에요. Budu 를 응용 프로그램 폴더로 옮긴 뒤 연결하세요.", "Running from a disk image. Move Budu to Applications first, then connect.")}
           </p>
         )}
@@ -359,23 +358,23 @@ export function ConnectScreen({
             {status != null && !tempNoPath && !status.cli_path && !cliError && <Mono text={status.cli_registered_other ? reRegisterCommand : cliCommand} />}
             {cliError && (
               <div role="alert" className="mt-2 space-y-2 max-w-[640px]">
-                <p className="text-[12px] text-red-500 break-words">{cliError.message}</p>
-                <p className={cn("text-[12px]", muted)}>{t("직접 등록하려면 이 명령을 터미널에 붙여 넣으세요.", "To register by hand, paste this into Terminal.")}</p>
+                <p className="text-sm text-[var(--color-danger)] break-words">{cliError.message}</p>
+                <p className={cn("text-sm", muted)}>{t("직접 등록하려면 이 명령을 터미널에 붙여 넣으세요.", "To register by hand, paste this into Terminal.")}</p>
                 <Mono text={reRegisterCommand} />
-                <button type="button" onClick={() => copy(reRegisterCommand)} className={cn("text-[12px] underline underline-offset-2", inkSoft)}>
+                <button type="button" onClick={() => copy(reRegisterCommand)} className={cn("text-sm underline underline-offset-2", inkSoft)}>
                   {copied ? t("복사됨", "Copied") : t("명령 복사", "Copy command")}
                 </button>
                 {/* remove 는 되돌려 둔 옛 등록도 지운다 — 팝오버와 같은 경고. */}
                 {restoreCmd && (
                   <>
-                    <p className="pt-1 text-[12px] text-amber-700 dark:text-amber-400">
+                    <p className="pt-1 text-sm text-[var(--color-ink-700)] dark:text-[#B5AFA2]">
                       {t(
                         "위 명령의 remove 는 되돌려 둔 기존 budu 등록도 지워요. 뒤의 add 가 또 실패하면 아래 명령으로 원래대로 되돌릴 수 있어요.",
                         "The remove above also deletes the budu entry we put back. If the add fails again, this restores it.",
                       )}
                     </p>
                     <Mono text={restoreCmd} />
-                    <button type="button" onClick={() => copyRestore(restoreCmd)} className={cn("text-[12px] underline underline-offset-2", inkSoft)}>
+                    <button type="button" onClick={() => copyRestore(restoreCmd)} className={cn("text-sm underline underline-offset-2", inkSoft)}>
                       {restoreCopied ? t("복사됨", "Copied") : t("되돌리기 명령 복사", "Copy restore command")}
                     </button>
                   </>
@@ -422,7 +421,7 @@ export function ConnectScreen({
             {status != null && !tempNoPath && (!status.codex_path || codexError) && <Mono text={codexCommand} />}
             {codexError && (
               <div role="alert" className="mt-2 space-y-2 max-w-[640px]">
-                <p className="text-[12px] text-red-500 break-words">{codexError.message}</p>
+                <p className="text-sm text-[var(--color-danger)] break-words">{codexError.message}</p>
                 {codexError.restore_command && <Mono text={codexError.restore_command} />}
               </div>
             )}
@@ -447,7 +446,7 @@ export function ConnectScreen({
         <button
           type="button"
           onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-          className={cn("mt-8 inline-flex items-center gap-1.5 text-[12px] hover:text-[var(--color-accent)] transition-colors", muted)}
+          className={cn("mt-8 inline-flex items-center gap-1.5 text-sm hover:text-[var(--color-ok)] transition-colors", muted)}
         >
           <ExternalLink size={12} />
           {t("GitHub 문서", "Docs on GitHub")}
@@ -471,10 +470,10 @@ export function ConnectScreen({
           {agent.connected ? (
             <div className="flex items-center gap-2.5">
               <span className="relative flex w-2 h-2 shrink-0" aria-hidden>
-                <span className="absolute inline-flex w-full h-full rounded-full bg-[var(--color-accent)] opacity-60 animate-ping" />
-                <span className="relative inline-flex w-2 h-2 rounded-full bg-[var(--color-accent)]" />
+                <span className="absolute inline-flex w-full h-full rounded-full bg-[var(--color-ok)] opacity-60 animate-ping" />
+                <span className="relative inline-flex w-2 h-2 rounded-full bg-[var(--color-ok)]" />
               </span>
-              <p className="text-[13px] text-[var(--color-ink-700)] dark:text-[#E8E5DD]">
+              <p className="text-md text-[var(--color-ink-700)] dark:text-[#E8E5DD]">
                 {t(
                   <>
                     <b className={em}>연결돼 있어요.</b> AI가 결제를 요청하면 승인 팝업이 떠요.
@@ -489,10 +488,10 @@ export function ConnectScreen({
           ) : isReady ? (
             <div className="flex items-start gap-2.5">
               <span
-                className="mt-[7px] inline-flex w-2 h-2 shrink-0 rounded-full bg-[var(--color-accent)] opacity-70"
+                className="mt-[7px] inline-flex w-2 h-2 shrink-0 rounded-full bg-[var(--color-ok)] opacity-70"
                 aria-hidden
               />
-              <p className="text-[12px] leading-relaxed text-[var(--color-ink-500)]">
+              <p className="text-sm leading-relaxed text-[var(--color-ink-500)]">
                 {t(
                   <>
                     <b className={em}>준비돼 있어요.</b> 다시 누를 건 없어요 — Claude를 켜면 알아서
@@ -506,7 +505,7 @@ export function ConnectScreen({
               </p>
             </div>
           ) : (
-            <p className="text-[12px] leading-relaxed text-[var(--color-ink-500)]">
+            <p className="text-sm leading-relaxed text-[var(--color-ink-500)]">
               {t(
                 <>
                   <b className={em}>아직 연결된 AI가 없어요.</b> 아래에서 쓰는 앱을 골라 연결하면,
@@ -601,8 +600,8 @@ export function ConnectScreen({
               {desktopMsg && (
                 <p
                   className={cn(
-                    "text-[11px] leading-relaxed",
-                    desktopMsg.ok ? "text-[var(--color-accent)]" : "text-red-500/90",
+                    "text-sm leading-relaxed",
+                    desktopMsg.ok ? "text-[var(--color-ok)]" : "text-[var(--color-danger)]",
                   )}
                 >
                   {desktopMsg.text}
@@ -683,7 +682,7 @@ export function ConnectScreen({
               </button>
               {cliError && (
                 <div className="space-y-2">
-                  <p className="text-[11px] leading-relaxed text-red-500/90">{cliError.message}</p>
+                  <p className="text-sm leading-relaxed text-[var(--color-danger)]">{cliError.message}</p>
                   {/* 대행이 실패한 사람에게 남은 길 = 수동 등록. 에러 문구가 "아래 명령"을
                       가리키므로 여기서 실제로 보여준다. */}
                   <CodeBox text={reRegisterCommand} />
@@ -699,7 +698,7 @@ export function ConnectScreen({
                       그대로 두면 멀쩡하던 등록만 잃는다. */}
                   {restoreCmd && (
                     <div className="space-y-2 pt-1">
-                      <p className="text-[11px] leading-relaxed text-amber-700 dark:text-amber-400">
+                      <p className="text-sm leading-relaxed text-[var(--color-ink-700)] dark:text-[#B5AFA2]">
                         {t(
                           <>
                             위 명령의 <b>remove</b>는 되돌려 둔 기존 budu 등록도 지워요. 뒤의 add가
@@ -776,14 +775,14 @@ export function ConnectScreen({
               <button
                 type="button"
                 onClick={() => copyPath(mcpPath)}
-                className="inline-flex items-center gap-1 text-[11px] text-[var(--color-ink-500)] hover:text-[var(--color-accent)] transition-colors"
+                className="inline-flex items-center gap-1 text-sm text-[var(--color-ink-500)] hover:text-[var(--color-ok)] transition-colors"
               >
                 {pathCopied ? <Check size={11} /> : <Copy size={11} />} {t("경로 복사", "Copy path")}
               </button>
               <button
                 type="button"
                 onClick={() => openUrl(`${GITHUB_URL}#readme`).catch(() => {})}
-                className="inline-flex items-center gap-1 text-[11px] text-[var(--color-ink-500)] hover:text-[var(--color-accent)] transition-colors"
+                className="inline-flex items-center gap-1 text-sm text-[var(--color-ink-500)] hover:text-[var(--color-ok)] transition-colors"
               >
                 <ExternalLink size={11} /> {t("GitHub 문서", "GitHub docs")}
               </button>

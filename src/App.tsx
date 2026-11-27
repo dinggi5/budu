@@ -89,7 +89,7 @@ function AppView() {
     return (
       <main className={shell}>
         <div />
-        <span className="text-[13px] text-[var(--color-ink-300)] font-mono">
+        <span className="text-md text-[var(--color-ink-300)] font-mono">
           {t("지갑 여는 중…", "Opening your wallet…")}
         </span>
         <div />
@@ -101,7 +101,7 @@ function AppView() {
     return (
       <main className={shell}>
         <div />
-        <p className="text-[12px] text-red-500 font-mono max-w-md text-center">
+        <p className="text-sm text-[var(--color-danger)] font-mono max-w-md text-center">
           {t("지갑 상태 확인 실패: ", "Couldn't read wallet status: ")}
           {statusError}
         </p>

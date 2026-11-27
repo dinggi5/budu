@@ -51,15 +51,15 @@ export function ScreenHeader({
   if (isWindow && railed) {
     return (
       <header className="w-full max-w-md win:max-w-none">
-        <h1 className="text-[24px] leading-tight font-bold tracking-[-0.01em] text-[var(--color-ink-900)] dark:text-[#E8E5DD]">{title}</h1>
-        {sub && <p className="mt-1.5 text-[14px] leading-relaxed text-[var(--color-ink-500)]">{sub}</p>}
+        <h1 className="text-lg leading-tight font-bold tracking-[-0.01em] text-[var(--color-ink-900)] dark:text-[#E8E5DD]">{title}</h1>
+        {sub && <p className="mt-1.5 text-md leading-relaxed text-[var(--color-ink-500)]">{sub}</p>}
       </header>
     );
   }
   return (
-    <header className="w-full max-w-md flex items-center justify-between text-[12px] text-[var(--color-ink-500)]">
+    <header className="w-full max-w-md flex items-center justify-between text-sm text-[var(--color-ink-500)]">
       <span className="flex items-center gap-2">
-        <span className="text-[var(--color-accent)] inline-flex">{icon}</span>
+        <span className="text-[var(--color-ok)] inline-flex">{icon}</span>
         {title}
       </span>
       <button
@@ -81,7 +81,7 @@ export const pageColumn = "w-full max-w-md win:max-w-none";
 export function LedgerHead({ title, tag }: { title: string; tag?: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <h2 className="text-[15px] font-semibold text-[var(--color-ink-900)] dark:text-[#E8E5DD]">{title}</h2>
+      <h2 className="text-md font-semibold text-[var(--color-ink-900)] dark:text-[#E8E5DD]">{title}</h2>
       {tag}
     </div>
   );
@@ -130,14 +130,14 @@ export const inputBase = cn(
   "text-[var(--color-ink-900)] dark:text-[#E8E5DD]",
   "placeholder:text-[var(--color-ink-300)]",
   "outline-none transition-colors duration-[var(--duration-base)]",
-  "focus:border-[var(--color-accent)]",
+  "focus:border-[var(--color-ok)]",
 );
 
 export const primaryBtn = cn(
   "w-full h-11 inline-flex items-center justify-center gap-2",
-  "text-[14px] tracking-tight",
+  "text-md tracking-tight",
   "rounded-[var(--radius-card)]",
-  "bg-[var(--color-accent)] text-white",
+  "bg-[var(--color-ok)] text-white",
   "transition-all duration-[var(--duration-base)] ease-[cubic-bezier(0.4,0,0.2,1)]",
   "hover:not-disabled:brightness-105 hover:not-disabled:translate-y-[-1px]",
   "hover:not-disabled:shadow-[var(--shadow-soft)]",
@@ -147,7 +147,7 @@ export const primaryBtn = cn(
 
 export const secondaryBtn = cn(
   "h-10 inline-flex items-center justify-center gap-2",
-  "text-[13px] tracking-tight",
+  "text-md tracking-tight",
   "rounded-[var(--radius-card)]",
   "border border-[var(--color-ivory-400)] dark:border-[var(--color-night-700)]",
   "bg-[var(--color-ivory-100)] dark:bg-[var(--color-night-900)]",
@@ -160,7 +160,7 @@ export const secondaryBtn = cn(
 export function FlowIcon({ children }: { children: React.ReactNode }) {
   return (
     <div className="flow-icon flex justify-center">
-      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)] text-[var(--color-accent)]">
+      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)] text-[var(--color-ok)]">
         {children}
       </div>
     </div>
@@ -168,7 +168,7 @@ export function FlowIcon({ children }: { children: React.ReactNode }) {
 }
 
 export function FieldHint({ children }: { children: React.ReactNode }) {
-  return <p className="mt-1.5 text-[11px] text-red-500/80">{children}</p>;
+  return <p className="mt-1.5 text-sm text-[var(--color-danger)]">{children}</p>;
 }
 
 export function PwInput({
@@ -195,7 +195,7 @@ export function PwInput({
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
       placeholder={placeholder}
-      className={cn(inputBase, "text-[14px] tracking-wide")}
+      className={cn(inputBase, "text-md tracking-wide")}
     />
   );
 }
@@ -232,9 +232,9 @@ export function HeaderIconButton({
 }) {
   const toneClass =
     tone === "danger"
-      ? "text-red-600 dark:text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+      ? "text-[var(--color-danger)] hover:text-[var(--color-danger-active)] hover:bg-[var(--color-danger-tint)]"
       : tone === "warn"
-        ? "text-amber-600 dark:text-amber-500 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+        ? "text-[var(--color-danger)] hover:text-[var(--color-danger-active)] hover:bg-[var(--color-danger-tint)]"
         : cn(
             "text-[var(--color-ink-500)] dark:text-[#B5AFA2]",
             "hover:text-[var(--color-ink-900)] dark:hover:text-[#E8E5DD]",
@@ -277,11 +277,11 @@ export function ActionButton({
       disabled={disabled}
       className={cn(
         "w-full h-11 px-4 inline-flex items-center justify-center gap-2",
-        "text-[14px] tracking-tight",
+        "text-md tracking-tight",
         "rounded-[var(--radius-card)]",
         "border",
         active
-          ? "border-[var(--color-accent)] bg-[var(--color-ivory-50)] text-[var(--color-accent)]"
+          ? "border-[var(--color-ok)] bg-[var(--color-ivory-50)] text-[var(--color-ok)]"
           : "border-[var(--color-ivory-400)] dark:border-[var(--color-night-700)] bg-[var(--color-ivory-50)] dark:bg-[var(--color-night-800)] text-[var(--color-ink-700)] dark:text-[#B5AFA2]",
         "transition-all duration-[var(--duration-base)] ease-[cubic-bezier(0.4,0,0.2,1)]",
         "hover:not-disabled:bg-[var(--color-ivory-200)] hover:not-disabled:translate-y-[-1px]",
@@ -324,8 +324,8 @@ export function FaucetButton({
       )}
     >
       <span className="text-[var(--color-ink-300)]">{icon}</span>
-      <span className="text-[13px] tracking-tight">{label}</span>
-      <span className="text-[10px] text-[var(--color-ink-300)]">{sub}</span>
+      <span className="text-md tracking-tight">{label}</span>
+      <span className="text-sm text-[var(--color-ink-300)]">{sub}</span>
     </button>
   );
 }
@@ -382,15 +382,15 @@ export function AgentBadge({
           );
   const className = cn(
     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full",
-    "text-[11px] tracking-tight border select-none",
+    "text-sm tracking-tight border select-none",
     "bg-[var(--color-ivory-50)] dark:bg-[var(--color-night-800)]",
     "transition-colors duration-[var(--duration-base)]",
     state === "live"
-      ? "border-[var(--color-accent)] text-[var(--color-accent)]"
+      ? "border-[var(--color-ok)] text-[var(--color-ok)]"
       : state === "ready"
         ? "border-[var(--color-ivory-400)] dark:border-[var(--color-night-700)] text-[var(--color-ink-500)]"
         : "border-[var(--color-ivory-400)] dark:border-[var(--color-night-700)] text-[var(--color-ink-300)]",
-    onClick && "cursor-pointer hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]",
+    onClick && "cursor-pointer hover:border-[var(--color-ok)] hover:text-[var(--color-ok)]",
   );
   const inner = (
     <>
@@ -399,13 +399,13 @@ export function AgentBadge({
         <>
           <span>{t(`${name} 쓰는 중`, `${name} in use`)}</span>
           <span className="relative flex w-1.5 h-1.5" aria-hidden>
-            <span className="absolute inline-flex w-full h-full rounded-full bg-[var(--color-accent)] opacity-60 animate-ping" />
-            <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
+            <span className="absolute inline-flex w-full h-full rounded-full bg-[var(--color-ok)] opacity-60 animate-ping" />
+            <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-[var(--color-ok)]" />
           </span>
         </>
       ) : state === "ready" ? (
         <>
-          <span className="inline-flex w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] opacity-70" aria-hidden />
+          <span className="inline-flex w-1.5 h-1.5 rounded-full bg-[var(--color-ok)] opacity-70" aria-hidden />
           <span>{t("준비됨 · Claude를 켜면 자동으로 붙어요", "Ready · attaches when you open Claude")}</span>
         </>
       ) : (
@@ -448,7 +448,7 @@ export function Switch({
       className={cn(
         "shrink-0 relative w-10 h-6 rounded-full transition-colors duration-[var(--duration-base)]",
         checked
-          ? "bg-[var(--color-accent)]"
+          ? "bg-[var(--color-ok)]"
           : "bg-[var(--color-ivory-400)] dark:bg-[var(--color-night-700)]",
       )}
     >

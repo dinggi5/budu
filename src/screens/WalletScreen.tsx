@@ -24,7 +24,7 @@ import { shell, modalOverlay, modalCard, secondaryBtn, ActionButton, HeaderIconB
 import { Rail, WindowHome, type RailPage } from "@/screens/WindowHome";
 import { BalanceCard } from "@/components/BalanceCard";
 import { ReceiveCard } from "@/components/ReceiveCard";
-import { SendSolSheet } from "@/components/SendSolSheet";
+import { SendSheet } from "@/components/SendSheet";
 import { PaymentApprovalModal } from "@/components/PaymentApprovalModal";
 import { BackupNag, LockBanner, SettingsBrokenBanner } from "@/components/banners";
 import { SessionBar, UnlockSessionModal } from "@/components/SessionBar";
@@ -42,7 +42,7 @@ import { isApprover, isWindow } from "@/lib/win";
 import { notifySync, useSync } from "@/lib/sync";
 import { ApprovalElsewhereBanner } from "@/components/banners";
 
-type Mode = "balance" | "receive" | "sendSol";
+type Mode = "balance" | "receive" | "send";
 
 
 /** 언어를 바꿔 다시 읽은 큰 창이면 설정으로 돌아간다 — 모듈이 읽힐 때 한 번 꺼내 두고, 첫 마운트가 한 번만 쓴다
@@ -570,8 +570,8 @@ export function WalletScreen({
               exit={{ opacity: 0 }}
             >
               <div className={cn(modalCard, "px-6 py-6")} role="alertdialog" aria-modal="true">
-                <p className="text-[15px] font-semibold">{t("저장하지 않은 변경이 있어요", "You have unsaved changes")}</p>
-                <p className="mt-2 text-[13px] leading-relaxed text-[var(--color-ink-500)]">
+                <p className="text-md font-semibold">{t("저장하지 않은 변경이 있어요", "You have unsaved changes")}</p>
+                <p className="mt-2 text-md leading-relaxed text-[var(--color-ink-500)]">
                   {t("지금 떠나면 바꾼 설정이 사라져요.", "Leaving now discards the settings you changed.")}
                 </p>
                 <div className="mt-5 grid grid-cols-2 gap-2">
@@ -581,7 +581,7 @@ export function WalletScreen({
                   <button
                     type="button"
                     // 보라는 돈이 걸린 곳에만 — 버리기는 붉은 글자의 보통 단추.
-                    className={cn(secondaryBtn, "text-red-500")}
+                    className={cn(secondaryBtn, "text-[var(--color-danger)]")}
                     onClick={() => {
                       const p = leaveTo;
                       setLeaveTo(null);
@@ -639,7 +639,7 @@ export function WalletScreen({
   // 판매자 — 큰 창 전용.
   // 읽어 온 내역이 꽉 찼으면 더 오래된 기록이 있을 수 있다 — 합계가 «최근 N건 기준» 임을 말한다.
   const partial = history && historyMore ? history.length : undefined;
-  // 작업과 내역(장부) — 큰 창 전용(팝오버 미니엔 들어오는 길이 없다). 왼쪽 단이 작업 목록이라 오른쪽 패널은 없다.
+  // 작업 내역(장부) — 큰 창 전용(팝오버 미니엔 들어오는 길이 없다). 왼쪽 단이 작업 목록이라 오른쪽 패널은 없다.
   if (showHistory) {
     return withModal(
       framed(
@@ -713,7 +713,7 @@ export function WalletScreen({
             history={history}
             onOpenJob={openJob}
             onReceive={() => setMode("receive")}
-            onSendSol={() => setMode("sendSol")}
+            onSend={() => setMode("send")}
             panelOpen={homePanel === "open"}
             onPanel={(o) => setHomePanel(o ? "open" : "closed")}
             notices={anyNotice ? notices : null}
@@ -736,10 +736,11 @@ export function WalletScreen({
               </div>
             </motion.div>
           )}
-          {mode === "sendSol" && (
-            <SendSolSheet
-              key="sendSol"
-              balance={balances?.sol}
+          {mode === "send" && (
+            <SendSheet
+              key="send"
+              sol={balances?.sol}
+              usdc={balances?.usdc}
               onClose={() => setMode("balance")}
               onSent={() => void refreshBalances()}
             />
@@ -761,15 +762,15 @@ export function WalletScreen({
   return withModal(
     <main className={shell}>
       <div className="w-full max-w-md flex flex-col gap-4">
-        <header className="flex items-center justify-between text-[12px]">
+        <header className="flex items-center justify-between text-sm">
           {/* 지금 어느 계정·어느 체인인지가 잔액보다 먼저. */}
           <div className="flex min-w-0 items-center gap-2 text-[var(--color-ink-900)] dark:text-[#E8E5DD] font-medium tracking-tight">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" aria-hidden />
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-ok)]" aria-hidden />
             <span className="truncate">{accountName(account)}</span>
             <span
               className={cn(
                 "shrink-0 font-normal",
-                chain.testnet ? "text-[var(--color-ink-500)]" : "text-[var(--color-accent)] font-medium",
+                chain.testnet ? "text-[var(--color-ink-500)]" : "text-[var(--color-ok)] font-medium",
               )}
             >
               · {chain.name}
@@ -779,10 +780,10 @@ export function WalletScreen({
             <span
               className={cn(
                 "mr-1 inline-flex items-center gap-1.5",
-                agent.connected ? "text-emerald-600 dark:text-emerald-500" : "text-[var(--color-ink-300)]",
+                agent.connected ? "text-[var(--color-ok)]" : "text-[var(--color-ink-300)]",
               )}
             >
-              <span className={cn("w-1.5 h-1.5 rounded-full", agent.connected ? "bg-emerald-500" : "bg-[var(--color-ink-300)]")} aria-hidden />
+              <span className={cn("w-1.5 h-1.5 rounded-full", agent.connected ? "bg-[var(--color-ok)]" : "bg-[var(--color-ink-300)]")} aria-hidden />
               {agent.connected ? agent.client || t("AI 연결됨", "AI connected") : t("AI 연결 안 됨", "AI not connected")}
             </span>
             <HeaderIconButton

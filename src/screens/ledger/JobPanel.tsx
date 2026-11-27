@@ -41,12 +41,12 @@ export function JobPanel({
   return (
     <aside className={cn("min-w-0 px-6 pt-14 pb-6 overflow-y-auto", sunken, className)} aria-label={t("작업과 일지", "Job and journal")}>
       <div className="flex items-center justify-between mb-3 min-h-8">
-        <h2 className={cn("text-[13px] font-semibold", inkSoft)}>{t("진행 중인 작업", "Job in progress")}</h2>
+        <h2 className={cn("text-md font-semibold", inkSoft)}>{t("진행 중인 작업", "Job in progress")}</h2>
       </div>
       {job ? (
         <div>
           <RenameField size="sm" key={job.job} value={names.label(job.job)} placeholder={job.job} onSave={(n) => renameJob(job.job, n)} />
-          <p className={cn("mt-1 text-[12px] num", muted)}>
+          <p className={cn("mt-1 text-sm num", muted)}>
             {receipt.note(job.job) ??
               (locked
                 ? t("긴급 잠금 중, 결제 멈춤", "Emergency lock on, payments paused")
@@ -62,7 +62,7 @@ export function JobPanel({
           </div>
         </div>
       ) : (
-        <p className={cn("text-[13px] leading-relaxed", muted)}>
+        <p className={cn("text-md leading-relaxed", muted)}>
           {locked ? t("긴급 잠금 중이에요.", "Emergency lock is on.") : t("진행 중인 작업이 없어요.", "No job in progress.")}
         </p>
       )}
@@ -72,7 +72,7 @@ export function JobPanel({
         type="button"
         onClick={() => setJournal(journal === "open" ? "closed" : "open")}
         aria-expanded={journal === "open"}
-        className={cn("mt-10 mb-[18px] w-full flex items-center justify-between text-[13px] font-semibold", inkSoft)}
+        className={cn("mt-10 mb-[18px] w-full flex items-center justify-between text-md font-semibold", inkSoft)}
       >
         <span>{t("일지", "Journal")}</span>
         <ChevronDown
@@ -92,9 +92,9 @@ export function JobPanel({
             className="overflow-hidden"
           >
             {entries == null ? (
-              <p className={cn("text-[13px]", faint)}>{t("불러오는 중…", "Loading…")}</p>
+              <p className={cn("text-md", faint)}>{t("불러오는 중…", "Loading…")}</p>
             ) : rows.length === 0 ? (
-              <p className={cn("text-[13px] leading-relaxed", muted)}>{t("아직 결제가 없어요.", "No payments yet.")}</p>
+              <p className={cn("text-md leading-relaxed", muted)}>{t("아직 결제가 없어요.", "No payments yet.")}</p>
             ) : (
               <ol>
                 {rows.map((e, i) => (
@@ -127,29 +127,29 @@ function JournalRow({ e }: { e: HistoryEntry }) {
         <span
           className={cn(
             "absolute left-0 top-1 w-[9px] h-[9px] rounded-full bg-[var(--color-ivory-50)] dark:bg-[var(--color-night-800)] ring-2 ring-inset",
-            f.tone === "ok" && "ring-emerald-500",
-            f.tone === "bad" && "ring-red-500",
+            f.tone === "ok" && "ring-[var(--color-ok)]",
+            f.tone === "bad" && "ring-[var(--color-danger)]",
             f.tone === "idle" && "ring-[var(--color-ink-300)]",
           )}
           aria-hidden
         />
-        <span className={cn("block text-[12px] num", muted)}>
+        <span className={cn("block text-sm num", muted)}>
           {when(e.ts)} · {f.state}
         </span>
-        <span className={cn("mt-0.5 flex justify-between gap-3 text-[14px] font-medium", ink)}>
+        <span className={cn("mt-0.5 flex justify-between gap-3 text-md font-medium", ink)}>
           <span className="min-w-0 truncate">{journalLine(e)}</span>
-          <span className={cn("num shrink-0", f.tone === "bad" && !f.struck && "text-red-500", f.struck && "line-through text-[var(--color-ink-300)]")}>
+          <span className={cn("num shrink-0", f.tone === "bad" && !f.struck && "text-[var(--color-danger)]", f.struck && "line-through text-[var(--color-ink-300)]")}>
             {money(e.amount)}
           </span>
         </span>
         {/* «다시 내지 마세요» 같은 경고는 누르지 않아도 보인다. */}
-        {f.undelivered && !open && <span className="mt-0.5 block text-[12px] text-red-500/90">{f.why}</span>}
+        {f.undelivered && !open && <span className="mt-0.5 block text-sm text-[var(--color-danger)]">{f.why}</span>}
       </button>
       {open && (
-        <dl className={cn("mt-2 ml-[22px] flex flex-col gap-1.5 text-[12px] leading-relaxed break-all", muted)}>
-          {reason && <dd className={f.tone === "bad" ? "text-red-500/90" : ""}>{reason}</dd>}
-          <dd className="font-mono text-[11px]">{e.resource || e.to}</dd>
-          {e.settle_tx && <dd className="font-mono text-[11px]">tx {e.settle_tx}</dd>}
+        <dl className={cn("mt-2 ml-[22px] flex flex-col gap-1.5 text-sm leading-relaxed break-all", muted)}>
+          {reason && <dd className={f.tone === "bad" ? "text-[var(--color-danger)]" : ""}>{reason}</dd>}
+          <dd className="font-mono text-sm">{e.resource || e.to}</dd>
+          {e.settle_tx && <dd className="font-mono text-sm">tx {e.settle_tx}</dd>}
         </dl>
       )}
     </li>

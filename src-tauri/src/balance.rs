@@ -20,7 +20,7 @@ pub(crate) struct Balances {
 }
 
 /// 실패 갈래 → 사람 말 (순수 — 테스트가 직접 부른다). URL 은 가린다(지정 RPC 의 API 키).
-fn describe(e: BalanceError, want_genesis: &str) -> String {
+pub(crate) fn describe(e: BalanceError, want_genesis: &str) -> String {
     match e {
         // 실제로 본 원인은 EVM 시절 파일의 `0x…` 주소 — 앱의 「옛 형식 지갑」 화면이 비번 한 번으로 고친다.
         BalanceError::BadAddress => ts!(

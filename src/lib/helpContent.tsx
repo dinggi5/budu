@@ -152,7 +152,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           <b className={em}>비밀번호</b> — 기본은 결제마다 비밀번호를 입력해야 승인됩니다(아래 자율 결제·작업 예산을 켠 경우만 예외).
         </li>
         <li>
-          <b className={em}>한도</b> — 결제당 한도, 하루 한도 등을 자세히 설정할 수 있습니다. 한도는 AI 의 USDC 결제에 걸려요 — 직접 하는 SOL 보내기는 한도 밖이고 언제나 비밀번호를 물어요.
+          <b className={em}>한도</b> — 결제당 한도, 하루 한도 등을 자세히 설정할 수 있습니다. 한도는 AI 의 결제에 걸려요 — 홈의 «보내기»(USDC·SOL 을 직접 보내는 것)는 한도 밖이고 언제나 비밀번호를 물어요.
         </li>
         <li>
           <b className={em}>긴급 잠금</b> — 헤더의 방패 버튼을 켜면 모든 결제가 즉시 막힙니다.
@@ -203,7 +203,7 @@ export const HELP_SECTIONS: HelpSection[] = [
   {
     id: "backup",
     icon: <KeyRound size={22} />,
-    title: t("시드 백업 (제일 중요)", "Seed backup (most important)"),
+    title: t("시드 백업", "Seed backup"),
     body: t(
       <div className="space-y-2.5">
         <p>

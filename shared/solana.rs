@@ -326,7 +326,7 @@ fn latest_blockhash_from(v: &Value) -> Result<LatestBlockhash, String> {
 /// 받는 쪽(`owner`)의 `mint` 토큰 계정(ATA)이 체인에 있나.
 /// 없으면 TransferChecked 가 실패해 정산이 안 될 결제를 사람 앞에 띄우는 셈이다. 있는데 모양이 이상하면(남의 민트·
 /// Token-2022·decimals 다름) 오류 — 우리가 만들 송금이 그 계정에 들어갈 수 없다. 클러스터 확인을 같이 한다.
-#[allow(dead_code)] // MCP 만 부른다 (GUI 빌드에선 안 쓰임)
+// MCP(판매자 계좌 확인)와 GUI(USDC 보내기의 받는 쪽 계좌 확인)가 같이 쓴다.
 pub async fn token_account_exists(
     client: &reqwest::Client,
     rpc_url: &str,

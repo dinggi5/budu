@@ -51,7 +51,7 @@ mod policy;
 mod receipt;
 mod session;
 mod settings;
-mod sol_send;
+mod send;
 /// 솔라나 주소·ATA·잔액 RPC — MCP 와 **같은 소스 파일**. 조건은 파일 머리.
 #[path = "../../shared/solana.rs"]
 mod solana;
@@ -275,10 +275,11 @@ pub fn run() {
             connect::connect_claude_desktop,
             connect::connect_claude_code,
             connect::connect_codex,
-            sol_send::send_sol,
-            sol_send::get_sol_sends,
-            sol_send::check_sol_sends,
-            sol_send::sol_rules
+            send::send_funds,
+            send::get_sends,
+            send::check_sends,
+            send::send_rules,
+            send::usdc_send_quote
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

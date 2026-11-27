@@ -52,8 +52,8 @@ export function LegacyWalletScreen({ onDone }: { onDone: (s: WalletStatus) => vo
 
   return (
     <main className={shell}>
-      <header className="w-full max-w-md flex items-center gap-2 text-[12px] text-[var(--color-ink-500)]">
-        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" aria-hidden />
+      <header className="w-full max-w-md flex items-center gap-2 text-sm text-[var(--color-ink-500)]">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-ok)]" aria-hidden />
         Budu
       </header>
 
@@ -61,10 +61,10 @@ export function LegacyWalletScreen({ onDone }: { onDone: (s: WalletStatus) => vo
         <FlowIcon>
           <Wrench size={22} />
         </FlowIcon>
-        <h1 className="mt-5 text-center text-[19px] tracking-tight">
+        <h1 className="mt-5 text-center text-lg tracking-tight">
           {t("옛 형식 지갑이에요", "This wallet uses an old format")}
         </h1>
-        <p className="mt-2 text-center text-[13px] leading-relaxed text-[var(--color-ink-500)]">
+        <p className="mt-2 text-center text-md leading-relaxed text-[var(--color-ink-500)]">
           {t(
             <>
               이 지갑 파일엔 이더리움 주소가 적혀 있어요.
@@ -83,14 +83,14 @@ export function LegacyWalletScreen({ onDone }: { onDone: (s: WalletStatus) => vo
           <PwInput value={pw} onChange={setPw} placeholder={t("비밀번호", "Password")} autoFocus onEnter={submit} />
         </div>
 
-        {error && <p className="mt-4 text-[12px] text-red-500 font-mono break-all">{error}</p>}
+        {error && <p className="mt-4 text-sm text-[var(--color-danger)] font-mono break-all">{error}</p>}
 
         <button type="button" onClick={submit} disabled={!pw || busy} className={cn(primaryBtn, "mt-6")}>
           {busy ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
           {t("주소 고치기", "Fix address")}
         </button>
 
-        <p className="mt-3 text-center text-[11px] leading-relaxed text-[var(--color-ink-300)]">
+        <p className="mt-3 text-center text-sm leading-relaxed text-[var(--color-ink-300)]">
           {t(
             "12단어와 솔라나 쪽 돈은 그대로예요. 옛 이더리움 주소로 받은 것이 있다면 같은 12단어로 이더리움 지갑에서 계속 쓸 수 있어요.",
             "Your 12 words and Solana funds stay as they are. Anything sent to the old Ethereum address is still reachable with the same 12 words in an Ethereum wallet.",

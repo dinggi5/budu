@@ -101,6 +101,7 @@ sequenceDiagram
 | 4 | `src-tauri/src/ipc.rs` · `ipc/watchdog.rs` | 요청·결과 파일, 승인 중재(동시에 한 건), 웹뷰가 잠들어도 창을 깨우는 감시 스레드 |
 | 5 | `src-tauri/src/confirm.rs` · `history.rs` | 정산 확정, 감사 로그(내역) |
 | 6 | `budu-mcp/src/flow.rs` · `x402.rs` · `payment.rs` | 402 고르기, 리다이렉트 가드, 한 번에 한 결제, 승인 대기, 결과 JSON |
+| 6½ | `src-tauri/src/send.rs` | 사람이 하는 «보내기»(SOL: System Transfer · USDC: ATA CreateIdempotent + TransferChecked). AI 길과 따로, 늘 비밀번호. rent 는 보낼 때 실측 |
 | 7 | `src-tauri/src/keys.rs` · `wallet.rs` | BIP-39 → SLIP-0010 ed25519(팬텀과 같은 경로), Argon2id + AES-256-GCM |
 | — | `shared/policy.rs` | 두 크레이트가 같이 읽는 파일 규칙 |
 
@@ -131,7 +132,7 @@ sequenceDiagram
 | `payment_request.json` / `payment_result.json` | MCP ↔ GUI | 결제 요청 한 건 / 그 결과 |
 | `app_alive.json` / `mcp_alive.json` | 서로 | 하트비트(앱이 꺼져 있으면 MCP 가 즉시 안내) |
 | `history[-<체인>][-a<계정>].json` | GUI → MCP | 감사 로그. 넘친 기록은 옆의 `.archive.jsonl` |
-| `sol_sends[-<체인>][-a<계정>].json` | GUI | 사람이 직접 한 SOL 보내기 기록(USDC 내역·한도와 따로). «보내는 중» 은 체인 확인·블록해시 만료로 결말 |
+| `sol_sends[-<체인>][-a<계정>].json` | GUI | 사람이 직접 한 «보내기»(USDC·SOL, 줄마다 `token`) 기록 — AI 결제 내역·한도와 따로. 파일 이름은 SOL 만 보내던 때 그대로. «보내는 중» 은 체인 확인·블록해시 만료로 결말 |
 | `x402_settlements[-<체인>].json` | MCP → GUI | 판매자가 준 정산 결과와 «본문 받음» 신호 |
 | `spend` · `trusted` · `job_names` `[-<체인>].json` | GUI | 오늘 사용액 · 화이트리스트 · 작업 별명 |
 | `lock.json` | GUI | 긴급 잠금 |

@@ -48,7 +48,7 @@ export function Section({
     >
       <div className="flex items-center gap-1.5">
         {icon}
-        <span className="text-[13px] tracking-tight">{title}</span>
+        <span className="text-md tracking-tight">{title}</span>
       </div>
       <div className="mt-3">{children}</div>
     </motion.section>
@@ -73,10 +73,10 @@ export function AboutSection() {
   }, []);
 
   return (
-    <Section icon={<Info size={13} className="text-[var(--color-accent)]" />} title={t("정보", "About")} delay={0.2}>
+    <Section icon={<Info size={13} className="text-[var(--color-ok)]" />} title={t("정보", "About")} delay={0.2}>
       <div className="flex items-baseline justify-between">
-        <span className="text-[13px] tracking-tight">Budu</span>
-        <span className="num font-mono text-[11px] text-[var(--color-ink-300)]">
+        <span className="text-md tracking-tight">Budu</span>
+        <span className="num font-mono text-sm text-[var(--color-ink-300)]">
           {version ? `v${version}` : "—"}
         </span>
       </div>
@@ -84,7 +84,7 @@ export function AboutSection() {
       {/* 개발 29에서 현재형으로 복원 — 저장소가 실제로 공개됐다. 다시 비공개로 돌리는 일이
           생기면 이 문장부터 미래형으로 되돌릴 것. 신뢰의 근거로 내세운 문장이라, 사실과
           어긋나면 뒤에 단서를 붙이는 걸로는 못 고친다. */}
-      <p className="mt-3 text-[13px] leading-relaxed text-[var(--color-ink-500)]">
+      <p className="mt-3 text-md leading-relaxed text-[var(--color-ink-500)]">
         {t(
           "Budu는 소스 코드가 MIT 라이선스로 공개돼 있어요. 열쇠와 돈을 다루는 코드를 직접 읽어 확인하고, 직접 빌드해서 쓸 수 있어요.",
           "Budu's source is public under the MIT license. You can read the code that handles your key and your money, and build it yourself.",
@@ -93,7 +93,7 @@ export function AboutSection() {
       {/* 저장(로컬)과 전송(RPC)을 나눠 쓴 건 개발 27 판단 그대로. 개발 29 에서 한 겹 더 —
           "내역이 ~/.budu 에만 있다"가 "내 거래가 비공개다"로 읽히면 안 된다. 보낸 거래는
           공개 체인에 영구히 남는다. 지갑에서 이 오해는 값이 비싸다. */}
-      <p className="mt-1.5 text-[11px] leading-snug text-[var(--color-ink-300)]">
+      <p className="mt-1.5 text-sm leading-snug text-[var(--color-ink-300)]">
         {t(
           <>
             지갑 키·설정·거래 내역은 이 컴퓨터의 <span className="font-mono">~/.budu</span>{" "}
@@ -113,16 +113,16 @@ export function AboutSection() {
         <button
           type="button"
           onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-          className="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-accent)] hover:underline transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--color-ok)] hover:underline transition-colors"
         >
           <ExternalLink size={12} />
           {t("소스 코드 보기", "Read the source")}
         </button>
-        <span className="text-[11px] text-[var(--color-ink-300)]">{t("MIT 라이선스", "MIT license")}</span>
+        <span className="text-sm text-[var(--color-ink-300)]">{t("MIT 라이선스", "MIT license")}</span>
       </div>
       {/* 글꼴 고지 — 앱에 Pretendard 를 함께 담아 배포하므로 OFL 1.1 이 고지를 요구한다.
           라이선스 전문은 번들 안(fonts/LICENSE-Pretendard.txt)에도 같이 들어간다. */}
-      <p className="mt-3 text-[10px] text-[var(--color-ink-300)]">
+      <p className="mt-3 text-sm text-[var(--color-ink-300)]">
         {t("글꼴 Pretendard — SIL Open Font License 1.1", "Pretendard typeface — SIL Open Font License 1.1")}
       </p>
     </Section>
@@ -160,7 +160,7 @@ export function TrustedAddrsModal({
         className={cn(modalCard, "px-7 py-6")}
       >
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-[11px] tracking-[0.04em] text-[var(--color-accent)]">
+          <span className="flex items-center gap-1.5 text-sm tracking-[0.04em] text-[var(--color-ok)]">
             <ShieldCheck size={13} />
             {t("화이트리스트", "Whitelist")}
           </span>
@@ -173,7 +173,7 @@ export function TrustedAddrsModal({
             <X size={14} />
           </button>
         </div>
-        <p className="mt-3 text-[12px] leading-relaxed text-[var(--color-ink-500)]">
+        <p className="mt-3 text-sm leading-relaxed text-[var(--color-ink-500)]">
           {t(
             "비번으로 승인하면 자동으로 학습돼요. 철회하면 다음 결제 때 다시 비번을 받아요.",
             "Approving with your password adds an address here. Remove one and the next payment to it asks again.",
@@ -181,7 +181,7 @@ export function TrustedAddrsModal({
         </p>
 
         {addrs.length === 0 ? (
-          <p className="mt-5 mb-1 text-[12px] text-[var(--color-ink-300)]">
+          <p className="mt-5 mb-1 text-sm text-[var(--color-ink-300)]">
             {t(
               "모두 철회했어요. 비번으로 승인하면 다시 학습돼요.",
               "All removed. Approving with your password adds them back.",
@@ -194,26 +194,26 @@ export function TrustedAddrsModal({
                 key={addr}
                 className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 hover:bg-[var(--color-ivory-200)] dark:hover:bg-[var(--color-night-700)]/50 transition-colors"
               >
-                <span className="num font-mono text-[12px] text-[var(--color-ink-500)]" title={addr}>
+                <span className="num font-mono text-sm text-[var(--color-ink-500)]" title={addr}>
                   {shortenAddress(addr)}
                 </span>
                 {confirming === addr ? (
                   <span className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] text-[var(--color-ink-500)]">{t("철회할까요?", "Remove it?")}</span>
+                    <span className="text-sm text-[var(--color-ink-500)]">{t("철회할까요?", "Remove it?")}</span>
                     <button
                       type="button"
                       onClick={() => {
                         setConfirming(null);
                         void onRevoke(addr);
                       }}
-                      className="text-[11px] font-medium text-red-500 hover:underline"
+                      className="text-sm font-medium text-[var(--color-danger)] hover:underline"
                     >
                       {t("철회", "Remove")}
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirming(null)}
-                      className="text-[11px] text-[var(--color-ink-300)] hover:underline"
+                      className="text-sm text-[var(--color-ink-300)] hover:underline"
                     >
                       {t("취소", "Cancel")}
                     </button>
@@ -227,7 +227,7 @@ export function TrustedAddrsModal({
                       `Remove ${shortenAddress(addr)}`,
                     )}
                     title={t("화이트리스트에서 빼기", "Remove from the whitelist")}
-                    className="shrink-0 p-1 rounded-md text-[var(--color-ink-300)] hover:text-red-500 transition-colors"
+                    className="shrink-0 p-1 rounded-md text-[var(--color-ink-300)] hover:text-[var(--color-danger-active)] transition-colors"
                   >
                     <Trash2 size={13} />
                   </button>
@@ -273,8 +273,8 @@ export function ToggleRow({
   return (
     <div className="flex items-center justify-between px-4 py-3.5">
       <div className="min-w-0 pr-3">
-        <p className="text-[13px] tracking-tight">{title}</p>
-        <p className="mt-0.5 text-[11px] leading-snug text-[var(--color-ink-300)]">{desc}</p>
+        <p className="text-md tracking-tight">{title}</p>
+        <p className="mt-0.5 text-sm leading-snug text-[var(--color-ink-300)]">{desc}</p>
       </div>
       <Switch checked={checked} onToggle={onToggle} label={title} />
     </div>
@@ -306,11 +306,11 @@ export function LanguageRow({ dirty }: { dirty: boolean }) {
   return (
     <div className="flex items-center justify-between px-4 py-3.5">
       <div className="min-w-0 pr-3">
-        <p className="text-[13px] tracking-tight">{t("언어", "Language")}</p>
+        <p className="text-md tracking-tight">{t("언어", "Language")}</p>
         <p
           className={cn(
-            "mt-0.5 text-[11px] leading-snug",
-            failed ? "text-red-500/90" : "text-[var(--color-ink-300)]",
+            "mt-0.5 text-sm leading-snug",
+            failed ? "text-[var(--color-danger)]" : "text-[var(--color-ink-300)]",
           )}
         >
           {failed
@@ -337,7 +337,7 @@ export function LanguageRow({ dirty }: { dirty: boolean }) {
             aria-pressed={o.code === current}
             disabled={dirty}
             className={cn(
-              "h-7 px-3 rounded-[var(--radius-pill)] text-[12px] tracking-tight",
+              "h-7 px-3 rounded-[var(--radius-pill)] text-sm tracking-tight",
               "transition-colors duration-[var(--duration-base)]",
               "disabled:opacity-40 disabled:cursor-not-allowed",
               o.code === current
@@ -370,17 +370,17 @@ export function UnitInput({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] text-[var(--color-ink-500)]">{label}</span>
+      <span className="text-sm text-[var(--color-ink-500)]">{label}</span>
       <span className="relative block mt-1.5">
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           inputMode={intOnly ? "numeric" : "decimal"}
-          className={cn(inputBase, "num text-[14px] pr-14")}
+          className={cn(inputBase, "num text-md pr-14")}
         />
         <span
           aria-hidden
-          className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-[var(--color-ink-300)]"
+          className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-[var(--color-ink-300)]"
         >
           {unit}
         </span>
@@ -408,8 +408,8 @@ export function LimitGroup({
   return (
     <div className="rounded-[var(--radius-card)] border border-[var(--color-ivory-300)] dark:border-[var(--color-night-700)] px-4 py-4 win:border-0 win:p-0">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] tracking-tight">{token}</span>
-        <span className="text-[11px] text-[var(--color-ink-300)] num">
+        <span className="text-md tracking-tight">{token}</span>
+        <span className="text-sm text-[var(--color-ink-300)] num">
           {/* 정확한 값 — 0.045 를 「0.05 사용」으로 반올림하면 한도 계산과 어긋나 보인다 */}
           {t(`오늘 ${used} 사용`, `${used} used today`)}
         </span>

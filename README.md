@@ -21,7 +21,7 @@
 기본 네트워크는 **솔라나 데브넷**입니다 — 시험용 토큰이라 실제 돈이 들지 않습니다. 홈의 «받기» 로 주소를 복사해 아래에서 받습니다.
 
 - 데브넷 USDC: [faucet.circle.com](https://faucet.circle.com) → *Solana Devnet* 을 고르고 주소를 붙여 넣기. 결제는 USDC 만 씁니다(SOL 필요 없음).
-- 데브넷 SOL(선택, «SOL 보내기» 를 해 볼 때만): [faucet.solana.com](https://faucet.solana.com).
+- 데브넷 SOL(선택, «보내기» 를 해 볼 때만 — USDC 를 보내도 수수료는 SOL 로 냅니다): [faucet.solana.com](https://faucet.solana.com).
 
 ## 개발
 

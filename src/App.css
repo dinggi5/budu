@@ -53,12 +53,30 @@
   --color-ink-500: #8A8A85;
   --color-ink-300: #B4B4AF;
 
-  /* 강조 — 부두 보라 (1점만). 솔라나 #9945FF 를 한 단 눌렀다. 바꾸는 건 이 다섯 슬롯뿐이다. */
-  --color-accent: #7A5AF8;
-  --color-accent-hover: #6B4BEA;
-  --color-accent-active: #5B3DD6;
-  --color-accent-tint: #F1EDFE;
-  --color-accent-on-dark: #A893FF;
+  /* 색은 회색 + 두 가지뿐이다(PLAN §5). 각 색은 뜻 하나만 싣는다 — 장식 색은 없다.
+     초록 = 괜찮다·지금 쓸 수 있다(주요 단추·게이지·연결됨·정산 완료) / 빨강 = 멈춰·확인해(차단·실패·잠금·메인넷·백업 안 함).
+     코드에서 red-/amber-/emerald- 같은 팔레트 색을 직접 쓰지 않는다 — scripts/check.sh 가 막는다.
+     다크는 아래 @media 에서 같은 이름의 값을 바꾼다(그래서 dark: 색 클래스가 필요 없다). */
+  --color-ok: #03B26C;
+  --color-ok-hover: #029E60;
+  --color-ok-active: #028A54;
+  --color-ok-tint: #E6F7EF;
+  --color-danger: #F04452;
+  --color-danger-active: #E42939;
+  --color-danger-tint: #FDEDEE;
+
+  /* 글자 크기는 세 단계뿐이다(PLAN §5): 큰 18 · 중간 14 · 작은 12. 예외는 홈 잔액 숫자(hero) 하나.
+     Tailwind 기본 크기(text-xs·text-base·text-2xl …)는 지운다 — 새 화면이 단계를 다시 늘리지 못하게.
+     위계는 크기 대신 굵기(400/600)와 색(진한/연한 회색)으로. text-[Npx] 직접 쓰기는 scripts/check.sh 가 막는다. */
+  --text-*: initial;
+  --text-sm: 12px;
+  --text-sm--line-height: 1.5;
+  --text-md: 14px;
+  --text-md--line-height: 1.55;
+  --text-lg: 18px;
+  --text-lg--line-height: 1.4;
+  --text-hero: 56px;
+  --text-hero--line-height: 1;
 
   /* 다크 — 잉크 베이스 (살짝 갈색) */
   --color-night-900: #14130F;
@@ -116,6 +134,13 @@
 @media (prefers-color-scheme: dark) {
   :root {
     color: #E8E5DD;
+    --color-ok: #2FCB85;
+    --color-ok-hover: #45D594;
+    --color-ok-active: #22B474;
+    --color-ok-tint: rgba(47, 203, 133, 0.14);
+    --color-danger: #FF5E6A;
+    --color-danger-active: #FF7A84;
+    --color-danger-tint: rgba(255, 94, 106, 0.14);
   }
 }
 

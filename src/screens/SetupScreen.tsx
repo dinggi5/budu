@@ -113,17 +113,17 @@ export function SetupScreen({
 
   return (
     <main className={shell}>
-      <header className="w-full max-w-md flex items-center gap-2 text-[12px] text-[var(--color-ink-500)]">
-        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" aria-hidden />
+      <header className="w-full max-w-md flex items-center gap-2 text-sm text-[var(--color-ink-500)]">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-ok)]" aria-hidden />
         Budu
       </header>
 
       <motion.section {...enter} className={cn(cardBase, "max-w-md px-8 py-10")}>
         <FlowIcon>{isImport ? <KeyRound size={22} /> : <ShieldCheck size={22} />}</FlowIcon>
 
-        <h1 className="mt-5 text-center text-[19px] tracking-tight">{title}</h1>
+        <h1 className="mt-5 text-center text-lg tracking-tight">{title}</h1>
 
-        <p className="mt-2 text-center text-[13px] leading-relaxed text-[var(--color-ink-500)]">
+        <p className="mt-2 text-center text-md leading-relaxed text-[var(--color-ink-500)]">
           {isImport ? (
             t(
               <>
@@ -182,11 +182,11 @@ export function SetupScreen({
                 "text-[var(--color-ink-900)] dark:text-[#E8E5DD]",
                 "placeholder:text-[var(--color-ink-300)]",
                 "outline-none transition-colors duration-[var(--duration-base)]",
-                "focus:border-[var(--color-accent)]",
-                "text-[14px] leading-relaxed font-mono tracking-wide",
+                "focus:border-[var(--color-ok)]",
+                "text-md leading-relaxed font-mono tracking-wide",
               )}
             />
-            <div className="mt-1.5 flex items-center justify-between text-[11px]">
+            <div className="mt-1.5 flex items-center justify-between text-sm">
               <span className="text-[var(--color-ink-300)]">
                 {t("주변에 보는 사람이 없는 곳에서 입력하세요.", "Type this where nobody can see your screen.")}
               </span>
@@ -194,7 +194,7 @@ export function SetupScreen({
                 <span
                   className={cn(
                     "tabular-nums",
-                    phraseOk ? "text-[var(--color-accent)]" : "text-[var(--color-ink-300)]",
+                    phraseOk ? "text-[var(--color-ok)]" : "text-[var(--color-ink-300)]",
                   )}
                 >
                   {t(`단어 ${wordCount}개`, `${wordCount} words`)}
@@ -205,7 +205,7 @@ export function SetupScreen({
         )}
 
         {!isImport && !isLegacy && (
-          <p className="mt-3 text-center text-[11px] leading-relaxed text-[var(--color-ink-300)]">
+          <p className="mt-3 text-center text-sm leading-relaxed text-[var(--color-ink-300)]">
             {t(
               "다음 단계에서 복구용 12단어를 백업해요. 비밀번호를 잊으면 이 12단어로만 되찾을 수 있어요 — Budu 가져오기나 팬텀·솔플레어 같은 솔라나 지갑에서.",
               "Next you'll back up your 12 recovery words. If you forget your password, those words are the only way back — through Import here, or a Solana wallet like Phantom or Solflare.",
@@ -236,7 +236,7 @@ export function SetupScreen({
         </div>
 
         {error && (
-          <p className="mt-4 text-[12px] text-red-500 font-mono break-all">{error}</p>
+          <p className="mt-4 text-sm text-[var(--color-danger)] font-mono break-all">{error}</p>
         )}
 
         <button
@@ -266,7 +266,7 @@ export function SetupScreen({
                 type="button"
                 onClick={() => switchMode("create")}
                 disabled={busy}
-                className="text-[12px] text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)] transition-colors disabled:opacity-50"
+                className="text-sm text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)] transition-colors disabled:opacity-50"
               >
                 {t("← 새 지갑 만들기로 돌아가기", "← Back to creating a new wallet")}
               </button>
@@ -275,10 +275,10 @@ export function SetupScreen({
                 type="button"
                 onClick={() => switchMode("import")}
                 disabled={busy}
-                className="text-[12px] text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)] transition-colors disabled:opacity-50"
+                className="text-sm text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)] transition-colors disabled:opacity-50"
               >
                 {t("이미 복구 문구가 있나요?", "Already have a recovery phrase?")}{" "}
-                <span className="text-[var(--color-accent)]">{t("가져오기", "Import it")}</span>
+                <span className="text-[var(--color-ok)]">{t("가져오기", "Import it")}</span>
               </button>
             )}
           </div>

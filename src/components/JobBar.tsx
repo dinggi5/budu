@@ -18,16 +18,16 @@ export function JobBar({ job, onEnd }: { job: JobView; onEnd: () => void }) {
       {...enter}
       className={cn(
         "w-full max-w-md flex items-center gap-3 px-4 py-3",
-        "rounded-[var(--radius-card)] border border-[var(--color-accent)]",
+        "rounded-[var(--radius-card)] border border-[var(--color-ok)]",
         "bg-[var(--color-ivory-50)] dark:bg-[var(--color-night-800)]",
       )}
     >
-      <Briefcase size={16} className="shrink-0 text-[var(--color-accent)]" />
+      <Briefcase size={16} className="shrink-0 text-[var(--color-ok)]" />
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] leading-snug tracking-tight text-[var(--color-ink-900)] dark:text-[#E8E5DD] truncate" title={job.job}>
+        <p className="text-sm leading-snug tracking-tight text-[var(--color-ink-900)] dark:text-[#E8E5DD] truncate" title={job.job}>
           {names.label(job.job)}
         </p>
-        <p className="mt-0.5 text-[11px] text-[var(--color-ink-300)] num">
+        <p className="mt-0.5 text-sm text-[var(--color-ink-300)] num">
           {t(
             `작업 예산 ${money(job.spent)} / ${money(job.budget)} USDC · ${fmtCountdown(job.secs_left)} 남음`,
             `Job budget ${money(job.spent)} / ${money(job.budget)} USDC · ${fmtCountdown(job.secs_left)} left`,
@@ -38,7 +38,7 @@ export function JobBar({ job, onEnd }: { job: JobView; onEnd: () => void }) {
         type="button"
         onClick={onEnd}
         className={cn(
-          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-[12px] tracking-tight",
+          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-sm tracking-tight",
           "border border-[var(--color-ivory-400)] dark:border-[var(--color-night-700)]",
           "text-[var(--color-ink-500)] dark:text-[#B5AFA2]",
           "hover:bg-[var(--color-ivory-200)] dark:hover:bg-[var(--color-night-700)]",

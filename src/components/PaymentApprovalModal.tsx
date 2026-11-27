@@ -221,8 +221,8 @@ export function PaymentApprovalModal({
     sellerHost = "";
   }
   const amountText = fmtExact(request.amount);
-  const warn = "flex items-start gap-1.5 text-[12px] leading-snug text-red-600 dark:text-red-500";
-  const caution = "flex items-start gap-1.5 text-[12px] leading-snug text-amber-600 dark:text-amber-500";
+  const warn = "flex items-start gap-1.5 text-sm leading-snug text-[var(--color-danger)]";
+  const caution = "flex items-start gap-1.5 text-sm leading-snug text-[var(--color-danger)]";
 
   return (
     <motion.div
@@ -245,7 +245,7 @@ export function PaymentApprovalModal({
         className={cn(modalCard, "max-w-[448px] px-7 pt-7 pb-6 shadow-[0_20px_60px_rgba(0,0,0,0.22)] border-0")}
       >
         {/* 누가 · 남은 시간 */}
-        <div className="flex items-center justify-between text-[12px] text-[var(--color-ink-500)]">
+        <div className="flex items-center justify-between text-sm text-[var(--color-ink-500)]">
           <span className="truncate">
             {client
               ? t(`${client} 가 결제를 요청했어요`, `${client} is asking to pay`)
@@ -259,42 +259,42 @@ export function PaymentApprovalModal({
           <span
             className={cn(
               "balance num font-bold tracking-[-0.02em] leading-none text-[var(--color-ink-900)] dark:text-[#E8E5DD]",
-              amountText.length > 10 ? "text-[26px] break-all" : "text-[40px]",
+              amountText.length > 10 ? "text-lg break-all" : "text-lg",
             )}
           >
             {amountText}
           </span>
-          <span className="text-[17px] font-semibold text-[var(--color-ink-500)]">{request.token}</span>
+          <span className="text-lg font-semibold text-[var(--color-ink-500)]">{request.token}</span>
         </div>
-        <p className="mt-1.5 text-[14px] text-[var(--color-ink-700)] dark:text-[#B5AFA2] truncate">
+        <p className="mt-1.5 text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2] truncate">
           {sellerHost ? t(`${sellerHost} 에게`, `To ${sellerHost}`) : t("받는 곳에게", "To the recipient")}
           <span className="text-[var(--color-ink-500)]"> · </span>
           {/* 메인넷이면 실제 자금 — 보라(돈이 걸린 곳). */}
-          <span className={cn(chain.testnet ? "text-[var(--color-ink-500)]" : "text-[var(--color-accent)] font-medium")}>
+          <span className={cn(chain.testnet ? "text-[var(--color-ink-500)]" : "text-[var(--color-ok)] font-medium")}>
             {chain.name}
             {!chain.testnet && t(" · 실제 자금", " · real funds")}
           </span>
         </p>
 
         {/* 사실 표 — 사람이 승인 전에 맞춰 볼 것. */}
-        <dl className="mt-5 grid grid-cols-[92px_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-[13px]">
+        <dl className="mt-5 grid grid-cols-[92px_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-md">
           {isX402 && request.resource && (
             <>
               <dt className="text-[var(--color-ink-500)]">{t("결제 대상", "Paying for")}</dt>
-              <dd className="font-mono text-[12px] text-[var(--color-ink-900)] dark:text-[#E8E5DD] break-all">{request.resource}</dd>
+              <dd className="font-mono text-sm text-[var(--color-ink-900)] dark:text-[#E8E5DD] break-all">{request.resource}</dd>
             </>
           )}
           <dt className="text-[var(--color-ink-500)]">{t("받는 주소", "Pays to")}</dt>
           <dd className="min-w-0">
-            <span className="font-mono text-[12px] text-[var(--color-ink-900)] dark:text-[#E8E5DD]" title={request.to}>
+            <span className="font-mono text-sm text-[var(--color-ink-900)] dark:text-[#E8E5DD]" title={request.to}>
               {shortenAddress(request.to)}
             </span>
             {/* 신뢰 여부 — 보호자가 승인 판단에 쓰는 핵심 신호 */}
             {trusted === true && (
-              <span className="ml-2 text-[12px] text-[var(--color-ink-500)]">{t("· 승인한 적 있음", "· approved before")}</span>
+              <span className="ml-2 text-sm text-[var(--color-ink-500)]">{t("· 승인한 적 있음", "· approved before")}</span>
             )}
             {trusted === false && (
-              <span className="ml-2 text-[12px] text-amber-600 dark:text-amber-500">{t("· 처음 보는 주소", "· new address")}</span>
+              <span className="ml-2 text-sm text-[var(--color-danger)]">{t("· 처음 보는 주소", "· new address")}</span>
             )}
           </dd>
           {job && (
@@ -304,9 +304,9 @@ export function PaymentApprovalModal({
               {/* 사람이 단 별명이 있으면 그것 + AI 이름표 — 예산은 이름표로 맞춘다. */}
               <dd className="text-[var(--color-ink-900)] dark:text-[#E8E5DD] break-words">
                 {jobNames.label(job)}
-                {jobNames.renamed(job) && <span className="block text-[12px] text-[var(--color-ink-500)]">{t(`AI 이름표 ${job}`, `AI label ${job}`)}</span>}
+                {jobNames.renamed(job) && <span className="block text-sm text-[var(--color-ink-500)]">{t(`AI 이름표 ${job}`, `AI label ${job}`)}</span>}
                 {!jobNames.renamed(job) && jobNames.collides(job) && (
-                  <span className="block text-[12px] text-amber-600 dark:text-amber-500">
+                  <span className="block text-sm text-[var(--color-danger)]">
                     {t("다른 작업에 붙인 별명과 글자가 같지만 그 작업과는 다른 작업이에요.", "Same text as another job's display name, but it is a different job.")}
                   </span>
                 )}
@@ -321,7 +321,7 @@ export function PaymentApprovalModal({
           {request.from && (multiAccount || !fromAccount) && (
             <>
               <dt className="text-[var(--color-ink-500)]">{t("계정", "Account")}</dt>
-              <dd className={fromAccount ? "text-[var(--color-ink-900)] dark:text-[#E8E5DD]" : "text-red-500"}>
+              <dd className={fromAccount ? "text-[var(--color-ink-900)] dark:text-[#E8E5DD]" : "text-[var(--color-danger)]"}>
                 {fromAccount
                   ? accountName(fromAccount)
                   : t(`알 수 없는 계정 ${shortenAddress(request.from)}`, `Unknown account ${shortenAddress(request.from)}`)}
@@ -357,7 +357,7 @@ export function PaymentApprovalModal({
           {chainMemo && (
             <>
               <dt className="text-[var(--color-ink-500)]">{t("온체인 메모", "On-chain memo")}</dt>
-              <dd className="font-mono text-[12px] text-[var(--color-ink-500)] truncate" title={chainMemo}>
+              <dd className="font-mono text-sm text-[var(--color-ink-500)] truncate" title={chainMemo}>
                 {chainMemo}
               </dd>
             </>
@@ -368,7 +368,7 @@ export function PaymentApprovalModal({
         {(openJob || repeatSecs != null || locked || !tokenOk || memoHidden || roomError || insufficient) && (
           <div className="mt-4 flex flex-col gap-1.5">
             {openJob && (
-              <p className="text-[12px] leading-snug text-[var(--color-ink-500)] num">
+              <p className="text-sm leading-snug text-[var(--color-ink-500)] num">
                 {t(
                   `이 작업 예산 ${money(openJob.spent)} / ${money(openJob.budget)} USDC 사용 중 — 예산을 넘거나 처음 보는 판매자, 또는 앞의 같은 결제가 내용을 못 받아 다시 물어요`,
                   `Job budget ${money(openJob.spent)} / ${money(openJob.budget)} USDC used — asking again: over budget, a new seller, or the same payment earlier didn't deliver`,
@@ -435,17 +435,17 @@ export function PaymentApprovalModal({
                     className={cn(
                       "text-left rounded-xl px-3.5 py-3 transition-colors duration-[var(--duration-fast)]",
                       on
-                        ? "bg-[var(--color-accent-tint)] shadow-[inset_0_0_0_1.5px_var(--color-accent)] dark:bg-[var(--color-accent)]/15"
+                        ? "bg-[var(--color-ok-tint)] shadow-[inset_0_0_0_1.5px_var(--color-ok)] dark:bg-[var(--color-ok)]/15"
                         : "shadow-[inset_0_0_0_1px_var(--color-ivory-400)] dark:shadow-[inset_0_0_0_1px_var(--color-night-600)] hover:bg-[var(--color-ivory-200)] dark:hover:bg-[var(--color-night-700)]",
                     )}
                   >
-                    <b className="block text-[14px] font-semibold text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
+                    <b className="block text-md font-semibold text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
                       {m === "once" ? t("이 결제만", "Just this one") : t("이 작업 전체", "Whole job")}
                     </b>
                     <span
                       className={cn(
-                        "block mt-0.5 text-[12px] num",
-                        m === "job" && on ? "text-[var(--color-accent)] dark:text-[var(--color-accent-on-dark)]" : "text-[var(--color-ink-500)]",
+                        "block mt-0.5 text-sm num",
+                        m === "job" && on ? "text-[var(--color-ok)]" : "text-[var(--color-ink-500)]",
                       )}
                     >
                       {m === "once"
@@ -475,9 +475,9 @@ export function PaymentApprovalModal({
                     aria-label={t("작업 예산", "Job budget")}
                     className={cn(inputBase, "num text-right")}
                   />
-                  <span className="shrink-0 text-[12px] text-[var(--color-ink-500)]">{t("USDC 까지", "USDC max")}</span>
+                  <span className="shrink-0 text-sm text-[var(--color-ink-500)]">{t("USDC 까지", "USDC max")}</span>
                 </div>
-                <p className={cn("mt-1.5 text-[12px] leading-snug", budgetBad ? "text-red-500" : "text-[var(--color-ink-500)]")}>
+                <p className={cn("mt-1.5 text-sm leading-snug", budgetBad ? "text-[var(--color-danger)]" : "text-[var(--color-ink-500)]")}>
                   {budgetBad
                     ? openJob
                       ? t(
@@ -505,13 +505,13 @@ export function PaymentApprovalModal({
           />
         </div>
 
-        {error && <p className="mt-3 text-[12px] text-red-500 font-mono break-all">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[var(--color-danger)] font-mono break-all">{error}</p>}
 
         <div className="mt-3.5 grid grid-cols-[1fr_2fr] gap-2">
-          <button type="button" onClick={reject} disabled={busy} className={cn(secondaryBtn, "w-full h-12 text-[15px]")}>
+          <button type="button" onClick={reject} disabled={busy} className={cn(secondaryBtn, "w-full h-12 text-md")}>
             {t("거절", "Reject")}
           </button>
-          <button type="button" onClick={approve} disabled={!pw || busy || blocked} className={cn(primaryBtn, "h-12 text-[15px]")}>
+          <button type="button" onClick={approve} disabled={!pw || busy || blocked} className={cn(primaryBtn, "h-12 text-md")}>
             {busy ? <Loader2 size={15} className="animate-spin" /> : isX402Sign ? <FileSignature size={15} /> : <Lock size={15} />}
             {isX402Sign ? t("승인하고 서명", "Approve and sign") : t("승인하고 보내기", "Approve and send")}
           </button>

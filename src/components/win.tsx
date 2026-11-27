@@ -74,8 +74,8 @@ export function PageTitle({ title, sub, aside }: { title: React.ReactNode; sub?:
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
-        <h1 className={cn("text-[24px] leading-tight font-bold tracking-[-0.01em]", ink)}>{title}</h1>
-        {sub && <p className={cn("mt-1.5 text-[14px] leading-relaxed", muted)}>{sub}</p>}
+        <h1 className={cn("text-lg leading-tight font-bold tracking-[-0.01em]", ink)}>{title}</h1>
+        {sub && <p className={cn("mt-1.5 text-md leading-relaxed", muted)}>{sub}</p>}
       </div>
       {aside && <div className="shrink-0 flex items-center gap-1.5">{aside}</div>}
     </div>
@@ -84,7 +84,7 @@ export function PageTitle({ title, sub, aside }: { title: React.ReactNode; sub?:
 
 /** 작은 묶음 이름 — 선 없이 글자 위계로만(12px, 회색). */
 export function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("text-[12px] font-medium", muted, className)}>{children}</div>;
+  return <div className={cn("text-sm font-medium", muted, className)}>{children}</div>;
 }
 
 /** 고를 수 있는 줄 — 고르면 회색 둥근 면. */
@@ -125,11 +125,11 @@ export function Tag({ tone, children, className }: { tone: Tone | "accent"; chil
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 h-5 px-1.5 rounded-[6px] text-[11px] font-medium whitespace-nowrap",
-        tone === "ok" && "text-emerald-700 bg-emerald-500/10 dark:text-emerald-400",
-        tone === "bad" && "text-red-600 bg-red-500/10 dark:text-red-400",
+        "inline-flex items-center gap-1 h-5 px-1.5 rounded-[6px] text-sm font-medium whitespace-nowrap",
+        tone === "ok" && "text-[var(--color-ok)] bg-[var(--color-ok-tint)]",
+        tone === "bad" && "text-[var(--color-danger)] bg-[var(--color-danger-tint)]0/10",
         tone === "idle" && "text-[var(--color-ink-500)] bg-[var(--color-ivory-300)]/60 dark:bg-[var(--color-night-600)] dark:text-[#B5AFA2]",
-        tone === "accent" && "text-[var(--color-accent)] bg-[var(--color-accent-tint)] dark:bg-[var(--color-accent)]/15 dark:text-[var(--color-accent-on-dark)]",
+        tone === "accent" && "text-[var(--color-ok)] bg-[var(--color-ok-tint)] dark:bg-[var(--color-ok)]/15",
         className,
       )}
     >
@@ -192,7 +192,7 @@ export function RenameField({
   useEffect(() => {
     if (editing) input.current?.select();
   }, [editing]);
-  const text = size === "lg" ? "text-[24px] font-bold leading-tight tracking-[-0.01em]" : "text-[15px] font-semibold";
+  const text = size === "lg" ? "text-lg font-bold leading-tight tracking-[-0.01em]" : "text-md font-semibold";
   async function save() {
     if (busy) return;
     setBusy(true);
@@ -253,7 +253,7 @@ export function RenameField({
           aria-label={t("작업 이름", "Job name")}
           className={cn(
             "min-w-0 flex-1 bg-transparent outline-none rounded-[8px] px-1.5 -mx-1.5",
-            "shadow-[inset_0_0_0_1.5px_var(--color-accent)]",
+            "shadow-[inset_0_0_0_1.5px_var(--color-ok)]",
             text,
             ink,
           )}
@@ -265,7 +265,7 @@ export function RenameField({
           <X size={15} />
         </IconButton>
       </div>
-      <p className={cn("mt-1 text-[12px]", err ? "text-red-500" : muted)}>
+      <p className={cn("mt-1 text-sm", err ? "text-[var(--color-danger)]" : muted)}>
         {err ??
           t(
             `화면에만 보이는 이름이에요. AI 가 붙인 «${placeholder}» 는 그대로라 예산은 그대로 이어져요. 비우면 원래 이름으로.`,
@@ -280,8 +280,8 @@ export function RenameField({
 export function FactRow({ name, children }: { name: string; children: React.ReactNode }) {
   return (
     <div className="py-2">
-      <dt className={cn("text-[12px]", muted)}>{name}</dt>
-      <dd className={cn("mt-0.5 text-[13px] break-words", ink)}>{children}</dd>
+      <dt className={cn("text-sm", muted)}>{name}</dt>
+      <dd className={cn("mt-0.5 text-md break-words", ink)}>{children}</dd>
     </div>
   );
 }
@@ -305,15 +305,15 @@ export function Gauge({
 }) {
   return (
     <div className="min-w-0">
-      <div className="flex justify-between text-[12px] text-[var(--color-ink-500)] mb-2">
+      <div className="flex justify-between text-sm text-[var(--color-ink-500)] mb-2">
         <span>{title}</span>
         <span className="num">{total}</span>
       </div>
       <div
         className={cn(
-          "num text-[17px] font-semibold mb-2.5",
+          "num text-lg font-semibold mb-2.5",
           warn
-            ? "text-red-500 text-[15px]"
+            ? "text-[var(--color-danger)] text-md"
             : muted
               ? "text-[var(--color-ink-300)]"
               : "text-[var(--color-ink-900)] dark:text-[#E8E5DD]",
@@ -333,7 +333,7 @@ export function Gauge({
       >
         {fill > 0 && (
           <div
-            className="h-full rounded-full bg-[var(--color-accent)] transition-[width] duration-[var(--duration-slow)] ease-[var(--ease-standard)]"
+            className="h-full rounded-full bg-[var(--color-ok)] transition-[width] duration-[var(--duration-slow)] ease-[var(--ease-standard)]"
             // 아주 적게 썼어도 «쓰긴 썼다» 가 보이게 최소 6px.
             style={{ width: `${fill * 100}%`, minWidth: 6 }}
           />
@@ -351,7 +351,7 @@ export function GhostButton({ onClick, children, disabled }: { onClick: () => vo
       disabled={disabled}
       className={cn(
         "disabled:opacity-50 disabled:pointer-events-none",
-        "h-9 px-3.5 rounded-[10px] inline-flex items-center gap-1.5 text-[13px] font-medium",
+        "h-9 px-3.5 rounded-[10px] inline-flex items-center gap-1.5 text-md font-medium",
         "bg-white text-[var(--color-ink-700)] shadow-[inset_0_0_0_1px_var(--color-ivory-300)] hover:text-[var(--color-ink-900)]",
         "dark:bg-[var(--color-night-800)] dark:text-[#B5AFA2] dark:shadow-[inset_0_0_0_1px_var(--color-night-600)] dark:hover:text-[#E8E5DD]",
         "transition-colors duration-[var(--duration-fast)]",

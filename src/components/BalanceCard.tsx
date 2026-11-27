@@ -55,17 +55,17 @@ export function BalanceCard({
       </div>
 
       <div className="mt-6 flex items-baseline gap-2">
-        <span className="balance text-[56px] leading-none num">
+        <span className="balance text-hero leading-none num">
           {/* 큰 창과 같은 표기 — 자르고, 1 미만 소액은 정확히(lib/ledger). 반올림하면 4.999999 가 5.00 으로 보였다. */}
           {balanceError ? "—" : balanceText(balances)}
         </span>
-        <span className="text-[15px] text-[var(--color-ink-500)] tracking-tight">USDC</span>
+        <span className="text-md text-[var(--color-ink-500)] tracking-tight">USDC</span>
       </div>
 
-      <p className="mt-2 flex items-center gap-1.5 text-[13px] text-[var(--color-ink-500)] num">
+      <p className="mt-2 flex items-center gap-1.5 text-md text-[var(--color-ink-500)] num">
         <Fuel size={12} className="text-[var(--color-ink-300)]" />
         {balanceError ? (
-          <span className="text-red-500/80 text-[12px]">{t("잔액 조회 실패", "Couldn't load balance")}</span>
+          <span className="text-[var(--color-danger)] text-sm">{t("잔액 조회 실패", "Couldn't load balance")}</span>
         ) : (
           // SOL 은 수수료 토큰 — x402 결제엔 필요 없다(페이실리테이터가 낸다). 0 이어도 결제는 된다.
           <>{t("SOL ", "SOL ")}{fmtAmount(balances?.sol, 4)}</>
@@ -78,7 +78,7 @@ export function BalanceCard({
           onClick={onCopy}
           className={cn(
             "group inline-flex items-center gap-2",
-            "text-[13px] text-[var(--color-ink-700)] dark:text-[#B5AFA2]",
+            "text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2]",
             "font-mono tracking-tight",
             "transition-colors duration-[var(--duration-base)] ease-[cubic-bezier(0.4,0,0.2,1)]",
             "hover:text-[var(--color-ink-900)] dark:hover:text-[#E8E5DD]",
@@ -87,7 +87,7 @@ export function BalanceCard({
         >
           <span>{shortenAddress(address)}</span>
           {copied ? (
-            <Check size={13} className="text-[var(--color-accent)]" />
+            <Check size={13} className="text-[var(--color-ok)]" />
           ) : (
             <Copy size={13} className="text-[var(--color-ink-300)] group-hover:text-[var(--color-ink-700)] transition-colors" />
           )}

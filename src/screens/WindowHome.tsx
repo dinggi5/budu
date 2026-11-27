@@ -7,8 +7,6 @@
 // 데이터는 WalletScreen 이 이미 폴링하는 것을 그대로 받는다. 금액·상태 규칙은 lib/ledger.ts 한 곳.
 
 import {
-  Check,
-  Copy,
   Database,
   HelpCircle,
   History,
@@ -28,7 +26,6 @@ import { useChain } from "@/lib/chain";
 import { accountName, fmtExact, shortenAddress } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { balanceText, limitKind, minusDec, money, ratio } from "@/lib/ledger";
-import { useCopy } from "@/lib/useCopy";
 import { JobPanel } from "@/screens/ledger/JobPanel";
 import { Gauge, GhostButton, IconButton } from "@/components/win";
 import type { Account, AgentStatus, Balances, HistoryEntry, JobView, Settings, SpendView } from "@/lib/types";
@@ -59,7 +56,7 @@ export function Rail({
       <RailButton on={page === "home"} onClick={() => onPage("home")} label={t("홈", "Home")}>
         <Home size={18} />
       </RailButton>
-      <RailButton on={page === "history"} onClick={() => onPage("history")} label={t("작업과 내역", "Jobs and history")}>
+      <RailButton on={page === "history"} onClick={() => onPage("history")} label={t("작업 내역", "Job history")}>
         <History size={18} />
       </RailButton>
       <RailButton on={page === "sellers"} onClick={() => onPage("sellers")} label={t("데이터 구매처", "Data sources")}>
@@ -126,17 +123,17 @@ function RailButton({
         on
           ? "bg-[var(--color-ivory-200)] text-[var(--color-ink-900)] dark:bg-[var(--color-night-700)] dark:text-[#E8E5DD]"
           : "text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)] dark:hover:text-[#E8E5DD]",
-        danger && "text-red-500 hover:text-red-600 dark:text-red-400",
+        danger && "text-[var(--color-danger)] hover:text-[var(--color-danger-active)]",
       )}
     >
       {children}
-      {dot && <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden />}
+      {dot && <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[var(--color-danger)]" aria-hidden />}
       {/* 이름 툴팁 — 브라우저 기본 title 은 늦게 뜨고 WebKit 에선 안 뜰 때도 있어 직접 그린다. */}
       <span
         aria-hidden
         className={cn(
           "pointer-events-none absolute left-full ml-2.5 top-1/2 -translate-y-1/2 z-50 whitespace-nowrap",
-          "rounded-[8px] px-2.5 py-1.5 text-[12px] font-medium shadow-[var(--shadow-lift)]",
+          "rounded-[8px] px-2.5 py-1.5 text-sm font-medium shadow-[var(--shadow-lift)]",
           "bg-[var(--color-ink-900)] text-white dark:bg-[#E8E5DD] dark:text-[var(--color-ink-900)]",
           "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-[var(--duration-fast)] group-hover:delay-300",
         )}
@@ -165,7 +162,7 @@ export function WindowHome({
   history,
   onOpenJob,
   onReceive,
-  onSendSol,
+  onSend,
   panelOpen,
   onPanel,
   notices,
@@ -187,7 +184,7 @@ export function WindowHome({
   /** 작업 이름을 누르면 장부의 그 작업으로. */
   onOpenJob: (label: string) => void;
   onReceive: () => void;
-  onSendSol: () => void;
+  onSend: () => void;
   /** 오른쪽 작업 패널 — 홈에만 있고, 오른쪽 위 단추로 닫고 연다. */
   panelOpen: boolean;
   onPanel: (open: boolean) => void;
@@ -219,21 +216,21 @@ export function WindowHome({
       </div>
       <section className="min-w-0 flex flex-col px-8 min-[880px]:px-14 pt-[72px] pb-10 min-[880px]:overflow-y-auto">
         {/* 눈썹 — 지금 어느 계정·어느 체인인지, AI 가 붙어 있는지. 잔액보다 먼저 읽혀야 하는 사실. */}
-        <div className="flex items-center gap-2 text-[13px] text-[var(--color-ink-500)] min-w-0">
+        <div className="flex items-center gap-2 text-md text-[var(--color-ink-500)] min-w-0">
           <span className="truncate text-[var(--color-ink-700)] dark:text-[#B5AFA2]">{accountName(account)}</span>
           <span aria-hidden>·</span>
-          <span className={cn("shrink-0", !chain.testnet && "text-[var(--color-accent)] font-medium")}>{chain.name}</span>
+          <span className={cn("shrink-0", !chain.testnet && "text-[var(--color-ok)] font-medium")}>{chain.name}</span>
           <span aria-hidden>·</span>
           <button
             type="button"
             onClick={onConnect}
             className={cn(
               "shrink-0 inline-flex items-center gap-1.5 hover:underline underline-offset-2",
-              agent.connected ? "text-emerald-600 dark:text-emerald-500" : "text-[var(--color-ink-500)]",
+              agent.connected ? "text-[var(--color-ok)]" : "text-[var(--color-ink-500)]",
             )}
           >
             <span
-              className={cn("w-1.5 h-1.5 rounded-full", agent.connected ? "bg-emerald-500" : "bg-[var(--color-ink-300)]")}
+              className={cn("w-1.5 h-1.5 rounded-full", agent.connected ? "bg-[var(--color-ok)]" : "bg-[var(--color-ink-300)]")}
               aria-hidden
             />
             {agent.connected ? agent.client || t("AI 연결됨", "AI connected") : t("AI 연결 안 됨", "AI not connected")}
@@ -242,10 +239,10 @@ export function WindowHome({
 
         {/* 잔액 — 이 화면의 주인공 하나. */}
         <div className="mt-3.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="balance num text-[64px] leading-none font-bold tracking-[-0.03em] text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
+          <span className="balance num text-hero leading-none font-bold tracking-[-0.03em] text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
             {balanceText(balances)}
           </span>
-          <span className="text-[21px] font-semibold text-[var(--color-ink-500)]">USDC</span>
+          <span className="text-lg font-semibold text-[var(--color-ink-500)]">USDC</span>
           <button
             type="button"
             onClick={onRefresh}
@@ -256,9 +253,9 @@ export function WindowHome({
             <RotateCw size={14} className={cn(refreshing && "animate-spin")} />
           </button>
         </div>
-        <p className="mt-4 text-[14px] text-[var(--color-ink-500)] num">
+        <p className="mt-4 text-md text-[var(--color-ink-500)] num">
           {balanceError ? (
-            <span className="text-red-500">{t("잔액을 못 읽었어요 — ", "Couldn't read the balance — ")}{balanceError}</span>
+            <span className="text-[var(--color-danger)]">{t("잔액을 못 읽었어요 — ", "Couldn't read the balance — ")}{balanceError}</span>
           ) : spent == null ? (
             t("오늘 쓴 돈을 못 읽었어요 · 결제는 한도 확인이 막아요", "Couldn't read today's spending · payments stay blocked by the limit check")
           ) : (
@@ -306,7 +303,7 @@ export function WindowHome({
         {/* 맨 아래 — 받는 주소 · SOL. */}
         <div className="mt-auto pt-10">
           <div>
-            <AddressLine address={address} sol={balances?.sol} onReceive={onReceive} onSendSol={onSendSol} />
+            <AddressLine address={address} sol={balances?.sol} onReceive={onReceive} onSend={onSend} />
           </div>
         </div>
       </section>
@@ -329,39 +326,34 @@ function AddressLine({
   address,
   sol,
   onReceive,
-  onSendSol,
+  onSend,
 }: {
   address: string;
   sol: string | undefined;
   onReceive: () => void;
-  onSendSol: () => void;
+  onSend: () => void;
 }) {
-  const [copied, copy] = useCopy();
   return (
     <div className="flex flex-wrap items-center gap-x-8 gap-y-4 min-w-0">
       <div className="min-w-0">
-        <span className="block text-[12px] text-[var(--color-ink-500)]">{t("받는 주소", "Receiving address")}</span>
-        <span className="block mt-0.5 font-mono text-[13px] text-[var(--color-ink-700)] dark:text-[#B5AFA2] truncate" title={address}>
+        <span className="block text-sm text-[var(--color-ink-500)]">{t("받는 주소", "Receiving address")}</span>
+        <span className="block mt-0.5 font-mono text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2] truncate" title={address}>
           {shortenAddress(address)}
         </span>
       </div>
       {/* SOL — 결제엔 필요 없지만 솔라나 지갑이라 받고 보낼 수는 있다. */}
       <div className="min-w-0">
-        <span className="block text-[12px] text-[var(--color-ink-500)]">SOL</span>
-        <span className="block mt-0.5 num text-[13px] text-[var(--color-ink-700)] dark:text-[#B5AFA2]">{sol != null ? fmtExact(sol) : "—"}</span>
+        <span className="block text-sm text-[var(--color-ink-500)]">SOL</span>
+        <span className="block mt-0.5 num text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2]">{sol != null ? fmtExact(sol) : "—"}</span>
       </div>
       <div className="ml-auto flex items-center gap-2 shrink-0">
-        <GhostButton onClick={() => copy(address)}>
-          {copied ? <Check size={14} className="text-[var(--color-accent)]" /> : <Copy size={14} />}
-          {copied ? t("복사됨", "Copied") : t("복사", "Copy")}
-        </GhostButton>
         <GhostButton onClick={onReceive}>
           <QrCode size={14} />
           {t("받기", "Receive")}
         </GhostButton>
-        <GhostButton onClick={onSendSol}>
+        <GhostButton onClick={onSend}>
           <Send size={14} />
-          {t("SOL 보내기", "Send SOL")}
+          {t("보내기", "Send")}
         </GhostButton>
       </div>
     </div>

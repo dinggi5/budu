@@ -14,12 +14,11 @@ export function BackupNag({ onBackup }: { onBackup: () => void }) {
       className={cn(
         "w-full max-w-md flex items-center gap-3 px-4 py-3",
         "rounded-[var(--radius-card)]",
-        "bg-amber-50 dark:bg-amber-950/30",
-        "border border-amber-200 dark:border-amber-900/50",
+        "bg-[var(--color-danger-tint)]",
       )}
     >
-      <AlertTriangle size={16} className="shrink-0 text-amber-600 dark:text-amber-500" />
-      <p className="flex-1 min-w-0 text-[12px] leading-snug text-amber-800 dark:text-amber-300">
+      <AlertTriangle size={16} className="shrink-0 text-[var(--color-danger)]" />
+      <p className="flex-1 min-w-0 text-sm leading-snug text-[var(--color-danger)]">
         {t(
           "시드 12단어를 백업하세요.",
           "Back up your 12-word seed.",
@@ -29,8 +28,8 @@ export function BackupNag({ onBackup }: { onBackup: () => void }) {
         type="button"
         onClick={onBackup}
         className={cn(
-          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-[12px] tracking-tight",
-          "bg-amber-600 text-white hover:bg-amber-700",
+          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-sm tracking-tight",
+          "bg-[var(--color-danger)] text-white hover:bg-[var(--color-danger-active)]",
           "transition-colors duration-[var(--duration-base)]",
         )}
       >
@@ -55,12 +54,11 @@ export function SettingsBrokenBanner() {
       className={cn(
         "w-full max-w-md flex items-center gap-3 px-4 py-3",
         "rounded-[var(--radius-card)]",
-        "bg-amber-50 dark:bg-amber-950/30",
-        "border border-amber-200 dark:border-amber-900/50",
+        "bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)]",
       )}
     >
-      <AlertTriangle size={16} className="shrink-0 text-amber-600 dark:text-amber-500" />
-      <p className="flex-1 min-w-0 text-[12px] leading-snug text-amber-800 dark:text-amber-300">
+      <AlertTriangle size={16} className="shrink-0 text-[var(--color-ink-500)]" />
+      <p className="flex-1 min-w-0 text-sm leading-snug text-[var(--color-ink-700)] dark:text-[#B5AFA2]">
         {t(
           "설정 파일(~/.budu/settings.json)을 읽지 못했어요. 한도·옵션은 기본값이고, 체인과 RPC는 지금 화면에 보이는 대로예요. 파일을 고치거나 지우면 돌아와요.",
           "Couldn't read the settings file (~/.budu/settings.json). Limits and options are at their defaults; the chain and RPC are what the screens show. Fix or delete the file to get the rest back.",
@@ -77,12 +75,12 @@ export function LockBanner({ onUnlock }: { onUnlock: () => void }) {
       className={cn(
         "w-full max-w-md flex items-center gap-3 px-4 py-3",
         "rounded-[var(--radius-card)]",
-        "bg-red-50 dark:bg-red-950/30",
-        "border border-red-200 dark:border-red-900/50",
+        "bg-[var(--color-danger-tint)]",
+        "border border-[var(--color-danger-tint)]",
       )}
     >
-      <ShieldAlert size={16} className="shrink-0 text-red-600 dark:text-red-500" />
-      <p className="flex-1 min-w-0 text-[12px] leading-snug text-red-800 dark:text-red-300">
+      <ShieldAlert size={16} className="shrink-0 text-[var(--color-danger)]" />
+      <p className="flex-1 min-w-0 text-sm leading-snug text-[var(--color-danger)]">
         {t(
           "긴급 잠금이 켜져 있어요. 모든 결제가 차단돼요.",
           "Emergency lock is on. Every payment is blocked.",
@@ -92,8 +90,8 @@ export function LockBanner({ onUnlock }: { onUnlock: () => void }) {
         type="button"
         onClick={onUnlock}
         className={cn(
-          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-[12px] tracking-tight",
-          "bg-red-600 text-white hover:bg-red-700",
+          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-sm tracking-tight",
+          "bg-[var(--color-danger)] text-white hover:bg-[var(--color-danger-active)]",
           "transition-colors duration-[var(--duration-base)]",
         )}
       >
@@ -119,16 +117,16 @@ export function ApprovalElsewhereBanner() {
         "border border-[var(--color-ivory-400)] dark:border-[var(--color-night-700)]",
       )}
     >
-      <Wallet size={16} className="shrink-0 text-[var(--color-accent)]" />
-      <p className="flex-1 min-w-0 text-[12px] leading-snug text-[var(--color-ink-500)]">
+      <Wallet size={16} className="shrink-0 text-[var(--color-ok)]" />
+      <p className="flex-1 min-w-0 text-sm leading-snug text-[var(--color-ink-500)]">
         {t("결제 승인을 기다리는 요청이 있어요.", "A payment is waiting for your approval.")}
       </p>
       <button
         type="button"
         onClick={() => invoke("show_approval").catch(() => {})}
         className={cn(
-          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-[12px] tracking-tight",
-          "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]",
+          "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-sm tracking-tight",
+          "bg-[var(--color-ok)] text-white hover:bg-[var(--color-ok-hover)]",
           "transition-colors duration-[var(--duration-base)]",
         )}
       >

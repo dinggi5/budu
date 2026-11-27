@@ -27,7 +27,7 @@ export function ReceiveCard({ address, onClose }: { address: string; onClose: ()
     <motion.section {...enter} className={cn(cardBase, "relative px-8 py-8")}>
       <CloseButton onClose={onClose} />
 
-      <p className="text-[11px] tracking-[0.04em] text-[var(--color-ink-500)]">{t("받는 주소", "Receiving address")}</p>
+      <p className="text-sm tracking-[0.04em] text-[var(--color-ink-500)]">{t("받는 주소", "Receiving address")}</p>
 
       <div className="mt-6 flex justify-center">
         <div className="p-4 rounded-[10px] bg-white dark:bg-[#E8E5DD] border border-[var(--color-ivory-300)] dark:border-transparent">
@@ -35,14 +35,14 @@ export function ReceiveCard({ address, onClose }: { address: string; onClose: ()
         </div>
       </div>
 
-      <p className="mt-6 text-[11px] font-mono text-[var(--color-ink-700)] dark:text-[#B5AFA2] break-all leading-relaxed text-center select-all">
+      <p className="mt-6 text-sm font-mono text-[var(--color-ink-700)] dark:text-[#B5AFA2] break-all leading-relaxed text-center select-all">
         {address}
       </p>
 
       <button type="button" onClick={() => copy(address)} className={cn(secondaryBtn, "mt-4 w-full")}>
         {copied ? (
           <>
-            <Check size={13} className="text-[var(--color-accent)]" />
+            <Check size={13} className="text-[var(--color-ok)]" />
             {t("복사됨", "Copied")}
           </>
         ) : (
@@ -55,8 +55,8 @@ export function ReceiveCard({ address, onClose }: { address: string; onClose: ()
 
       {chain.testnet ? (
         <div className="mt-6 pt-5 border-t border-[var(--color-ivory-300)] dark:border-[var(--color-night-700)]">
-          <p className="text-[11px] tracking-[0.04em] text-[var(--color-ink-500)]">{t("테스트 코인 받기", "Get test coins")}</p>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--color-ink-300)]">
+          <p className="text-sm tracking-[0.04em] text-[var(--color-ink-500)]">{t("테스트 코인 받기", "Get test coins")}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-ink-300)]">
             {t(
               // 조사를 체인 이름 뒤에 붙이지 않는다 — 이름이 바뀌면 받침이 갈려 고정 조사가 틀린다.
               // 이름을 문장 끝으로 빼서 조사를 아예 안 타게 했다.
@@ -76,8 +76,8 @@ export function ReceiveCard({ address, onClose }: { address: string; onClose: ()
         </div>
       ) : (
         <div className="mt-6 pt-5 border-t border-[var(--color-ivory-300)] dark:border-[var(--color-night-700)]">
-          <p className="text-[11px] tracking-[0.04em] text-[var(--color-ink-500)]">{t("USDC 충전", "Adding USDC")}</p>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--color-ink-300)]">
+          <p className="text-sm tracking-[0.04em] text-[var(--color-ink-500)]">{t("USDC 충전", "Adding USDC")}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-ink-300)]">
             {t(
               <>
                 거래소·다른 지갑에서 이 주소로 보낼 때 반드시 <b>{chain.depositNetwork ?? chain.name}</b>{" "}

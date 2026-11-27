@@ -1,4 +1,4 @@
-// 큰 창의 판매자 — 내역을 호스트별로 묶은 목록 / 고른 판매자의 산 것·결제 2단.
+// 큰 창의 판매자 — 내역을 호스트별로 묶은 목록 / 고른 판매자의 산 것·결제 2단. 결제를 누르면 그 줄 아래로 세부가 펼쳐진다.
 // 판매자의 카탈로그를 읽어 오지 않는다 — 큰 창이 판매자에게 요청을 보내는 길을 새로 열지 않는다.
 
 import { useMemo, useState } from "react";
@@ -11,7 +11,7 @@ import { useJobNames } from "@/lib/jobNames";
 import { dayLabel, fromUnits, money, sellersOf } from "@/lib/ledger";
 import type { HistoryEntry, JobView } from "@/lib/types";
 import { Eyebrow, IconButton, PageTitle, Tag, hairline, ink, muted, usePref, useWidth } from "@/components/win";
-import { Empty, Library, LibraryItem, Loading, PartialNote, ListWithDetail } from "./parts";
+import { Empty, Library, LibraryItem, Loading, PartialNote, PaymentList } from "./parts";
 
 
 // ── 판매자 ────────────────────────────────────────────────────────────────────────────
@@ -34,9 +34,7 @@ export function SellersPage({
   const [page, pageW] = useWidth<HTMLDivElement>();
   const wide = pageW >= 690;
   const [lib, setLib] = usePref<"open" | "closed">("sellers.lib", "open");
-  const roomy = pageW >= 1130;
-  const [detail, setDetail] = useState(false);
-  const showLib = wide && lib === "open" && (roomy || !detail);
+  const showLib = wide && lib === "open";
   const sellers = useMemo(() => (entries ? sellersOf(entries) : []), [entries]);
   const [pickedKey, setPickedKey] = useState<string | null>(null);
   const s = sellers.find((x) => x.key === pickedKey) ?? sellers[0] ?? null;
@@ -108,7 +106,7 @@ export function SellersPage({
             value={s?.key ?? ""}
             onChange={(e) => setPickedKey(e.target.value)}
             aria-label={t("구매처", "Source")}
-            className={cn("h-8 max-w-full rounded-full px-3 text-[13px] outline-none bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)]", ink)}
+            className={cn("h-8 max-w-full rounded-full px-3 text-md outline-none bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)]", ink)}
           >
             {sellers.map((x) => (
               <option key={x.key} value={x.key}>
@@ -154,14 +152,14 @@ export function SellersPage({
           <Eyebrow className="mt-8 mb-1">{t("산 것", "What was bought")}</Eyebrow>
           <ul>
             {s.paths.map((p) => (
-              <li key={p.path} className={cn("grid grid-cols-[minmax(0,1fr)_auto_72px] gap-x-4 items-center py-2.5 border-b last:border-b-0 text-[13px]", hairline)}>
+              <li key={p.path} className={cn("grid grid-cols-[minmax(0,1fr)_auto_72px] gap-x-4 items-center py-2.5 border-b last:border-b-0 text-md", hairline)}>
                 <span className={cn("min-w-0 truncate font-mono", ink)} title={p.path}>
                   {p.path}
                 </span>
-                <span className={cn("text-[12px] num", muted)}>
+                <span className={cn("text-sm num", muted)}>
                   {t(`${p.count}번, 마지막 ${dayLabel(p.last)}`, `${p.count}×, last ${dayLabel(p.last)}`)}
                 </span>
-                <span className={cn("text-right num text-[14px]", ink)}>{money(p.price)}</span>
+                <span className={cn("text-right num text-md", ink)}>{money(p.price)}</span>
               </li>
             ))}
           </ul>
@@ -174,7 +172,7 @@ export function SellersPage({
   return (
     <div ref={page} className="flex h-screen min-w-0 flex-1 bg-[var(--color-ivory-100)] dark:bg-[var(--color-night-900)]">
       {showLib && library}
-      <ListWithDetail key={s?.key ?? "none"} head={head} entries={entries == null ? null : rows} allEntries={entries} groupDays onDetail={setDetail} footer={<PartialNote n={partial} />} />
+      <PaymentList key={s?.key ?? "none"} head={head} entries={entries == null ? null : rows} groupDays footer={<PartialNote n={partial} />} />
     </div>
   );
 }

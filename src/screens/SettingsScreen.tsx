@@ -277,7 +277,7 @@ export function SettingsScreen({
               {groups.map((g, i) => (
                 <li key={g}>
                   <Selectable on={navSel === i} onClick={() => setNavSel(i)} className="px-3 py-2">
-                    <span className={cn("text-[14px]", navSel === i ? cn(ink, "font-semibold") : inkSoft)}>{g}</span>
+                    <span className={cn("text-md", navSel === i ? cn(ink, "font-semibold") : inkSoft)}>{g}</span>
                   </Selectable>
                 </li>
               ))}
@@ -288,8 +288,8 @@ export function SettingsScreen({
         {!s ? (
           <motion.section {...enter} className={cn(cardBase, "px-6 py-10")}>
             <div className="flex flex-col items-center">
-              <Loader2 size={24} className="animate-spin text-[var(--color-accent)]" />
-              <p className="mt-3 text-[13px] text-[var(--color-ink-500)]">
+              <Loader2 size={24} className="animate-spin text-[var(--color-ok)]" />
+              <p className="mt-3 text-md text-[var(--color-ink-500)]">
                 {t("설정 불러오는 중…", "Loading settings…")}
               </p>
             </div>
@@ -299,17 +299,17 @@ export function SettingsScreen({
           <fieldset disabled={busy} className="flex flex-col gap-3 win:gap-0 border-0 p-0 m-0 min-w-0">
             {/* 한도 — 단일/하루 누적 한도(USDC) */}
             <Section
-              icon={<Gauge size={13} className="text-[var(--color-accent)]" />}
+              icon={<Gauge size={13} className="text-[var(--color-ok)]" />}
               title={t("한도", "Limits")}
               delay={0}
             >
-              <p className="text-[13px] leading-relaxed text-[var(--color-ink-500)]">
+              <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
                 {t(
                   "단일 거래·하루 누적 한도를 넘으면 결제를 막아줘요. AI의 큰 지출을 막기 위한 안전 장치예요.",
                   "Anything over the per-payment or daily limit is blocked. This is the guardrail against a big spend by the AI.",
                 )}
               </p>
-              <p className="mt-1.5 text-[11px] text-[var(--color-ink-300)]">
+              <p className="mt-1.5 text-sm text-[var(--color-ink-300)]">
                 {t("0으로 두면 무제한이에요.", "Leave a limit at 0 for no limit.")}
               </p>
 
@@ -327,17 +327,17 @@ export function SettingsScreen({
 
             {/* 자율 결제 — 한도 이하 AI 결제를 비번 없이 자동 승인 */}
             <Section
-              icon={<Zap size={13} className="text-[var(--color-accent)]" />}
+              icon={<Zap size={13} className="text-[var(--color-ok)]" />}
               title={t("자율 결제", "Autopay")}
               delay={0.04}
             >
-              <p className="text-[13px] leading-relaxed text-[var(--color-ink-500)]">
+              <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
                 {t(
                   "이 금액 이하의 AI 결제 요청은, 세션을 잠금 해제해 두면 비번 없이 자동 승인돼요. 넘는 금액은 항상 비번을 받아요.",
                   "With the session unlocked, AI payments at or under this amount go through without your password. Anything larger always asks.",
                 )}
               </p>
-              <p className="mt-1.5 text-[11px] text-[var(--color-ink-300)]">
+              <p className="mt-1.5 text-sm text-[var(--color-ink-300)]">
                 {t(
                   "한도를 0으로 두면 자율 결제가 꺼져요(항상 비번). 단일·하루 한도는 그대로 함께 적용돼요.",
                   "Set the limit to 0 to turn autopay off (always ask). The per-payment and daily limits still apply on top.",
@@ -360,7 +360,7 @@ export function SettingsScreen({
                     onChange={(v) => field("auto_lock_mins", v)}
                   />
                 </div>
-                <p className="mt-2.5 text-[11px] text-[var(--color-ink-300)]">
+                <p className="mt-2.5 text-sm text-[var(--color-ink-300)]">
                   {t(
                     "유휴 시간이 지나면 자동으로 다시 잠겨요. 0이면 유휴 잠금 안 함(앱 종료·긴급 잠금 시엔 항상 잠김).",
                     "The session locks itself after this much idle time. 0 means no idle lock (quitting the app or the emergency lock still locks it).",
@@ -417,8 +417,8 @@ export function SettingsScreen({
                 {/* 화이트리스트 — 목록은 모달로 (많아지면 설정이 길어지니) */}
                 <div className="flex items-center justify-between px-4 py-3.5">
                   <div className="min-w-0 pr-3">
-                    <p className="text-[13px] tracking-tight">{t("화이트리스트", "Whitelist")}</p>
-                    <p className="mt-0.5 text-[11px] leading-snug text-[var(--color-ink-300)]">
+                    <p className="text-md tracking-tight">{t("화이트리스트", "Whitelist")}</p>
+                    <p className="mt-0.5 text-sm leading-snug text-[var(--color-ink-300)]">
                       {trusted === null
                         ? t("불러오는 중…", "Loading…")
                         : trusted.length === 0
@@ -433,7 +433,7 @@ export function SettingsScreen({
                     type="button"
                     onClick={() => setShowTrusted(true)}
                     disabled={!trusted || trusted.length === 0}
-                    className="shrink-0 text-[12px] text-[var(--color-accent)] disabled:text-[var(--color-ink-300)] hover:underline transition-colors"
+                    className="shrink-0 text-sm text-[var(--color-ok)] disabled:text-[var(--color-ink-300)] hover:underline transition-colors"
                   >
                     {t("주소 보기", "View")}
                   </button>
@@ -444,11 +444,11 @@ export function SettingsScreen({
             {/* 네트워크 — 데브넷 ↔ 메인넷 런타임 전환.
                 메인넷 선택 시엔 실돈 경고를 콜아웃으로 올려 위계를 준다. */}
             <Section
-              icon={<Network size={13} className="text-[var(--color-accent)]" />}
+              icon={<Network size={13} className="text-[var(--color-ok)]" />}
               title={t("네트워크", "Network")}
               delay={0.08}
             >
-              <p className="text-[13px] leading-relaxed text-[var(--color-ink-500)]">
+              <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
                 {t(
                   "잔액·결제가 이뤄지는 블록체인이에요. 메인넷은 실제 자금이 오가고, 데브넷은 테스트 코인으로 연습해요. 사용액·내역·화이트리스트는 네트워크별로 따로, 한도는 모든 네트워크에 같이 적용돼요.",
                   "The blockchain your balance and payments live on. Mainnet moves real funds; devnet is practice with test coins. Spending, history, and the whitelist are kept per network; limits apply to every network.",
@@ -463,14 +463,14 @@ export function SettingsScreen({
                       type="button"
                       onClick={() => selectChain(c.id)}
                       className={cn(
-                        "rounded-[var(--radius-card)] border px-2 py-3 text-[12px] tracking-tight transition-colors",
+                        "rounded-[var(--radius-card)] border px-2 py-3 text-sm tracking-tight transition-colors",
                         active
-                          ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-medium"
+                          ? "border-[var(--color-ok)] bg-[var(--color-ok)]/10 text-[var(--color-ok)] font-medium"
                           : "border-[var(--color-ivory-300)] dark:border-[var(--color-night-700)] text-[var(--color-ink-500)] hover:border-[var(--color-ink-300)]",
                       )}
                     >
                       {c.name}
-                      <span className="block mt-0.5 text-[10px] text-[var(--color-ink-300)]">
+                      <span className="block mt-0.5 text-sm text-[var(--color-ink-300)]">
                         {c.testnet ? t("연습용", "Practice") : t("실제 자금", "Real funds")}
                       </span>
                     </button>
@@ -478,13 +478,13 @@ export function SettingsScreen({
                 })}
               </div>
               {chain.testnet ? (
-                <p className="mt-2.5 text-[11px] text-[var(--color-ink-300)]">
+                <p className="mt-2.5 text-sm text-[var(--color-ink-300)]">
                   {t("바꾼 뒤 저장을 누르면 적용돼요.", "Press save to apply the change.")}
                 </p>
               ) : (
                 // 실돈 경고는 문장 한 줄이 아니라 콜아웃 — 일상 설정과 위험 설정의 시각 위계 분리.
-                <div className="mt-2.5 rounded-[var(--radius-card)] border border-amber-500/30 bg-amber-500/5 px-3.5 py-2.5">
-                  <p className="text-[11px] leading-relaxed text-amber-600 dark:text-amber-500">
+                <div className="mt-2.5 rounded-[var(--radius-card)] bg-[var(--color-danger-tint)] px-3.5 py-2.5">
+                  <p className="text-sm leading-relaxed text-[var(--color-danger)]">
                     {t(
                       "메인넷은 실제 USDC가 오가요. 운영 예산만 소액 충전하고, 위의 한도를 확인해 두세요. 바꾼 뒤 저장을 누르면 적용돼요.",
                       "Mainnet moves real USDC. Top up only what the agent needs, and check your limits above. Press save to apply the change.",
@@ -496,11 +496,11 @@ export function SettingsScreen({
 
             {/* RPC 서버 — 프라이버시: 공개 RPC는 내 IP↔지갑을 볼 수 있음 */}
             <Section
-              icon={<Globe size={13} className="text-[var(--color-accent)]" />}
+              icon={<Globe size={13} className="text-[var(--color-ok)]" />}
               title={t("RPC 서버", "RPC server")}
               delay={0.12}
             >
-              <p className="text-[13px] leading-relaxed text-[var(--color-ink-500)]">
+              <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
                 {t(
                   "잔액 조회·결제 준비(블록해시)에 쓰는 솔라나 서버예요. 공개 RPC는 내 IP와 지갑 주소를 볼 수 있고 요청 제한도 빡빡해요. 메인넷에서 쓰거나 프라이버시가 중요하면 본인 키 엔드포인트(Helius·QuickNode·Triton 등)를 직접 넣으세요.",
                   "The Solana server used to read balances and prepare payments (recent blockhash). A public RPC can see your IP and wallet address and is tightly rate-limited. On mainnet, or if privacy matters, paste your own endpoint (Helius, QuickNode, Triton and so on).",
@@ -517,7 +517,7 @@ export function SettingsScreen({
                     field("rpc_url", v);
                   }
                 }}
-                className={cn(inputBase, "mt-4 text-[13px]")}
+                className={cn(inputBase, "mt-4 text-md")}
               >
                 {presets.map((p) => (
                   <option key={p.label} value={p.url}>
@@ -533,18 +533,18 @@ export function SettingsScreen({
                   placeholder="https://…"
                   spellCheck={false}
                   autoCapitalize="off"
-                  className={cn(inputBase, "mt-2 font-mono text-[12px]")}
+                  className={cn(inputBase, "mt-2 font-mono text-sm")}
                 />
               )}
             </Section>
 
             {/* 앱 — 상시 구동: 창을 닫아도 백그라운드에서 결제 요청을 받는다 */}
             <Section
-              icon={<Power size={13} className="text-[var(--color-accent)]" />}
+              icon={<Power size={13} className="text-[var(--color-ok)]" />}
               title={t("앱", "App")}
               delay={0.16}
             >
-              <p className="text-[13px] leading-relaxed text-[var(--color-ink-500)]">
+              <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
                 {t(
                   "창을 닫아도 앱은 종료되지 않고 백그라운드에서 결제 요청을 받아요 — 요청이 오면 창이 다시 떠요. 완전히 끄려면 ⌘Q를 누르세요.",
                   "Closing the window doesn't quit Budu — it keeps taking payment requests in the background and brings the window back when one arrives. Press ⌘Q to quit for real.",
@@ -573,7 +573,7 @@ export function SettingsScreen({
               </RowGroup>
             </Section>
 
-            {error && <p className="text-[12px] text-red-500 font-mono break-all win:mb-3">{error}</p>}
+            {error && <p className="text-sm text-[var(--color-danger)] font-mono break-all win:mb-3">{error}</p>}
 
             <button type="button" onClick={save} disabled={busy} className={cn(primaryBtn, "mt-2 win:w-auto win:px-8 win:self-start", isWindow && navSel === groups.length - 1 && "hidden")}>
               {saved ? (

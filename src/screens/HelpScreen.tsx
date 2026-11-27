@@ -27,14 +27,14 @@ export function HelpScreen({ onClose }: { onClose: () => void }) {
             className={cn(cardBase, "px-6 py-5")}
           >
             <div className="flex items-start gap-3.5">
-              <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)] text-[var(--color-accent)]">
+              <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)] text-[var(--color-ok)]">
                 {s.icon}
               </div>
               <div className="flex-1 min-w-0 pt-0.5">
-                <h2 className="text-[15px] tracking-tight text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
+                <h2 className="text-md tracking-tight text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
                   {s.title}
                 </h2>
-                <div className="mt-2 text-[12.5px] leading-relaxed text-[var(--color-ink-500)]">
+                <div className="mt-2 text-sm leading-relaxed text-[var(--color-ink-500)]">
                   {s.body}
                 </div>
               </div>
@@ -45,7 +45,7 @@ export function HelpScreen({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-          className="mt-1 inline-flex items-center justify-center gap-1.5 text-[12px] text-[var(--color-ink-500)] hover:text-[var(--color-accent)] transition-colors"
+          className="mt-1 inline-flex items-center justify-center gap-1.5 text-sm text-[var(--color-ink-500)] hover:text-[var(--color-ok)] transition-colors"
         >
           <ExternalLink size={12} />
           {t("GitHub에서 전체 문서 보기", "Read the full docs on GitHub")}
@@ -67,7 +67,7 @@ function HelpWindow() {
       {HELP_SECTIONS.map((s) => (
         <li key={s.id}>
           <Selectable on={s.id === sec.id} onClick={() => setId(s.id)} className="px-3 py-2">
-            <span className={cn("flex items-start gap-2 text-[14px] leading-snug", s.id === sec.id ? cn(ink, "font-semibold") : inkSoft)}>
+            <span className={cn("flex items-start gap-2 text-md leading-snug", s.id === sec.id ? cn(ink, "font-semibold") : inkSoft)}>
               <span className="shrink-0 mt-0.5 inline-flex text-[var(--color-ink-500)] [&_svg]:w-[15px] [&_svg]:h-[15px]">{s.icon}</span>
               <span className="min-w-0">{s.title}</span>
             </span>
@@ -85,7 +85,7 @@ function HelpWindow() {
           <button
             type="button"
             onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-            className={cn("mt-6 px-3 inline-flex items-center gap-1.5 text-[12px] hover:text-[var(--color-accent)] transition-colors", muted)}
+            className={cn("mt-6 px-3 inline-flex items-center gap-1.5 text-sm hover:text-[var(--color-ok)] transition-colors", muted)}
           >
             <ExternalLink size={12} />
             {t("GitHub 전체 문서", "Full docs on GitHub")}
@@ -98,7 +98,7 @@ function HelpWindow() {
             value={sec.id}
             onChange={(e) => setId(e.target.value)}
             aria-label={t("주제", "Topic")}
-            className={cn("mb-5 h-8 max-w-full rounded-full px-3 text-[13px] outline-none bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)]", ink)}
+            className={cn("mb-5 h-8 max-w-full rounded-full px-3 text-md outline-none bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)]", ink)}
           >
             {HELP_SECTIONS.map((s) => (
               <option key={s.id} value={s.id}>
@@ -109,12 +109,12 @@ function HelpWindow() {
         )}
         <motion.div key={sec.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}>
           <PageTitle title={sec.title} />
-          <div className={cn("mt-5 text-[15px] leading-[1.75] max-w-[72ch]", inkSoft)}>{sec.body}</div>
+          <div className={cn("mt-5 text-md leading-[1.75] max-w-[72ch]", inkSoft)}>{sec.body}</div>
           {!wide && (
             <button
               type="button"
               onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-              className={cn("mt-8 inline-flex items-center gap-1.5 text-[12px] hover:text-[var(--color-accent)] transition-colors", muted)}
+              className={cn("mt-8 inline-flex items-center gap-1.5 text-sm hover:text-[var(--color-ok)] transition-colors", muted)}
             >
               <ExternalLink size={12} />
               {t("GitHub 전체 문서", "Full docs on GitHub")}
