@@ -455,8 +455,27 @@ fn connect_claude_code_blocking() -> Result<(), ConnectError> {
             .into(),
         ));
     };
+    // 자가 복구가 돌고 있으면 기다리지 않고 바로 알린다(CLI 가 걸리면 최대 90초 쥔다).
+    let _one = match REREGISTER.try_lock() {
+        Ok(g) => g,
+        // 앞선 등록이 패닉했어도 등록 파일 자체는 CLI 가 쓴다 — 잠금만 되찾는다.
+        Err(std::sync::TryLockError::Poisoned(e)) => e.into_inner(),
+        Err(std::sync::TryLockError::WouldBlock) => {
+            return Err(bare(
+                ts!(
+                    "다른 등록 작업이 진행 중이에요. 잠시 뒤 다시 눌러 주세요.",
+                    "Another registration is in progress. Try again in a moment."
+                )
+                .into(),
+            ))
+        }
+    };
     reregister(&cli, AddWith::Path(&mcp))
 }
+
+/// claude 등록 고치기는 한 번에 하나 — 시작 때 자가 복구(spawn_heal)와 사람이 누른 연결이 겹치면
+/// remove→add 가 엇갈려 «already exists» 로 실패한다. 자가 복구는 이걸 쥔 **뒤에** 등록을 읽고 판단한다.
+static REREGISTER: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 /// 새 budu 등록을 무엇으로 만드는가.
 enum AddWith<'a> {
@@ -476,10 +495,8 @@ enum AddWith<'a> {
 /// remove 는 스냅숏 유무와 무관하게 **무조건** 돌린다: 우리가
 /// .claude.json 을 못 읽는 환경에서도 CLI 는 항목을 볼 수 있고, 그때 remove 를
 /// 건너뛰면 add 가 "already exists" 로 죽는다. 없어서 실패하는 remove 는 정상.
+/// 부르는 쪽이 `REREGISTER` 를 쥐고 부른다(판단부터 등록까지 한 덩이).
 fn reregister(cli: &std::path::Path, add: AddWith) -> Result<(), ConnectError> {
-    // 시작 때 자가 복구(spawn_heal)와 사람이 누른 연결이 겹치면 remove→add 가 엇갈려 «already exists» 로 실패한다 — 한 번에 하나.
-    static REREGISTER: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    let _one = REREGISTER.lock().unwrap_or_else(|e| e.into_inner());
     let old_entry = registered_cli_entry();
     let mut rm = Command::new(cli);
     rm.args(["mcp", "remove", "--scope", "user", "budu"]);
@@ -720,7 +737,11 @@ fn output_within(mut cmd: Command, secs: u64) -> std::io::Result<std::process::O
         Ok(out) => out,
         Err(_) => {
             // 넘겼다 — 자식을 죽인다(남은 스레드는 파이프가 닫히면 끝난다).
-            let _ = Command::new("/bin/kill").args(["-9", "--", &format!("-{pid}")]).status();
+            // 먼저 TERM(설정 파일을 쓰던 CLI 가 마무리할 틈), 잠깐 뒤 KILL.
+            let group = format!("-{pid}");
+            let _ = Command::new("/bin/kill").args(["-TERM", "--", &group]).status();
+            std::thread::sleep(std::time::Duration::from_millis(1500));
+            let _ = Command::new("/bin/kill").args(["-9", "--", &group]).status();
             Err(std::io::Error::new(std::io::ErrorKind::TimedOut, "timed out"))
         }
     }
@@ -839,6 +860,7 @@ fn heal_cli_registration() -> Option<String> {
     if !ours.is_file() {
         return None;
     }
+    let _one = REREGISTER.lock().unwrap_or_else(|e| e.into_inner());
     let entry = registered_cli_entry()?;
     let old = entry.get("command")?.as_str()?.to_string();
     if !should_heal(&old, &ours, |p| p.exists(), path_is_temp_location) {
