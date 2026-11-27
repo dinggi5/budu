@@ -20,7 +20,6 @@ import {
   Terminal,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { GITHUB_URL } from "@/lib/helpContent";
 import { useCopy } from "@/lib/useCopy";
 import type { AgentStatus, ConnectError, ConnectStatus } from "@/lib/types";
 import { enter, flatCard, LedgerHead, pageColumn, pageShell, primaryBtn, ScreenHeader, secondaryBtn } from "@/components/ui";
@@ -443,14 +442,6 @@ export function ConnectScreen({
             {status != null && !tempNoPath && <Mono text={mcpPath} />}
           </BoardRow>
         </ul>
-        <button
-          type="button"
-          onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-          className={cn("mt-8 inline-flex items-center gap-1.5 text-sm hover:text-[var(--color-ok)] transition-colors", muted)}
-        >
-          <ExternalLink size={12} />
-          {t("GitHub 문서", "Docs on GitHub")}
-        </button>
       </main>
     );
   }
@@ -778,13 +769,6 @@ export function ConnectScreen({
                 className="inline-flex items-center gap-1 text-sm text-[var(--color-ink-500)] hover:text-[var(--color-ok)] transition-colors"
               >
                 {pathCopied ? <Check size={11} /> : <Copy size={11} />} {t("경로 복사", "Copy path")}
-              </button>
-              <button
-                type="button"
-                onClick={() => openUrl(`${GITHUB_URL}#readme`).catch(() => {})}
-                className="inline-flex items-center gap-1 text-sm text-[var(--color-ink-500)] hover:text-[var(--color-ok)] transition-colors"
-              >
-                <ExternalLink size={11} /> {t("GitHub 문서", "GitHub docs")}
               </button>
             </div>
           </div>
