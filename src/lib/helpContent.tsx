@@ -148,16 +148,10 @@ export const HELP_SECTIONS: HelpSection[] = [
     body: t(
       <ul className="space-y-2">
         <li>
-          <b className={em}>비밀번호</b> — 결제마다 비밀번호를 입력해야 승인됩니다
-        </li>
-        <li>
           <b className={em}>한도</b> — 결제당 한도, 하루 한도 등을 자세히 설정할 수 있습니다. 한도는 AI 의 결제에 걸립니다 — 홈의 «보내기»(USDC·SOL 을 직접 보내는 것)는 한도 밖이고 언제나 비밀번호를 묻습니다.
         </li>
         <li>
           <b className={em}>긴급 잠금</b> — 헤더의 방패 버튼을 누르면 모든 결제를 즉시 막아 사용자를 보호합니다.
-        </li>
-        <li>
-          <b className={em}>자율 결제</b> — 설정 금액 이하의 결제를 자동으로 승인합니다. (첫 거래 시 비밀번호 승인 필요)
         </li>
         <li>
           <b className={em}>프로젝트 예산</b> — 프로젝트마다 쓸 수 있는 예산을 정해 둘 수 있습니다.
@@ -168,16 +162,10 @@ export const HELP_SECTIONS: HelpSection[] = [
       </ul>,
       <ul className="space-y-2">
         <li>
-          <b className={em}>Password</b> — every payment needs your password to be approved
-        </li>
-        <li>
           <b className={em}>Limits</b> — set a per-payment limit, a daily limit and more, in detail. Limits apply to the AI's payments — «Send» on Home (sending USDC or SOL yourself) is outside them and always asks for your password.
         </li>
         <li>
           <b className={em}>Emergency lock</b> — press the shield button in the header to block every payment at once and protect you.
-        </li>
-        <li>
-          <b className={em}>Autopay</b> — approves payments up to the amount you set automatically. (Your password is needed for the first payment.)
         </li>
         <li>
           <b className={em}>Project budget</b> — set a budget for each project.
