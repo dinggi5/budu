@@ -293,17 +293,17 @@ export function SendSheet({
             <p className="text-sm leading-relaxed text-[var(--color-ink-500)]">
               {token === "SOL"
                 ? t(
-                    `수수료 ${fromUnits(fee, 9)} SOL 이 따로 나가요. 처음 쓰는 주소엔 ${fromUnits(BigInt(rules.rent_exempt_min), 9)} SOL 이상 보내야 해요. AI 결제 한도는 여기에 걸리지 않아요.`,
-                    `A ${fromUnits(fee, 9)} SOL network fee is added. A brand-new address needs at least ${fromUnits(BigInt(rules.rent_exempt_min), 9)} SOL. AI payment limits don't apply here.`,
+                    `수수료 ${fromUnits(fee, 9)} SOL 이 따로 나가요. 처음 쓰는 주소엔 ${fromUnits(BigInt(rules.rent_exempt_min), 9)} SOL 이상 보내야 해요.`,
+                    `A ${fromUnits(fee, 9)} SOL network fee is added. A brand-new address needs at least ${fromUnits(BigInt(rules.rent_exempt_min), 9)} SOL.`,
                   )
                 : q && "q" in q && !q.q.ata_exists
                   ? t(
-                      `받는 쪽에 아직 USDC 계좌가 없어 만들어 줘요 — 수수료 ${fromUnits(fee, 9)} SOL 에 계좌 값 ${fromUnits(BigInt(q.q.sol_need) - fee, 9)} SOL 이 더 들어요. AI 결제 한도는 여기에 걸리지 않아요.`,
-                      `The recipient has no USDC account yet, so this opens one — ${fromUnits(BigInt(q.q.sol_need) - fee, 9)} SOL on top of the ${fromUnits(fee, 9)} SOL fee. AI payment limits don't apply here.`,
+                      `받는 쪽에 아직 USDC 계좌가 없어 만들어 줘요 — 수수료 ${fromUnits(fee, 9)} SOL 에 계좌 값 ${fromUnits(BigInt(q.q.sol_need) - fee, 9)} SOL 이 더 들어요.`,
+                      `The recipient has no USDC account yet, so this opens one — ${fromUnits(BigInt(q.q.sol_need) - fee, 9)} SOL on top of the ${fromUnits(fee, 9)} SOL fee.`,
                     )
                   : t(
-                      `수수료 ${fromUnits(fee, 9)} SOL 은 SOL 로 내요. AI 결제 한도는 여기에 걸리지 않아요.`,
-                      `The ${fromUnits(fee, 9)} SOL network fee is paid in SOL. AI payment limits don't apply here.`,
+                      `수수료 ${fromUnits(fee, 9)} SOL 은 SOL 로 내요.`,
+                      `The ${fromUnits(fee, 9)} SOL network fee is paid in SOL.`,
                     )}
             </p>
             {addr !== "" && !addrOk && <p className="text-sm text-[var(--color-danger)]">{t("솔라나 주소 모양이 아니에요", "That doesn't look like a Solana address")}</p>}
