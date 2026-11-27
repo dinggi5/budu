@@ -22,6 +22,8 @@ export function JobPanel({
   locked,
   entries,
   onEnd,
+  ended,
+  onResume,
   onOpenJob,
   className,
 }: {
@@ -29,6 +31,9 @@ export function JobPanel({
   locked: boolean;
   entries: HistoryEntry[] | null;
   onEnd: () => void;
+  /** 방금 끝낸 예산 — «다시 열기» 로 되돌릴 수 있다. */
+  ended: JobView | null;
+  onResume: () => void;
   /** 작업 이름을 누르면 장부의 그 작업으로. */
   onOpenJob: (label: string) => void;
   className?: string;
@@ -36,28 +41,35 @@ export function JobPanel({
   const names = useJobNames();
   const receipt = useReceipt();
   const rows = (entries ?? []).slice(0, JOURNAL_ROWS);
+  const shown = locked ? job : (job ?? ended);
   const [journal, setJournal] = usePref<"open" | "closed">("journal", "open");
   return (
     <aside className={cn("min-w-0 px-6 pt-14 pb-6 overflow-y-auto", sunken, className)} aria-label={t("프로젝트와 기록", "Project and log")}>
       <div className="flex items-center justify-between mb-3 min-h-8">
         <h2 className={cn("text-md font-semibold", inkSoft)}>{t("진행 중인 프로젝트", "Project in progress")}</h2>
       </div>
-      {job ? (
+      {shown ? (
         <div>
-          <RenameField size="sm" key={job.job} value={names.label(job.job)} placeholder={job.job} onSave={(n) => renameJob(job.job, n)} />
+          <RenameField size="sm" key={shown.job} value={names.label(shown.job)} placeholder={shown.job} onSave={(n) => renameJob(shown.job, n)} />
           <p className={cn("mt-1 text-sm num", muted)}>
-            {receipt.note(job.job) ??
-              (locked
-                ? t("긴급 잠금 중, 결제 멈춤", "Emergency lock on, payments paused")
-                : t(`판매자 ${job.sellers}곳`, `${job.sellers} seller(s)`))}
+            {!job
+              ? t("끝냈어요", "Ended")
+              : (receipt.note(shown.job) ??
+                (locked
+                  ? t("긴급 잠금 중, 결제 멈춤", "Emergency lock on, payments paused")
+                  : t(`구매처 ${shown.sellers}곳`, `${shown.sellers} source(s)`)))}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <GhostButton onClick={() => onOpenJob(job.job)}>{t("결제 보기", "Payments")}</GhostButton>
-            <GhostButton onClick={() => void receipt.save(job.job)}>
+            <GhostButton onClick={() => onOpenJob(shown.job)}>{t("결제 보기", "Payments")}</GhostButton>
+            <GhostButton onClick={() => void receipt.save(shown.job)}>
               <Download size={13} />
               CSV
             </GhostButton>
-            <GhostButton onClick={onEnd}>{t("끝내기", "End")}</GhostButton>
+            {job ? (
+              <GhostButton onClick={onEnd}>{t("끝내기", "End")}</GhostButton>
+            ) : (
+              <GhostButton onClick={onResume}>{t("다시 열기", "Reopen")}</GhostButton>
+            )}
           </div>
         </div>
       ) : (

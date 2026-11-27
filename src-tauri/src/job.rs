@@ -52,6 +52,21 @@ static NEXT_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::Atomic
 
 static GRANT: Mutex<Option<Grant>> = Mutex::new(None);
 
+/// «끝내기» 를 실수로 눌렀을 때 «다시 열기» 로 되돌릴 수 있는 시간. 이 동안만 끝낸 예산(과 키)을 메모리에 둔다 —
+/// 끝낸 예산은 어떤 결제도 덮지 않는다(`covers`·`claim` 은 GRANT 만 본다). 긴급 잠금·세션 잠금·새 예산이 열리면 바로 버린다.
+const RESUME_SECS: u64 = 10 * 60;
+
+struct Ended {
+    grant: Grant,
+    at: u64,
+}
+
+static ENDED: Mutex<Option<Ended>> = Mutex::new(None);
+
+fn ended() -> std::sync::MutexGuard<'static, Option<Ended>> {
+    ENDED.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 fn guard() -> std::sync::MutexGuard<'static, Option<Grant>> {
     GRANT.lock().unwrap_or_else(|e| e.into_inner())
 }
@@ -71,6 +86,7 @@ pub(crate) fn fmt_units(v: u64) -> String {
 /// 작업 예산을 닫는다 — 긴급 잠금·세션 잠금·「작업 끝내기」.
 pub(crate) fn clear() {
     *guard() = None;
+    *ended() = None;
 }
 
 /// 승인 창에서 고른 예산이 이 결제에 쓸 수 있는 값인지 — **서명 전에** 본다(틀렸으면 아무것도 서명하지 않는다).
@@ -139,6 +155,7 @@ pub(crate) fn after_human_approval(
                     x.charged.push((signature.to_string(), amount));
                 }
             } else {
+                *ended() = None; // 새 예산이 열렸다 — 끝낸 예산은 되돌릴 일이 없다(키를 오래 들고 있지 않게)
                 *g = Some(Grant {
                     generation: NEXT_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
                     job,
@@ -284,10 +301,32 @@ pub(crate) fn job_status() -> Option<JobView> {
     })
 }
 
-/// 「작업 끝내기」 — 예산과 키를 지금 버린다.
+/// 「작업 끝내기」 — 예산을 닫는다. 결제는 지금부터 다시 승인 창으로 가고, `RESUME_SECS` 동안만 «다시 열기» 로 되돌릴 수 있다.
 #[tauri::command]
 pub(crate) fn end_job() {
-    clear();
+    let taken = guard().take();
+    if let Some(grant) = taken {
+        *ended() = Some(Ended { grant, at: now_secs() });
+    }
+}
+
+/// 「다시 열기」 — 방금 끝낸 예산을 그대로 되살린다(사용액·판매자·키 그대로, 마지막 사용 시각은 지금).
+/// 되돌릴 시간이 지났거나, 그 사이 잠겼거나, 다른 예산이 열렸으면 false.
+#[tauri::command]
+pub(crate) fn resume_job() -> bool {
+    let taken = ended().take();
+    let Some(e) = taken else { return false };
+    if now_secs().saturating_sub(e.at) >= RESUME_SECS {
+        return false;
+    }
+    let mut g = guard();
+    if g.is_some() {
+        return false;
+    }
+    let mut grant = e.grant;
+    grant.last_active = now_secs();
+    *g = Some(grant);
+    true
 }
 
 #[cfg(test)]
@@ -445,6 +484,31 @@ mod tests {
         let (_, c) = claim(&req("오슬로호", SELLER, "0.01")).unwrap();
         assert!(guard().as_ref().unwrap().last_active > 0);
         release_claim(c);
+        clear();
+    }
+
+    /// 끝내면 결제를 덮지 않고, 다시 열면 그대로 돌아온다. 잠금(clear)·시간 초과 뒤엔 못 연다.
+    #[test]
+    fn end_then_resume() {
+        let _l = test_lock();
+        let _d = crate::store::test_dir::use_temp("job-resume");
+        clear();
+        open("0.20");
+        end_job();
+        assert!(!covers(&req("오슬로호", SELLER, "0.01")));
+        assert!(job_status().is_none());
+        assert!(resume_job());
+        assert!(covers(&req("오슬로호", SELLER, "0.01")));
+        assert!(!resume_job()); // 한 번만
+
+        end_job();
+        clear(); // 긴급 잠금 등
+        assert!(!resume_job());
+
+        open("0.20");
+        end_job();
+        ended().as_mut().unwrap().at = 0;
+        assert!(!resume_job());
         clear();
     }
 }

@@ -25,6 +25,8 @@ export function LedgerPage({
   scope,
   onScope,
   onEnd,
+  ended,
+  onResume,
   onMore,
   partial,
 }: {
@@ -34,6 +36,9 @@ export function LedgerPage({
   scope: Scope;
   onScope: (s: Scope) => void;
   onEnd: () => void;
+  /** 방금 끝낸 예산 — «다시 열기» 로 되돌린다. */
+  ended: JobView | null;
+  onResume: () => void;
   onMore?: () => void;
   partial?: number;
 }) {
@@ -180,6 +185,7 @@ export function LedgerPage({
               CSV
             </GhostButton>
             {isOpen && <GhostButton onClick={onEnd}>{t("끝내기", "End")}</GhostButton>}
+            {!isOpen && !locked && ended?.job === label && <GhostButton onClick={onResume}>{t("다시 열기", "Reopen")}</GhostButton>}
           </div>
         </div>
         {isOpen && (
@@ -192,7 +198,7 @@ export function LedgerPage({
                 fill={locked ? 0 : ratio(job!.spent, job!.budget)}
                 muted={locked}
               />
-              <Fact title={t("승인한 판매자", "Approved sellers")} value={t(`${job!.sellers}곳`, `${job!.sellers}`)} />
+              <Fact title={t("구매처", "Sources")} value={t(`${job!.sellers}곳`, `${job!.sellers}`)} />
             </div>
           </>
         )}

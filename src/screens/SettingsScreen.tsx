@@ -490,7 +490,7 @@ export function SettingsScreen({
               </div>
               {!chain.testnet && (
                 <p className="mt-2.5 text-sm text-[var(--color-danger)]">
-                  {t("메인넷은 실제 USDC가 오가요.", "Mainnet moves real USDC.")}
+                  {t("메인넷은 실제 자금이 오가요.", "Mainnet moves real funds.")}
                 </p>
               )}
             </Section>

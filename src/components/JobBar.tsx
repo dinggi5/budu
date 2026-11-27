@@ -1,5 +1,5 @@
 // 작업 예산 바 — 사람이 승인 창에서 연 작업 예산을 메뉴바 팝오버 한 줄로. «오슬로호 입항 준비 · 0.07 / 0.20 USDC».
-// 끝내기 = 예산과 메모리의 키를 지금 버린다(그 뒤 같은 작업의 결제는 다시 승인 창으로).
+// 끝내기 = 예산을 닫는다(그 뒤 같은 작업의 결제는 다시 승인 창으로). 10분 동안은 «다시 열기» 로 되돌린다.
 
 import { motion } from "framer-motion";
 import { Briefcase } from "lucide-react";
@@ -10,7 +10,7 @@ import type { JobView } from "@/lib/types";
 import { enter } from "@/components/ui";
 import { t } from "@/lib/i18n";
 
-export function JobBar({ job, onEnd }: { job: JobView; onEnd: () => void }) {
+export function JobBar({ job, ended, onEnd, onResume }: { job: JobView; ended: boolean; onEnd: () => void; onResume: () => void }) {
   const names = useJobNames();
   return (
     <motion.div
@@ -27,15 +27,17 @@ export function JobBar({ job, onEnd }: { job: JobView; onEnd: () => void }) {
           {names.label(job.job)}
         </p>
         <p className="mt-0.5 text-sm text-[var(--color-ink-300)] num">
-          {t(
-            `프로젝트 예산 ${money(job.spent)} / ${money(job.budget)} USDC`,
-            `Project budget ${money(job.spent)} / ${money(job.budget)} USDC`,
-          )}
+          {ended
+            ? t("끝냈어요", "Ended")
+            : t(
+                `프로젝트 예산 ${money(job.spent)} / ${money(job.budget)} USDC`,
+                `Project budget ${money(job.spent)} / ${money(job.budget)} USDC`,
+              )}
         </p>
       </div>
       <button
         type="button"
-        onClick={onEnd}
+        onClick={ended ? onResume : onEnd}
         className={cn(
           "shrink-0 h-8 px-3.5 rounded-[var(--radius-pill)] text-sm tracking-tight",
           "border border-[var(--color-ivory-400)] dark:border-[var(--color-night-700)]",
@@ -44,7 +46,7 @@ export function JobBar({ job, onEnd }: { job: JobView; onEnd: () => void }) {
           "transition-colors duration-[var(--duration-base)]",
         )}
       >
-        {t("끝내기", "End")}
+        {ended ? t("다시 열기", "Reopen") : t("끝내기", "End")}
       </button>
     </motion.div>
   );

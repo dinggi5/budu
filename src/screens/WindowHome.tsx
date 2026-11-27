@@ -158,6 +158,8 @@ export function WindowHome({
   spend,
   job,
   onEndJob,
+  endedJob,
+  onResumeJob,
   history,
   onOpenJob,
   onReceive,
@@ -178,6 +180,8 @@ export function WindowHome({
   spend: SpendView | null;
   job: JobView | null;
   onEndJob: () => void;
+  endedJob: JobView | null;
+  onResumeJob: () => void;
   history: HistoryEntry[] | null;
   /** 작업 이름을 누르면 장부의 그 작업으로. */
   onOpenJob: (label: string) => void;
@@ -311,6 +315,8 @@ export function WindowHome({
           locked={locked}
           entries={history}
           onEnd={onEndJob}
+          ended={endedJob}
+          onResume={onResumeJob}
           onOpenJob={onOpenJob}
           className="min-[880px]:h-screen"
         />

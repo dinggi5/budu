@@ -121,6 +121,8 @@ export function WalletScreen({
   const [session, setSession] = useState<SessionStatus>({ unlocked: false, remaining_secs: 0, auto_limit: "0" });
   // 사람이 연 작업 예산 — 1초 폴링.
   const [jobView, setJobView] = useState<JobView | null>(null);
+  const [endedJob, setEndedJob] = useState<JobView | null>(null);
+  const jobSeq = useRef(0);
   const [showUnlock, setShowUnlock] = useState(false);
   // 결제 요청별 자율 승인 1회 시도 가드(중복 시도·진행 중 모달 깜빡임 방지).
   const autoTried = useRef<Set<string>>(new Set());
@@ -132,6 +134,9 @@ export function WalletScreen({
   //. 판매자 화면·승인 시트는 원래 이렇게 걸렀고, 장부·패널·홈·작업 바도 같은 값을 쓴다.
   const jobHere =
     jobView != null && jobView.chain_id === chain.id && jobView.from.trim() === address.trim() ? jobView : null;
+  // 방금 끝낸 예산 — 실수로 눌렀을 때 «다시 열기» 로 되돌린다(백엔드 job.rs RESUME_SECS 동안). 열린 예산이 생기면 사라진다.
+  const endedHere =
+    !jobHere && endedJob != null && endedJob.chain_id === chain.id && endedJob.from.trim() === address.trim() ? endedJob : null;
 
   // 내역은 한 번에 HISTORY_PAGE 줄씩 — 「더 보기」가 늘린다(200건을 넘친 기록도 보관 파일에 남는다).
   // 여러 곳이 부르는 loadHistory 가 늘 지금 줄 수로 읽게 ref 로 들고, 버튼 표시는 state 로 다시 그린다.
@@ -336,9 +341,12 @@ export function WalletScreen({
             );
         })
         .catch(() => {});
+      const seq = jobSeq.current;
       invoke<JobView | null>("job_status")
         .then((v) => {
-          if (active)
+          // 끝내기·다시 열기를 누르기 전에 나간 조회는 버린다 — 끝낸 예산이 1초 다시 보이지 않게.
+          if (active && seq === jobSeq.current && v) setEndedJob(null);
+          if (active && seq === jobSeq.current)
             setJobView((prev) =>
               prev && v && prev.job === v.job && prev.spent === v.spent && prev.budget === v.budget
                 ? prev
@@ -548,9 +556,32 @@ export function WalletScreen({
   // 장부엔 왼쪽 작업 단이 같은 일을 한다. 홈에선 기본으로 열려 있고, 오른쪽 위 네모 단추 하나로 닫고 연다.
   const [homePanel, setHomePanel] = usePref<"open" | "closed">("homePanel", "open");
   const endJob = () => {
-    invoke("end_job").catch(() => {});
+    jobSeq.current++;
+    setEndedJob(jobView);
     setJobView(null);
+    invoke("end_job").catch(() => {});
   };
+  const resumeJob = () => {
+    jobSeq.current++;
+    const seq = jobSeq.current;
+    setEndedJob(null);
+    invoke<boolean>("resume_job")
+      .then(() => invoke<JobView | null>("job_status"))
+      .then((v) => {
+        if (seq === jobSeq.current) setJobView(v ?? null);
+      })
+      .catch(() => {});
+  };
+  // 긴급 잠금은 끝낸 예산도 버린다(job::clear) — «다시 열기» 도 거둔다.
+  useEffect(() => {
+    if (locked) setEndedJob(null);
+  }, [locked]);
+  // 되돌릴 시간(10분)이 지나면 «다시 열기» 도 거둔다 — 백엔드도 그때 버린다.
+  useEffect(() => {
+    if (!endedJob) return;
+    const h = setTimeout(() => setEndedJob(null), 10 * 60 * 1000);
+    return () => clearTimeout(h);
+  }, [endedJob]);
   const openJob = (label: string) => {
     setLedgerScope(`job:${label}`);
     goPage("history");
@@ -653,6 +684,8 @@ export function WalletScreen({
           scope={ledgerScope}
           onScope={setLedgerScope}
           onEnd={endJob}
+          ended={endedHere}
+          onResume={resumeJob}
           onMore={partial ? () => setHistoryPage(historyLimit + HISTORY_PAGE) : undefined}
           partial={partial}
         />,
@@ -712,6 +745,8 @@ export function WalletScreen({
             job={jobHere}
             locked={locked}
             onEndJob={endJob}
+            endedJob={endedHere}
+            onResumeJob={resumeJob}
             history={history}
             onOpenJob={openJob}
             onReceive={() => setMode("receive")}
@@ -805,7 +840,9 @@ export function WalletScreen({
 
         {!isApprover && pending && <ApprovalElsewhereBanner />}
         {locked && <LockBanner onUnlock={toggleLock} />}
-        {!locked && jobHere && <JobBar job={jobHere} onEnd={endJob} />}
+        {!locked && (jobHere || endedHere) && (
+          <JobBar job={(jobHere ?? endedHere)!} ended={!jobHere} onEnd={endJob} onResume={resumeJob} />
+        )}
         {!locked && (Number(session.auto_limit) > 0 || session.unlocked) && (
           <SessionBar session={session} onUnlock={() => setShowUnlock(true)} onLock={lockSession} />
         )}
