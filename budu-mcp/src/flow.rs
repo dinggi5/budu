@@ -706,7 +706,8 @@ async fn deliver(d: Delivery<'_>) -> Result<X402Outcome, String> {
                 success,
                 body.incomplete || body.save_failed,
                 // 내용을 끝까지 받아 남겼다는 긍정 신호 — 정산 성공 + 본문 완전 + 저장 성공일 때만.
-                success && !body.incomplete && !body.save_failed,
+                // 저장이 늦어 아직 모르면(save_pending) 붙이지 않는다 — 작업 예산의 «같은 결제 10분» 예외가 열리지 않게.
+                success && !body.incomplete && !body.save_failed && !body.save_pending,
             );
             recorded = true;
         }

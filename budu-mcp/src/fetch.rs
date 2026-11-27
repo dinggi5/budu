@@ -279,6 +279,9 @@ pub struct FetchedBody {
     pub image: Option<InlineImage>,
     /// 본문을 끝까지 받지 못했다(연결 끊김·시간 초과). 받은 만큼만 `text`/`saved_file` 에 있다.
     pub incomplete: bool,
+    /// 저장이 `SAVE_WAIT` 안에 안 끝나 결과가 먼저 나갔다 — 남겼는지 **모른다**. «내용 받음» 신호를 붙이지 않는다
+    /// (못 받았다고 단정하지도 않는다).
+    pub save_pending: bool,
 }
 
 impl FetchedBody {
@@ -518,6 +521,7 @@ pub async fn read_response(resp: reqwest::Response) -> FetchedBody {
             );
             // 상한에서 끊긴 응답이면 저장이 늦어도 재결제 경고는 그대로 가야 한다.
             b.incomplete = truncated;
+            b.save_pending = true;
             b
         }
     };
@@ -638,6 +642,7 @@ fn classify_tracked(
             image: None,
             // 상한에서 끊긴 응답은 다 받은 게 아니다 — 결제 결과에 재결제 경고가 붙게 한다.
             incomplete: truncated,
+            save_pending: false,
         };
     }
 
@@ -695,6 +700,7 @@ fn classify_tracked(
         save_failed,
         image,
         incomplete: false,
+        save_pending: false,
     }
 }
 

@@ -209,7 +209,7 @@ export function WindowHome({
       )}
     >
       {/* 패널 토글 — 열려 있든 닫혀 있든 같은 자리의 네모 단추 하나(장부의 목록 접기와 같은 모양). */}
-      <div className="hidden min-[880px]:block fixed top-3 right-4 z-40">
+      <div className="fixed top-3 right-4 z-40">
         <IconButton
           label={panelOpen ? t("작업 패널 닫기", "Hide job panel") : t("작업 패널 열기", "Show job panel")}
           onClick={() => onPanel(!panelOpen)}

@@ -477,6 +477,9 @@ enum AddWith<'a> {
 /// .claude.json 을 못 읽는 환경에서도 CLI 는 항목을 볼 수 있고, 그때 remove 를
 /// 건너뛰면 add 가 "already exists" 로 죽는다. 없어서 실패하는 remove 는 정상.
 fn reregister(cli: &std::path::Path, add: AddWith) -> Result<(), ConnectError> {
+    // 시작 때 자가 복구(spawn_heal)와 사람이 누른 연결이 겹치면 remove→add 가 엇갈려 «already exists» 로 실패한다 — 한 번에 하나.
+    static REREGISTER: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _one = REREGISTER.lock().unwrap_or_else(|e| e.into_inner());
     let old_entry = registered_cli_entry();
     let mut rm = Command::new(cli);
     rm.args(["mcp", "remove", "--scope", "user", "budu"]);
@@ -587,9 +590,12 @@ fn shell_codex_home_blocking() -> Option<String> {
 }
 
 /// 앱 시작 때 부른다 — 로그인 셸의 CODEX_HOME 을 미리 읽어 둔다.
+/// Codex 를 안 쓰는 사람에겐 셸(.zshrc 전체)을 띄우지 않는다 — rc 의 부작용(tmux 자동 시작 등)을 남의 앱이 일으키지 않게.
 pub(crate) fn spawn_codex_home_probe() {
     std::thread::spawn(|| {
-        let _ = shell_codex_home_blocking();
+        if find_codex_cli().is_some() {
+            let _ = shell_codex_home_blocking();
+        }
     });
 }
 
@@ -700,8 +706,10 @@ fn codex_command(cli: &std::path::Path) -> Command {
 
 /// 자식 프로세스를 최대 `secs` 초 기다린다 — codex(node)가 걸려도 앱이 같이 멈추지 않게. 넘기면 죽이고 오류.
 fn output_within(mut cmd: Command, secs: u64) -> std::io::Result<std::process::Output> {
+    use std::os::unix::process::CommandExt;
     use std::process::Stdio;
-    let child = cmd.stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
+    // 자식을 새 프로세스 그룹의 우두머리로 — 넘기면 그룹째(셸이 띄운 손자까지) 죽여 파이프를 놓게 한다.
+    let child = cmd.stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).process_group(0).spawn()?;
     let pid = child.id();
     // 파이프 읽기·기다리기는 딴 스레드에서(출력이 커도, 손자가 파이프를 물고 있어도 여기서 막히지 않게).
     let (tx, rx) = std::sync::mpsc::channel();
@@ -712,7 +720,7 @@ fn output_within(mut cmd: Command, secs: u64) -> std::io::Result<std::process::O
         Ok(out) => out,
         Err(_) => {
             // 넘겼다 — 자식을 죽인다(남은 스레드는 파이프가 닫히면 끝난다).
-            let _ = Command::new("/bin/kill").args(["-9", &pid.to_string()]).status();
+            let _ = Command::new("/bin/kill").args(["-9", "--", &format!("-{pid}")]).status();
             Err(std::io::Error::new(std::io::ErrorKind::TimedOut, "timed out"))
         }
     }

@@ -107,8 +107,8 @@ export const cardBase = cn(
 
 // 모달 카드 공통 — 팝오버(420x640)보다 길어져도 닿을 수 있게 my-auto 를 반드시 함께 쓴다
 // (modalOverlay 의 items-start 와 짝).
-/** 큰 창 하위 화면의 판 — 팝오버에선 카드, 큰 창에선 카드를 걷어 낸 평평한 묶음(사장 «설정·연결·백업·도움말이
- *  다른 페이지와 안 맞는다»). 장부 페이지가 카드 없이 선과 여백으로 위계를 세우니 같은 문법으로. 모달의 카드(modalCard)는 그대로. */
+/** 큰 창 하위 화면의 판 — 팝오버에선 카드, 큰 창에선 카드를 걷어 낸 평평한 묶음 — 설정·연결·백업·도움말이
+ *  다른 페이지와 같은 모양이 되게. 장부 페이지가 카드 없이 선과 여백으로 위계를 세우니 같은 문법으로. 모달의 카드(modalCard)는 그대로. */
 export const flatCard = cn(
   cardBase,
   "win:bg-transparent win:dark:bg-transparent win:border-0 win:shadow-none win:rounded-none win:px-0 win:py-0",
