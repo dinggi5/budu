@@ -348,12 +348,12 @@ function AddressLine({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <GhostButton onClick={onReceive}>
-          <QrCode size={14} />
+        <GhostButton size="lg" onClick={onReceive}>
+          <QrCode size={16} />
           {t("받기", "Receive")}
         </GhostButton>
-        <GhostButton onClick={onSend}>
-          <Send size={14} />
+        <GhostButton size="lg" onClick={onSend}>
+          <Send size={16} />
           {t("보내기", "Send")}
         </GhostButton>
       </div>

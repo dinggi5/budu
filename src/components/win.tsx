@@ -337,7 +337,18 @@ export function Gauge({
   );
 }
 
-export function GhostButton({ onClick, children, disabled }: { onClick: () => void; children: React.ReactNode; disabled?: boolean }) {
+export function GhostButton({
+  onClick,
+  children,
+  disabled,
+  size = "md",
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  disabled?: boolean;
+  /** lg = 홈의 받기·보내기처럼 그 화면의 주 동작(폭 고정, 가운데 정렬). */
+  size?: "md" | "lg";
+}) {
   return (
     <button
       type="button"
@@ -345,7 +356,8 @@ export function GhostButton({ onClick, children, disabled }: { onClick: () => vo
       disabled={disabled}
       className={cn(
         "disabled:opacity-50 disabled:pointer-events-none",
-        "h-9 px-3.5 rounded-[10px] inline-flex items-center gap-1.5 text-md font-medium",
+        "inline-flex items-center text-md font-medium",
+        size === "lg" ? "h-11 min-w-[132px] px-5 justify-center gap-2 rounded-[12px]" : "h-9 px-3.5 gap-1.5 rounded-[10px]",
         "bg-white text-[var(--color-ink-700)] shadow-[inset_0_0_0_1px_var(--color-ivory-300)] hover:text-[var(--color-ink-900)]",
         "dark:bg-[var(--color-night-800)] dark:text-[#B5AFA2] dark:shadow-[inset_0_0_0_1px_var(--color-night-600)] dark:hover:text-[#E8E5DD]",
         "transition-colors duration-[var(--duration-fast)]",
