@@ -269,7 +269,7 @@ export function PaymentApprovalModal({
         <p className="mt-1.5 text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2] truncate">
           {sellerHost ? t(`${sellerHost} 에게`, `To ${sellerHost}`) : t("받는 곳에게", "To the recipient")}
           <span className="text-[var(--color-ink-500)]"> · </span>
-          {/* 메인넷이면 실제 자금 — 보라(돈이 걸린 곳). */}
+          {/* 메인넷이면 실제 자금 — 빨강(멈춰·확인해). */}
           <span className={cn(chain.testnet ? "text-[var(--color-ink-500)]" : "text-[var(--color-danger)] font-medium")}>
             {chain.name}
             {!chain.testnet && t(" · 실제 자금", " · real funds")}

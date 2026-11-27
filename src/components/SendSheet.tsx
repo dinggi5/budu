@@ -47,6 +47,9 @@ function stateOf(status: string): { tone: "ok" | "bad" | "idle"; text: string } 
       return { tone: "bad", text: t("실패 · 안 나감", "failed · not sent") };
     case "expired":
       return { tone: "idle", text: t("만료 · 안 나감", "expired · not sent") };
+    case "unknown":
+      // RPC 가 그 무렵 기록을 안 갖고 있어 결말을 못 정했다 — 나갔을 수 있다.
+      return { tone: "bad", text: t("결말 모름 · 탐색기에서 확인", "unknown · check the explorer") };
     default:
       return { tone: "idle", text: t("확인 중 · 다시 보내지 마세요", "checking · don't resend") };
   }
@@ -81,8 +84,9 @@ export function SendSheet({
   const [recent, setRecent] = useState<Send[]>([]);
   // USDC: 받는 주소를 적으면 그쪽 USDC 계좌가 있는지 묻는다(없으면 렌트가 든다).
   const [quote, setQuote] = useState<{ to: string; chain: number; q: Quote } | { to: string; chain: number; err: string } | null>(null);
-  // 확인 단계에 들어갈 때 본 네트워크 — 보낼 때 이 값을 넘겨 그 사이 설정이 바뀌었으면 백엔드가 멈춘다.
-  const [seenChain, setSeenChain] = useState<number | null>(null);
+  // 확인 단계에 들어갈 때 본 네트워크·계정 — 보낼 때 이 값을 넘겨 그 사이 바뀌었으면 백엔드가 멈춘다.
+  const [seen, setSeen] = useState<{ chain: number; from: string } | null>(null);
+  const [resetNote, setResetNote] = useState<string | null>(null);
 
   const loadRecent = () =>
     invoke<Send[]>("get_sends")
@@ -124,14 +128,18 @@ export function SendSheet({
       clearTimeout(id);
     };
   }, [token, addr, addrOk, chain.id]);
-  // 시트를 연 채로 네트워크가 바뀌면 처음 단계로 — 확인 화면의 숫자가 다른 네트워크 것이 되지 않게.
+  // 확인 화면을 띄운 채 네트워크나 계정이 바뀌면 처음 단계로 — 확인한 화면과 다른 곳에서 돈이 나가지 않게.
+  // 보내는 중(busy)엔 건드리지 않는다: 백엔드가 대조해 거절하고, 그 결과를 이 화면에서 보여 준다.
   useEffect(() => {
-    if (seenChain != null && seenChain !== chain.id && !busy) {
+    if (step !== "confirm" || busy || !seen) return;
+    if (seen.chain !== chain.id || seen.from !== from) {
       setStep("form");
-      setSeenChain(null);
+      setSeen(null);
       setPw("");
+      setError(null);
+      setResetNote(t("네트워크나 계정이 바뀌어 처음으로 돌아왔어요.", "The network or account changed, so this started over."));
     }
-  }, [chain.id, seenChain, busy]);
+  }, [step, busy, seen, chain.id, from]);
 
   const dec = DEC[token];
   const solHave = sol != null ? toUnits(sol, 9) : null;
@@ -186,11 +194,12 @@ export function SendSheet({
         token,
         to: addr,
         amount: amount.trim(),
-        expectedChainId: seenChain ?? chain.id,
-        expectedFrom: from,
+        expectedChainId: seen?.chain ?? chain.id,
+        expectedFrom: seen?.from ?? from,
       });
       setResult(r);
       setStep("done");
+      setSeen(null);
       onSent();
       loadRecent();
     } catch (e) {
@@ -301,11 +310,13 @@ export function SendSheet({
             {quoteErr && <p className="text-sm text-[var(--color-danger)] break-all">{quoteErr}</p>}
             {amountErr && <p className="text-sm text-[var(--color-danger)]">{amountErr}</p>}
             {solErr && <p className="text-sm text-[var(--color-danger)]">{solErr}</p>}
+            {resetNote && <p className="text-sm text-[var(--color-ink-500)]">{resetNote}</p>}
             <button
               type="button"
               disabled={!ready}
               onClick={() => {
-                setSeenChain(chain.id);
+                setSeen({ chain: chain.id, from });
+                setResetNote(null);
                 setStep("confirm");
               }}
               className={cn(primaryBtn, "mt-1")}

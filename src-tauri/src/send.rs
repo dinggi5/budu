@@ -111,6 +111,8 @@ pub(crate) struct SolSend {
     /// 우리 서명 = tx id (서명자가 우리 하나라 첫 서명이 곧 tx id — 탐색기에서 바로 찾힌다).
     pub(crate) signature: String,
     /// "sending"(서명해서 보냈거나 보내는 중 — 나갔을 수 있음) · "confirmed"(나감) · "failed"(안 나감) · "expired"(안 나감)
+    /// · "unknown"(블록해시는 만료됐는데 RPC 가 그 무렵 기록을 안 갖고 있어 «없음» 을 못 믿음 — 나갔을 수 있음.
+    ///   새 송금을 막지 않고 «탐색기에서 확인» 을 말한다. 나중에 체인에서 찾으면 그 결과로 바뀐다)
     pub(crate) status: String,
     #[serde(default)]
     pub(crate) detail: String,
@@ -118,8 +120,9 @@ pub(crate) struct SolSend {
     pub(crate) valid_until: u64,
     /// 블록해시를 받은 슬롯. «체인에 없음 → 만료» 는 RPC 가 이 슬롯부터의 기록을 갖고 있을 때만 믿는다
     /// (기록을 지운 노드는 나간 송금도 «없음» 이라고 답한다). 옛 기록은 0.
+    /// None = 옛 기록(이 칸이 생기기 전). Some(0) = RPC 가 슬롯을 안 알려 줌(→ «없음» 을 못 믿는다).
     #[serde(default)]
-    pub(crate) slot: u64,
+    pub(crate) slot: Option<u64>,
 }
 
 // ── 금액 ─────────────────────────────────────────────────────────────────────────────────
@@ -731,7 +734,7 @@ async fn send_inner(password: &str, token: Token, to: &str, amount: &str, expect
         status: "sending".into(),
         detail: String::new(),
         valid_until: latest.last_valid_block_height,
-        slot: latest.slot,
+        slot: Some(latest.slot),
     })
     .map_err(|_| {
         String::from(ts!(
@@ -853,7 +856,8 @@ pub(crate) async fn check_sends() -> bool {
 }
 
 async fn check_inner() -> bool {
-    let pending: Vec<SolSend> = get_sends().into_iter().filter(|r| r.status == "sending").collect();
+    // «결말 모름» 도 계속 물어본다 — 체인에서 찾으면 확정한다(만료로는 내리지 않는다).
+    let pending: Vec<SolSend> = get_sends().into_iter().filter(|r| r.status == "sending" || r.status == "unknown").collect();
     if pending.is_empty() {
         return false;
     }
@@ -873,7 +877,8 @@ async fn check_inner() -> bool {
     else {
         return false;
     };
-    // RPC 가 기록을 어디부터 갖고 있나. 모르면 만료를 내리지 않는다(«보내는 중» 으로 남는 쪽이 이중 송금보다 낫다).
+    // RPC 가 기록을 어디부터 갖고 있나. 덮지 못하면(또는 모르면) «만료 · 안 나감» 대신 «결말 모름» 으로 —
+    // «안 나감» 이라고 거짓말하면 사람이 다시 보내 이중 송금이 되고, «보내는 중» 으로 두면 새 송금이 영영 막힌다.
     let min_ledger = rpc_call(&c, &rpc, "minimumLedgerSlot", json!([])).await.ok().and_then(|v| v.as_u64());
     let mut changed = false;
     for r in pending {
@@ -882,8 +887,8 @@ async fn check_inner() -> bool {
                 update(&r.signature, if ok { "confirmed" } else { "failed" }, "");
                 changed = true;
             }
-            Ok(None) if finalized > r.valid_until.saturating_add(EXPIRY_MARGIN) && ledger_covers(min_ledger, r.slot) => {
-                update(&r.signature, "expired", "");
+            Ok(None) if r.status == "sending" && finalized > r.valid_until.saturating_add(EXPIRY_MARGIN) => {
+                update(&r.signature, if ledger_covers(min_ledger, r.slot) { "expired" } else { "unknown" }, "");
                 changed = true;
             }
             _ => {}
@@ -892,12 +897,13 @@ async fn check_inner() -> bool {
     changed
 }
 
-/// «체인에 없음» 을 믿어도 되나 — RPC 의 가장 오래된 슬롯이 송금 슬롯 이하일 때만. 옛 기록(slot 0)은 예전 판정을 따른다.
-fn ledger_covers(min_ledger: Option<u64>, slot: u64) -> bool {
-    if slot == 0 {
-        return true;
+/// «체인에 없음» 을 믿어도 되나 — RPC 의 가장 오래된 슬롯이 송금 슬롯 이하일 때만. 옛 기록(None)은 예전 판정을 따른다.
+/// 한계: 로드밸런서 뒤 RPC 는 두 질문을 다른 노드가 답할 수 있다 — 그 경우까지는 못 막는다.
+fn ledger_covers(min_ledger: Option<u64>, slot: Option<u64>) -> bool {
+    match slot {
+        None => true,
+        Some(s) => s > 0 && min_ledger.is_some_and(|m| m <= s),
     }
-    min_ledger.is_some_and(|m| m <= slot)
 }
 
 /// 화면에 쓸 값(수수료·최소 잔액) — 시트가 «전부 보내기» 와 안내를 같은 값으로 계산하게. rent 는 실측(못 읽으면 옛 값).
@@ -1016,12 +1022,18 @@ mod tests {
     fn records_round_trip_and_refuse_broken_file() {
         let _d = crate::store::test_dir::use_temp("sol-sends");
         assert!(get_sends().is_empty());
-        let row = SolSend { ts: 1, to: "a".into(), token: "SOL".into(), units: 2, signature: "s".into(), status: "sending".into(), detail: String::new(), valid_until: 9, slot: 0 };
+        let row = SolSend { ts: 1, to: "a".into(), token: "SOL".into(), units: 2, signature: "s".into(), status: "sending".into(), detail: String::new(), valid_until: 9, slot: None };
         prepend(row.clone()).unwrap();
         update("s", "confirmed", "");
         assert_eq!(get_sends()[0].status, "confirmed");
         fs::write(path().unwrap(), "{broken").unwrap();
-        assert!(prepend(row).is_err(), "깨진 파일은 덮지 않는다 → 보내지도 않는다");
+        assert!(prepend(row.clone()).is_err(), "깨진 파일은 덮지 않는다 → 보내지도 않는다");
+        // «결말 모름» 은 새 송금을 막지 않는다(«보내는 중» 만 막는다).
+        fs::remove_file(path().unwrap()).unwrap();
+        prepend(SolSend { status: "unknown".into(), ..row.clone() }).unwrap();
+        assert!(!has_pending());
+        prepend(SolSend { signature: "s2".into(), ..row }).unwrap();
+        assert!(has_pending());
     }
 
     #[test]
@@ -1100,10 +1112,11 @@ mod tests {
 
     #[test]
     fn expiry_needs_rpc_history() {
-        assert!(ledger_covers(None, 0), "옛 기록은 예전 판정");
-        assert!(!ledger_covers(None, 100), "RPC 기록 범위를 모르면 만료 안 함");
-        assert!(ledger_covers(Some(100), 100));
-        assert!(!ledger_covers(Some(101), 100), "지운 노드의 «없음» 은 안 믿음");
+        assert!(ledger_covers(None, None), "옛 기록은 예전 판정");
+        assert!(!ledger_covers(None, Some(100)), "RPC 기록 범위를 모르면 만료 안 함");
+        assert!(ledger_covers(Some(100), Some(100)));
+        assert!(!ledger_covers(Some(101), Some(100)), "지운 노드의 «없음» 은 안 믿음");
+        assert!(!ledger_covers(Some(0), Some(0)), "슬롯을 모르는 새 기록도 안 믿음");
     }
 
     const REAL_DEVNET_USDC_ATA: &str = "6yNun9THHtHWrvk9KAVVmtUDpWhQFsAUtStG7j2makHQ";
