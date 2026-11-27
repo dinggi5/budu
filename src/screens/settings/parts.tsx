@@ -289,7 +289,7 @@ export function LockRow({ value, onChange }: { value: string; onChange: (v: stri
 
 /** 관련 행들을 하나의 카드로 묶는 구분선 리스트.
  *  행마다 테두리 상자를 두르지 않고, 컨테이너 하나 + 헤어라인 구분선으로 접는다. */
-export function RowGroup({ children }: { children: ReactNode }) {
+export function RowGroup({ children, first = false }: { children: ReactNode; /** 묶음 제목 바로 밑(큰 창에서 위 여백 없음). */ first?: boolean }) {
   return (
     <div
       className={cn(
@@ -297,6 +297,7 @@ export function RowGroup({ children }: { children: ReactNode }) {
         "divide-y divide-[var(--color-ivory-300)] dark:divide-[var(--color-night-700)]",
         // 큰 창 — 상자도 줄 사이 선도 걷는다. 줄 안쪽 여백은 왼쪽 선에 맞춘다.
         "win:rounded-none win:border-0 win:divide-y-0 win:[&>*]:px-0 win:[&>*]:py-3",
+        first && "win:mt-0",
       )}
     >
       {children}

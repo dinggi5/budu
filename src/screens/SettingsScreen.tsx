@@ -545,7 +545,7 @@ export function SettingsScreen({
               title={t("앱", "App")}
               delay={0.16}
             >
-              <RowGroup>
+              <RowGroup first>
                 <ToggleRow
                   title={t("로그인 시 자동 시작", "Start at login")}
                   checked={autostart ?? false}

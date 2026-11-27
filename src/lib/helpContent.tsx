@@ -124,6 +124,32 @@ export const HELP_SECTIONS: HelpSection[] = [
     ),
   },
   {
+    id: "cost",
+    title: t("비용은 어느 정도 나가나요?", "How much does it cost?"),
+    body: t(
+      <div className="space-y-3">
+        <p>데모 판매자 budu-port 가격(파고·조석 0.01, 혼잡 0.05 USDC) 기준 예시입니다. 판매자마다 가격이 다릅니다.</p>
+        <table className="w-full num">
+          <tbody className="[&_td]:py-1.5 [&_td:last-child]:text-right">
+            <tr><td>입항 보고서 1건</td><td>0.07~0.3 USDC</td></tr>
+            <tr><td>배 1척 5분마다 감시</td><td>하루 약 14 USDC</td></tr>
+            <tr><td>20척 감시</td><td>하루 약 288 USDC</td></tr>
+          </tbody>
+        </table>
+      </div>,
+      <div className="space-y-3">
+        <p>Examples at the demo seller budu-port's prices (waves and tides 0.01, congestion 0.05 USDC). Prices differ by seller.</p>
+        <table className="w-full num">
+          <tbody className="[&_td]:py-1.5 [&_td:last-child]:text-right">
+            <tr><td>One port-call report</td><td>0.07–0.3 USDC</td></tr>
+            <tr><td>Watching one ship every 5 min</td><td>about 14 USDC a day</td></tr>
+            <tr><td>Watching 20 ships</td><td>about 288 USDC a day</td></tr>
+          </tbody>
+        </table>
+      </div>,
+    ),
+  },
+  {
     id: "safety",
     title: t("결제 보호 장치가 따로 있나요?", "Is there anything that protects payments?"),
     // 사장이 준 문장 그대로(개발 14). 사실 문제가 보이면 고치지 말고 묻는다.
