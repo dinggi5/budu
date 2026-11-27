@@ -25,11 +25,8 @@ export function HelpScreen({ onClose }: { onClose: () => void }) {
             transition={{ duration: 0.3, delay: i * 0.04, ease: [0.4, 0, 0.2, 1] }}
             className={cn(cardBase, "px-6 py-5")}
           >
-            <div className="flex items-start gap-3.5">
-              <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)] text-[var(--color-ok)]">
-                {s.icon}
-              </div>
-              <div className="flex-1 min-w-0 pt-0.5">
+            <div>
+              <div className="min-w-0">
                 <h2 className="text-md tracking-tight text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
                   {s.title}
                 </h2>
@@ -57,10 +54,7 @@ function HelpWindow() {
       {HELP_SECTIONS.map((s) => (
         <li key={s.id}>
           <Selectable on={s.id === sec.id} onClick={() => setId(s.id)} className="px-3 py-2">
-            <span className={cn("flex items-start gap-2 text-md leading-snug", s.id === sec.id ? cn(ink, "font-semibold") : inkSoft)}>
-              <span className="shrink-0 mt-0.5 inline-flex text-[var(--color-ink-500)] [&_svg]:w-[15px] [&_svg]:h-[15px]">{s.icon}</span>
-              <span className="min-w-0">{s.title}</span>
-            </span>
+            <span className={cn("block text-md leading-snug", s.id === sec.id ? cn(ink, "font-semibold") : inkSoft)}>{s.title}</span>
           </Selectable>
         </li>
       ))}

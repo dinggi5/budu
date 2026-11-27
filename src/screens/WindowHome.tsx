@@ -335,19 +335,9 @@ function AddressLine({
   onReceive: () => void;
   onSend: () => void;
 }) {
-  // 받기·보내기를 오른쪽 끝에 떼어 두지 않고 SOL · 받는 주소 바로 위에 나란히 — 게이지 단과 같은 왼쪽 선.
+  // SOL · 받는 주소 아래에 받기·보내기를 나란히 — 게이지 단과 같은 왼쪽 선.
   return (
     <div className={cn("flex flex-col gap-5 min-w-0", GAUGE_W)}>
-      <div className="flex items-center gap-2">
-        <GhostButton onClick={onReceive}>
-          <QrCode size={14} />
-          {t("받기", "Receive")}
-        </GhostButton>
-        <GhostButton onClick={onSend}>
-          <Send size={14} />
-          {t("보내기", "Send")}
-        </GhostButton>
-      </div>
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4 min-w-0">
         {/* SOL — 결제엔 필요 없지만 솔라나 지갑이라 받고 보낼 수는 있다. */}
         <div className="min-w-0">
@@ -360,6 +350,16 @@ function AddressLine({
             {shortenAddress(address)}
           </span>
         </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <GhostButton onClick={onReceive}>
+          <QrCode size={14} />
+          {t("받기", "Receive")}
+        </GhostButton>
+        <GhostButton onClick={onSend}>
+          <Send size={14} />
+          {t("보내기", "Send")}
+        </GhostButton>
       </div>
     </div>
   );

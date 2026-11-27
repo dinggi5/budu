@@ -5,7 +5,6 @@
 // 두 언어를 한 섹션 안에 나란히 둔다 — 문서 성격의 글이라 한쪽만 고치면 금세 어긋난다.
 // 번역이 아니라 **같은 말을 그 언어로** 쓴다: 영어 쪽도 짧은 문장, 조용한 톤, 느낌표 없이.
 
-import { ArrowDownLeft, Bot, Coins, Compass, KeyRound, ShieldCheck, Stamp } from "lucide-react";
 
 import { t } from "./i18n";
 
@@ -14,7 +13,6 @@ export const GITHUB_URL = "https://github.com/dinggi5/budu";
 
 export type HelpSection = {
   id: string;
-  icon: React.ReactNode;
   title: string;
   /** 도움말 화면·투어에 그대로 들어가는 본문. */
   body: React.ReactNode;
@@ -25,7 +23,6 @@ const em = "text-[var(--color-ink-700)] dark:text-[#E8E5DD]";
 export const HELP_SECTIONS: HelpSection[] = [
   {
     id: "what",
-    icon: <Bot size={22} />,
     title: t("부두가 뭐예요?", "What is Budu?"),
     body: t(
       <p>
@@ -40,7 +37,6 @@ export const HELP_SECTIONS: HelpSection[] = [
   },
   {
     id: "fund",
-    icon: <ArrowDownLeft size={22} />,
     title: t("AI한테 돈은 어떻게 주나요?", "How do I give the AI money?"),
     body: t(
       <div className="space-y-2.5">
@@ -65,7 +61,6 @@ export const HELP_SECTIONS: HelpSection[] = [
   },
   {
     id: "sol",
-    icon: <Coins size={22} />,
     title: t("결제에 솔라나가 필요한가요?", "Do I need SOL to pay?"),
     body: t(
       <p>
@@ -78,7 +73,6 @@ export const HELP_SECTIONS: HelpSection[] = [
   },
   {
     id: "flow",
-    icon: <Stamp size={22} />,
     title: t("결제 과정은 어떻게 진행되나요?", "How does a payment go?"),
     body: t(
       <ol className="space-y-1.5 list-decimal pl-5 marker:text-[var(--color-ink-500)]">
@@ -109,7 +103,6 @@ export const HELP_SECTIONS: HelpSection[] = [
   },
   {
     id: "uses",
-    icon: <Compass size={22} />,
     title: t("부두로 어떤 일을 할 수 있나요?", "What can I do with Budu?"),
     body: t(
       <ul className="space-y-2">
@@ -142,7 +135,6 @@ export const HELP_SECTIONS: HelpSection[] = [
   },
   {
     id: "safety",
-    icon: <ShieldCheck size={22} />,
     title: t("결제 보호 장치가 따로 있나요?", "Is there anything that protects payments?"),
     // 사장이 준 문장 그대로(개발 14). 사실 문제가 보이면 고치지 말고 묻는다.
     body: t(
@@ -178,7 +170,6 @@ export const HELP_SECTIONS: HelpSection[] = [
   },
   {
     id: "backup",
-    icon: <KeyRound size={22} />,
     title: t("시드 백업", "Seed backup"),
     body: t(
       <div className="space-y-2.5">

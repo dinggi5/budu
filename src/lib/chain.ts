@@ -68,7 +68,7 @@ export function explorerTxUrl(chain: ChainConfig, sig: string): string {
 }
 
 /** 선택 가능한 클러스터 (설정 토글 순서). 대회 데모 단계라 데브넷이 왼쪽·기본. */
-export const CHAINS: ChainConfig[] = [SOLANA_DEVNET, SOLANA_MAINNET];
+export const CHAINS: ChainConfig[] = [SOLANA_MAINNET, SOLANA_DEVNET]; // 설정 화면 순서 — 메인넷 먼저(새 설치 기본)
 
 /** chain_id → ChainConfig. 설정 로드 전(undefined)과 **모르는 id** 둘 다 데브넷 — 백엔드 active_chain()·MCP 가
  *  모르는 id 를 데브넷으로 정규화하므로, 여기서 다른 걸 그리면 잔액은 데브넷인데 라벨만 딴 클러스터가 된다. */

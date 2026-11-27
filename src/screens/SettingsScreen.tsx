@@ -391,7 +391,7 @@ export function SettingsScreen({
             >
               <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
                 {t(
-                  "설정 금액 이하의 결제를 자동으로 승인합니다. (0으로 두면 항상 비밀번호)",
+                  "설정 금액 이하의 결제를 자동으로 승인합니다. (0으로 두면 상시 비밀번호)",
                   "Payments up to the amount you set are approved automatically. (0 means always ask for the password.)",
                 )}
               </p>
