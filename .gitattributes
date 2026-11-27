@@ -1,0 +1,7 @@
+# GitHub 언어 통계는 제품 코드만 — Rust + TypeScript
+scripts/* linguist-vendored
+docs/** linguist-documentation
+index.html linguist-detectable=false
+*.css linguist-detectable=false
+# 데모 판매자 서버(budu-port)는 지갑 제품이 아니라 시연용 — 통계에서 뺀다
+budu-port/** linguist-vendored

@@ -1,0 +1,113 @@
+// 긴급 잠금 — 켜지면 모든 송금·서명이 차단된다 (AI 폭주·키 노출 대비 비상 스위치).
+
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::PathBuf;
+
+use crate::session::SessionKey;
+use crate::store::{budu_dir, write_json};
+
+#[derive(Serialize, Deserialize, Default)]
+struct LockState {
+    locked: bool,
+}
+
+fn lock_path() -> Result<PathBuf, String> {
+    Ok(budu_dir()?.join("lock.json"))
+}
+
+/// 긴급 잠금 상태를 읽는다. 파일이 없으면 "해제"(한 번도 안 켰다).
+/// 🔴 **있는데 못 읽거나 깨졌으면 "잠금"** — 예전엔 "해제"로 봐서, 잠금을 켠 뒤 파일이 상하면
+/// 비상 스위치가 조용히 풀렸다. 갇히지는 않는다: 해제 버튼(`set_locked(false)`)이 새 파일을 쓴다.
+pub(crate) fn read_lock() -> bool {
+    lock_path().map(|p| lock_at(&p)).unwrap_or(true)
+}
+
+fn lock_at(path: &std::path::Path) -> bool {
+    match fs::read_to_string(path) {
+        Ok(s) => serde_json::from_str::<LockState>(&s)
+            .map(|l| l.locked)
+            .unwrap_or(true),
+        Err(e) => e.kind() != std::io::ErrorKind::NotFound,
+    }
+}
+
+/// 긴급 잠금 상태를 알려준다 (비번 불필요).
+#[tauri::command]
+pub(crate) fn is_locked() -> bool {
+    read_lock()
+}
+
+/// 긴급 잠금을 켜고 끈다. 켜져 있으면 모든 결제 서명(`x402::do_sign_x402`)이 즉시 거부한다.
+/// 켤 때는 자율 결제용 세션 키도 즉시 메모리에서 소멸시킨다(비상 스위치 = 자율 결제도 멈춤).
+/// 저장에 성공하면 메뉴바 아이콘도 잠금/해제 모양으로 바꾼다.
+#[tauri::command]
+pub(crate) fn set_locked(
+    app: tauri::AppHandle,
+    locked: bool,
+    session: tauri::State<'_, SessionKey>,
+) -> Result<(), String> {
+    if locked {
+        if let Ok(mut g) = session.0.lock() {
+            *g = None;
+        }
+        crate::job::clear(); // 작업 예산의 키도
+    }
+    write_lock_at(&lock_path()?, locked)?;
+    crate::tray::refresh_icon(&app);
+    Ok(())
+}
+
+/// 잠금 상태를 쓴다. 그 자리에 **파일이 아닌 것**(디렉터리 등)이 있으면 옆으로 치우고 쓴다
+/// — 읽기는 그걸 「잠금」으로 보는데(닫힌 쪽 실패) 쓰기는 디렉터리 위로 rename 을 못 해, 해제 버튼이 영영
+/// 안 들었다. 치우지도 못하면 그대로 오류 — 잠금은 닫힌 채로 남는다.
+fn write_lock_at(path: &std::path::Path, locked: bool) -> Result<(), String> {
+    if fs::symlink_metadata(path).is_ok_and(|m| !m.is_file()) {
+        let aside = path.with_extension(format!("broken.{}", crate::store::now_secs()));
+        fs::rename(path, aside).map_err(|e| e.to_string())?;
+    }
+    write_json(path.to_path_buf(), &LockState { locked })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // 긴급 잠금 기본값은 "해제".
+    #[test]
+    fn lock_state_default_is_unlocked() {
+        assert!(!LockState::default().locked);
+    }
+
+    // 없으면 해제, 깨졌으면 잠금(비상 스위치는 닫힌 쪽으로 실패한다).
+    #[test]
+    fn missing_is_unlocked_broken_is_locked() {
+        let dir = std::env::temp_dir().join(format!("budu-lock-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("lock.json");
+        assert!(!lock_at(&p));
+        fs::write(&p, r#"{"locked":false}"#).unwrap();
+        assert!(!lock_at(&p));
+        fs::write(&p, r#"{"locked":true}"#).unwrap();
+        assert!(lock_at(&p));
+        fs::write(&p, r#"{"lock"#).unwrap();
+        assert!(lock_at(&p));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // 🔴 개발 71: 그 자리에 디렉터리가 있으면 읽기는 「잠금」, 해제(쓰기)는 그걸 치우고 된다.
+    #[test]
+    fn directory_in_place_can_be_unlocked() {
+        let dir = std::env::temp_dir().join(format!("budu-lockdir-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        let p = dir.join("lock.json");
+        fs::create_dir_all(p.join("inside")).unwrap();
+        assert!(lock_at(&p));
+        write_lock_at(&p, false).unwrap();
+        assert!(!lock_at(&p));
+        write_lock_at(&p, true).unwrap();
+        assert!(lock_at(&p));
+        let _ = fs::remove_dir_all(&dir);
+    }
+}

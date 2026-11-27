@@ -1,0 +1,22 @@
+{
+  "name": "budu-port",
+  "version": "0.1.0",
+  "private": true,
+  "description": "부두 데모 판매자 — 부산항 데이터를 x402(솔라나 데브넷)로 건당 판다",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "golden": "node golden.mjs",
+    "setup-seller": "node setup-seller.mjs",
+    "test": "node test-parse.mjs"
+  },
+  "dependencies": {
+    "@noble/hashes": "1.8.0",
+    "@solana-program/token": "0.16.1",
+    "@solana/kit": "8.6.0",
+    "@x402/core": "2.30.0",
+    "@x402/express": "2.30.0",
+    "@x402/svm": "2.30.0",
+    "express": "5.3.0"
+  }
+}

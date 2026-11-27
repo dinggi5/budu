@@ -1,0 +1,31 @@
+{
+  "generator": "@x402/svm 2.30.0 ExactSvmScheme",
+  "cases": [
+    {
+      "name": "devnet_0.01_seller_memo",
+      "seed_byte": 7,
+      "owner": "GmaDrppBC7P5ARKV8g3djiwP89vz1jLK23V2GBjuAEGB",
+      "pay_to": "HAgk14JpMQLgt6rVgv7cBQFJWFto5Dqxi472uT3DKpqk",
+      "fee_payer": "CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5",
+      "mint": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+      "decimals": 6,
+      "amount": "10000",
+      "memo": "budu-golden-1",
+      "blockhash": "EZ3rST5dvHmbanh75jc4PuLfV96vp9fEYBVeNk4FfM1k",
+      "transaction_base64": "AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADUobMn+m+vXILe7PA44E6I9ubWE/BmLW8sxlNIG1T+Cxg4Ojm/EjyKoIfMIGWjAXIiEJSpFfMu8V0EolVOymsMgAIBBAioJj4231QlUdK2b0fJ3VUxiogRXd0NQhBvJO622ZUKfupKbGPinFIKvvVQexMuxfmVR3auvr57kkIe6mkURtIsa4T+VAWZkKbqIwjcZYhVrZWKZR4UVyYj9/rTk9uwE+yfjrIjpNyTLPvaeNDHbQBHTH0KYhj4Iv3veDKdy24JGjtELLORIVfxOpM9ATQoLQMrX/7NAaLb8bd5BgjfAC6nAwZGb+UhFzL/7K26csOb57yM5bvF9xJrLEObOkAAAAAFSlNamSkhBk0k6HFg2jh8fDW13bySu4HkH6hAQQVEjQbd9uHXZaGT2cvhRs7reawctIXtX1s3kTqM9YV+/wCpyV29u5s5tb9yxXaxLxIjPB/vcv+BhIj3ODTS8YLYlusEBQAFAiBOAAAFAAkDAQAAAAAAAAAHBAIEAwEKDBAnAAAAAAAABgYADWJ1ZHUtZ29sZGVuLTEA"
+    },
+    {
+      "name": "devnet_large_amount_utf8_memo",
+      "seed_byte": 42,
+      "owner": "2iXtA8oeZqUU5pofxK971TCEvFGfems2AcDRaZHKD2pQ",
+      "pay_to": "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4",
+      "fee_payer": "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4",
+      "mint": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+      "decimals": 6,
+      "amount": "18446744073709551615",
+      "memo": "부산항 입항 준비 · invoice#42",
+      "blockhash": "11111111111111111111111111111111",
+      "transaction_base64": "AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD6PlFiM5H3pgUva0TLsQ7As27n2Kvy//mfPgMA9nEyDyhyw0kn2+h221IfyDce3gYdnTVPMf7QFOXLkmH+JqwHgAIBBAgcxm7UN1ERWkK1kFEyxPZoMoYR5ejet9hiWF0qNVHQARl/ayPhbIUyxqvIOPrNXqeJvgx2spIDNAOb+os9No1hhym1sSR1ISgbpclL8xwEkaOR7MUUttiwAKDWSvmKgAUExTD7ptRikpEzr6RFZOyfvNwz1dpqLohz6V1Cjeuj4TtELLORIVfxOpM9ATQoLQMrX/7NAaLb8bd5BgjfAC6nAwZGb+UhFzL/7K26csOb57yM5bvF9xJrLEObOkAAAAAFSlNamSkhBk0k6HFg2jh8fDW13bySu4HkH6hAQQVEjQbd9uHXZaGT2cvhRs7reawctIXtX1s3kTqM9YV+/wCpAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBQAFAiBOAAAFAAkDAQAAAAAAAAAHBAMEAgEKDP//////////BgYAJeu2gOyCsO2VrSDsnoXtla0g7KSA67mEIMK3IGludm9pY2UjNDIA"
+    }
+  ]
+}

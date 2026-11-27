@@ -1,0 +1,36 @@
+[package]
+name = "budu-mcp"
+version = "0.1.0"
+edition = "2021"
+description = "부두 MCP 어댑터 — AI 에이전트가 로컬 지갑을 조회·결제"
+
+# stdio MCP 서버(AI 에이전트용, src/main.rs). lib(wallet/flow/payment/x402/chain)을 통합 테스트와 같이 쓴다.
+
+# 독립 크레이트: src-tauri(Tauri 앱)와 분리. 파일 읽기 + RPC만 하므로 Tauri 의존성 불필요.
+# RPC_URL / USDC_ADDRESS 등 체인 상수는 src-tauri/src/chain.rs 와 의도적으로 중복(공유 크레이트
+# 안 만드는 정책 — Tauri 빌드 위험 0). 단, ~/.budu 파일을 **읽는 규칙**(체인 선택·계정 정규화·
+# 데이터 파일 이름·지정 RPC·조회 스위치·내역 항목 형식·URL 가리기)은 두 크레이트가 갈리면 돈이 딴 체인·딴 계정으로 가므로 shared/policy.rs 한 파일을
+# `#[path]` 모듈로 양쪽에서 컴파일한다(개발 56) — 크레이트가 아니라 여기 의존성엔 아무것도 안 붙는다.
+
+[dependencies]
+# MCP 서버 (공식 Rust SDK). stdio 전송 + 매크로 기반 도구 정의.
+rmcp = { version = "0.16", features = ["server", "macros", "transport-io"] }
+# 비동기 런타임 (stdio I/O + RPC await).
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std", "io-util", "time"] }
+# JSON 직렬화 + 도구 인자 스키마.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = "1"
+# 솔라나 주소·ATA(PDA) (개발 2) — shared/solana.rs 를 GUI 와 같이 컴파일하므로 같은 버전.
+bs58 = "0.5"
+curve25519-dalek = "4"
+# 홈 디렉터리(~/.budu) 탐색.
+dirs = "6.0.0"
+anyhow = "1"
+# x402 HTTP 클라이언트: 402 응답 fetch + PAYMENT-SIGNATURE 재요청, 솔라나 JSON-RPC.
+# rustls = macOS에서 시스템 openssl 의존성 회피.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+# 결제 헤더 base64 인코딩 (src-tauri와 동일 버전).
+base64 = "0.22"
+# ATA(PDA) 주소 = sha256 (shared/solana.rs — GUI 와 같은 버전).
+sha2 = "0.10"

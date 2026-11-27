@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Budu",
+  "version": "0.1.0",
+  "identifier": "com.dinggi5.budu",
+  "build": {
+    "beforeDevCommand": "npm run sidecars && npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run sidecars && npm run build",
+    "frontendDist": "../dist",
+    "additionalWatchFolders": [
+      "../shared"
+    ]
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Budu",
+        "width": 420,
+        "height": 640,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": true,
+        "visible": false,
+        "skipTaskbar": true,
+        "center": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "app"
+    ],
+    "externalBin": [
+      "binaries/budu-mcp"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Finance",
+    "copyright": "© 2026 dinggi5.",
+    "shortDescription": "부산항 업무를 하는 AI 에이전트의 지출 지갑",
+    "longDescription": "키가 이 맥을 떠나지 않는 로컬 지갑. AI 에이전트가 x402 로 데이터를 살 때, 사람이 허락한 작업 예산 안에서만 돈을 내고 그 밖은 비밀번호로 승인한다.",
+    "macOS": {
+      "hardenedRuntime": true,
+      "minimumSystemVersion": "11.0"
+    }
+  }
+}

@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>부두 큰 창 시안</title>
+<style>
+@font-face {
+  font-family: "Pretendard Variable";
+  font-weight: 45 920;
+  src: url("../../public/fonts/PretendardVariable.woff2") format("woff2");
+}
+:root {
+  --g50:#F9FAFB; --g100:#F2F4F6; --g200:#E5E8EB; --g300:#D1D6DB; --g400:#B0B8C1;
+  --g500:#8B95A1; --g600:#6B7684; --g700:#4E5968; --g800:#333D4B; --g900:#191F28;
+  --panel:#F7F8FA;
+  --accent:#7A5AF8; --accent-tint:#F1EDFE; --accent-hover:#6B4BEA;
+  --danger:#F04452; --success:#03B26C;
+  --font: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; background:#EEF0F3; color:var(--g900); font-family:var(--font);
+  -webkit-font-smoothing:antialiased; letter-spacing:-0.01em; font-feature-settings:"tnum"; }
+.page { max-width: 1040px; margin: 0 auto; padding: 48px 24px 96px; }
+.page > h1 { font-size: 24px; font-weight: 700; margin: 0 0 8px; }
+.page > p.lead { font-size: 15px; line-height: 1.6; color: var(--g600); margin: 0 0 32px; max-width: 720px; }
+.tabs { display:flex; gap:8px; margin-bottom: 24px; flex-wrap: wrap; }
+.tab { border:0; background:#fff; color:var(--g700); font: 500 14px var(--font); height:36px; padding:0 16px;
+  border-radius:999px; cursor:pointer; box-shadow: inset 0 0 0 1px var(--g200); }
+.tab[aria-selected="true"] { background:var(--g900); color:#fff; box-shadow:none; }
+.option { display:none; }
+.option.on { display:block; }
+.option > h2 { font-size: 21px; font-weight: 600; margin: 0 0 6px; }
+.option > p.note { font-size: 14px; line-height: 1.6; color: var(--g600); margin: 0 0 20px; max-width: 760px; }
+.frame-label { font-size: 13px; color: var(--g500); margin: 28px 0 10px; }
+.scaler { width: 100%; overflow: hidden; }
+
+/* ---- 맥 창 ---- */
+.win { width: 960px; height: 720px; background:#fff; border-radius: 12px; position: relative; overflow: hidden;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,.18), 0 20px 50px rgba(0,0,0,.14); transform-origin: top left; }
+.lights { position:absolute; top:18px; left:18px; display:flex; gap:8px; z-index:5; }
+.lights i { width:12px; height:12px; border-radius:50%; display:block; }
+.lights i:nth-child(1){background:#FF5F57} .lights i:nth-child(2){background:#FEBC2E} .lights i:nth-child(3){background:#28C840}
+
+/* ---- 공통 조각 ---- */
+.num { font-feature-settings:"tnum"; }
+.muted { color: var(--g500); }
+.mono { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0; }
+.chip { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 10px; border-radius:999px;
+  font-size:12px; font-weight:500; background:var(--g100); color:var(--g700); white-space:nowrap; }
+.chip.ok { background:#E6F7EF; color:#028A54; }
+.chip.warn { background:#FFF0F1; color:#D22B3A; }
+.chip.accent { background:var(--accent-tint); color:var(--accent); }
+.dot { width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block; }
+.bar { height:6px; border-radius:999px; background:var(--g100); overflow:hidden; }
+.bar > b { display:block; height:100%; border-radius:999px; background:var(--accent); }
+.bar.grey > b { background: var(--g400); }
+.btn { height:36px; padding:0 14px; border-radius:10px; border:0; font:500 13px var(--font); cursor:default;
+  display:inline-flex; align-items:center; gap:6px; }
+.btn.ghost { background:#fff; box-shadow: inset 0 0 0 1px var(--g200); color:var(--g700); }
+.btn.primary { background:var(--accent); color:#fff; }
+.btn.dark { background:var(--g900); color:#fff; }
+svg.ic { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+/* ================= A — 콘솔 ================= */
+.A { display:grid; grid-template-columns: 208px 1fr; height:100%; }
+.A .side { background: var(--panel); padding: 56px 12px 16px; display:flex; flex-direction:column; gap:2px; }
+.A .acct { display:flex; align-items:center; gap:10px; padding: 8px 10px 18px; }
+.A .avatar { width:28px; height:28px; border-radius:8px; background:var(--g900); color:#fff; display:grid; place-items:center; font-size:12px; font-weight:700; }
+.A .acct b { font-size:14px; font-weight:600; display:block; }
+.A .acct span { font-size:12px; color:var(--g500); }
+.A .nav { display:flex; align-items:center; gap:10px; height:36px; padding:0 10px; border-radius:8px; font-size:14px; color:var(--g700); }
+.A .nav.on { background:#fff; color:var(--g900); font-weight:600; box-shadow: 0 0 0 1px var(--g200); }
+.A .nav .cnt { margin-left:auto; font-size:12px; color:var(--g500); }
+.A .side .spacer { flex:1; }
+.A .agent { margin: 0 4px; padding: 12px; border-radius: 10px; background:#fff; box-shadow: 0 0 0 1px var(--g200); font-size:12px; }
+.A .agent b { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--g900); }
+.A .agent b .dot { color: var(--success); }
+.A .main { padding: 40px 40px 32px; overflow:hidden; display:flex; flex-direction:column; gap:20px; }
+.A .top { display:flex; align-items:center; justify-content:space-between; }
+.A .top h3 { font-size:24px; font-weight:700; margin:0; }
+.A .top .right { display:flex; gap:8px; align-items:center; }
+.A .grid { display:grid; grid-template-columns: 1.1fr 1fr; gap:16px; }
+.A .card { background:var(--panel); border-radius:14px; padding:20px; }
+.A .bal .label { font-size:13px; color:var(--g500); }
+.A .bal .big { font-size:40px; font-weight:700; margin:6px 0 2px; letter-spacing:-0.02em; }
+.A .bal .big small { font-size:17px; font-weight:600; color:var(--g500); margin-left:4px; }
+.A .bal .sub { font-size:12px; color:var(--g500); }
+.A .lim { margin-top:18px; }
+.A .lim .row { display:flex; justify-content:space-between; font-size:12px; color:var(--g600); margin-bottom:8px; }
+.A .job .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.A .job h4 { margin:0; font-size:15px; font-weight:600; }
+.A .job .amt { font-size:24px; font-weight:700; margin:2px 0 10px; }
+.A .job .amt small { font-size:13px; color:var(--g500); font-weight:500; }
+.A .job .meta { display:flex; gap:16px; font-size:12px; color:var(--g600); margin-top:12px; }
+.A .feed { background:#fff; border-radius:14px; box-shadow: 0 0 0 1px var(--g200); overflow:hidden; flex:1; }
+.A .feed .fh { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--g100); font-size:13px; font-weight:600; }
+.A table { width:100%; border-collapse:collapse; font-size:13px; }
+.A td { padding: 11px 18px; border-bottom: 1px solid var(--g100); white-space:nowrap; }
+.A td.r { text-align:right; }
+.A td .path { font-weight:500; }
+.A td .host { color:var(--g500); font-size:12px; }
+.A tr:last-child td { border-bottom:0; }
+
+/* A-2 판매자 */
+.A .sellers { display:grid; grid-template-columns: 1fr; gap:12px; }
+.A .seller { background:#fff; border-radius:14px; box-shadow: 0 0 0 1px var(--g200); padding:18px 20px; }
+.A .seller .sh { display:flex; align-items:center; gap:12px; }
+.A .seller .logo { width:36px; height:36px; border-radius:10px; background:var(--g900); color:#fff; display:grid; place-items:center; font-weight:700; font-size:14px; }
+.A .seller .sh b { font-size:15px; }
+.A .seller .sh .u { font-size:12px; color:var(--g500); }
+.A .seller .sh .right { margin-left:auto; text-align:right; }
+.A .seller .sh .right .spent { font-size:17px; font-weight:700; }
+.A .price { display:grid; grid-template-columns: 120px 1fr 90px 90px; gap:8px; align-items:center; padding:10px 0; border-top:1px solid var(--g100); font-size:13px; }
+.A .price:first-of-type { margin-top: 14px; }
+.A .placeholder { border:1px dashed var(--g300); background:transparent; box-shadow:none; color:var(--g500); }
+
+/* ================= B — 장부 ================= */
+.B { display:grid; grid-template-columns: 64px 1fr; height:100%; }
+.B .rail { border-right:1px solid var(--g100); padding: 60px 0 16px; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.B .rail a { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; color:var(--g500); }
+.B .rail a.on { background:var(--g100); color:var(--g900); }
+.B .rail .spacer { flex:1; }
+.B .body { display:grid; grid-template-columns: 1fr 320px; height:100%; }
+.B .hero { padding: 72px 56px 40px; display:flex; flex-direction:column; }
+.B .eyebrow { font-size:13px; color:var(--g500); display:flex; align-items:center; gap:8px; }
+.B .eyebrow .net { color:var(--g600); }
+.B .hero .big { font-size:64px; font-weight:700; letter-spacing:-0.03em; margin: 14px 0 0; line-height:1; }
+.B .hero .big small { font-size:21px; color:var(--g500); font-weight:600; margin-left:8px; letter-spacing:0; }
+.B .hero .after { font-size:14px; color:var(--g600); margin-top:16px; }
+.B .gauges { display:grid; grid-template-columns: 1fr 1fr; gap:32px; margin-top:48px; }
+.B .gauge .t { font-size:12px; color:var(--g500); margin-bottom:8px; display:flex; justify-content:space-between; }
+.B .gauge .v { font-size:17px; font-weight:600; margin-bottom:10px; }
+.B .jobline { margin-top: auto; padding-top: 28px; border-top: 1px solid var(--g100); display:flex; align-items:center; gap:16px; }
+.B .jobline .ji { width:40px; height:40px; border-radius:12px; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; }
+.B .jobline b { font-size:15px; display:block; }
+.B .jobline span { font-size:13px; color:var(--g500); }
+.B .jobline .right { margin-left:auto; display:flex; align-items:center; gap:12px; }
+.B .log { background: var(--panel); padding: 56px 24px 24px; overflow:hidden; }
+.B .log h5 { margin:0 0 18px; font-size:13px; font-weight:600; color:var(--g600); display:flex; justify-content:space-between; }
+.B .entry { position:relative; padding: 0 0 20px 22px; }
+.B .entry::before { content:""; position:absolute; left:4px; top:8px; bottom:-4px; width:1px; background:var(--g200); }
+.B .entry:last-child::before { display:none; }
+.B .entry::after { content:""; position:absolute; left:0; top:4px; width:9px; height:9px; border-radius:50%; background:#fff; box-shadow: inset 0 0 0 2px var(--g400); }
+.B .entry.ok::after { box-shadow: inset 0 0 0 2px var(--success); }
+.B .entry.bad::after { box-shadow: inset 0 0 0 2px var(--danger); }
+.B .entry .when { font-size:12px; color:var(--g500); }
+.B .entry .what { font-size:14px; font-weight:500; margin-top:2px; display:flex; justify-content:space-between; }
+.B .entry .why { font-size:12px; color:var(--g500); margin-top:2px; }
+.B .entry.bad .what span:last-child { color: var(--danger); }
+
+/* B-2 내역(장부) */
+.B .ledger { padding: 64px 48px 32px; grid-column: 1 / -1; overflow:hidden; }
+.B .ledger h3 { margin:0 0 4px; font-size:24px; font-weight:700; }
+.B .ledger .lsub { font-size:14px; color:var(--g500); margin-bottom: 28px; }
+.B .group { margin-bottom: 28px; }
+.B .group .gh { display:flex; align-items:baseline; gap:12px; padding-bottom:10px; border-bottom:1px solid var(--g900); }
+.B .group .gh b { font-size:15px; }
+.B .group .gh .tot { margin-left:auto; font-size:15px; font-weight:700; }
+.B .line { display:grid; grid-template-columns: 70px 1fr 140px 110px 90px; gap:12px; padding:11px 0; border-bottom:1px solid var(--g100); font-size:13px; align-items:center; }
+
+
+/* ================= B + A — 장부 뼈대에 A 의 정렬된 열 ================= */
+.BA .hero { padding: 64px 56px 0; }
+.BA .gauges { margin-top: 36px; }
+.BA .feed2 { padding: 36px 56px 24px; }
+.BA .feed2 .fh { display:flex; justify-content:space-between; align-items:baseline; font-size:13px; font-weight:600; color:var(--g600); padding-bottom:10px; border-bottom:1px solid var(--g900); }
+.BA .row { display:grid; grid-template-columns: 14px 52px 1fr 170px 150px 64px; gap:12px; align-items:center; padding: 12px 0; border-bottom:1px solid var(--g100); font-size:13px; }
+.BA .row .pt { width:8px; height:8px; border-radius:50%; box-shadow: inset 0 0 0 2px var(--success); }
+.BA .row.bad .pt { box-shadow: inset 0 0 0 2px var(--danger); }
+.BA .row.idle .pt { box-shadow: inset 0 0 0 2px var(--g400); }
+.BA .row .path { font-weight:500; }
+.BA .row .host { color:var(--g500); margin-left:6px; }
+.BA .row .st { font-size:12px; color:var(--g500); white-space:nowrap; }
+.BA .row.bad .st { color: var(--danger); }
+.BA .row .amt { text-align:right; font-weight:600; }
+.BA .row.bad .amt { color:var(--g400); text-decoration:line-through; font-weight:500; }
+.BA .jobtag { font-size:12px; color:var(--g600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.BA .seller2 { padding: 64px 56px 24px; }
+.BA .seller2 h3 { margin:0 0 4px; font-size:24px; font-weight:700; }
+.BA .seller2 .lsub { font-size:14px; color:var(--g500); margin-bottom: 32px; }
+.BA .sg { margin-bottom: 36px; }
+.BA .sg .gh { display:flex; align-items:baseline; gap:12px; padding-bottom:10px; border-bottom:1px solid var(--g900); }
+.BA .sg .gh b { font-size:15px; }
+.BA .sg .gh .tot { margin-left:auto; font-size:15px; font-weight:700; }
+.BA .pr { display:grid; grid-template-columns: 120px 1fr 110px 72px; gap:12px; align-items:center; padding: 12px 0; border-bottom:1px solid var(--g100); font-size:13px; }
+.BA .tag { font-size:12px; color:var(--g500); }
+.BA .tag.real { color:#028A54; }
+
+/* ================= C — 관제 ================= */
+.C { display:flex; flex-direction:column; height:100%; }
+.C .bar-top { height:52px; display:flex; align-items:center; padding: 0 16px 0 92px; border-bottom:1px solid var(--g100); gap:16px; }
+.C .bar-top .seg { display:flex; background:var(--g100); border-radius:9px; padding:3px; }
+.C .bar-top .seg span { font-size:13px; height:28px; padding:0 14px; display:grid; place-items:center; border-radius:7px; color:var(--g600); }
+.C .bar-top .seg span.on { background:#fff; color:var(--g900); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+.C .bar-top .right { margin-left:auto; display:flex; align-items:center; gap:10px; font-size:13px; }
+.C .cols { flex:1; display:grid; grid-template-columns: 248px 1fr 268px; min-height:0; }
+.C .list { border-right:1px solid var(--g100); overflow:hidden; }
+.C .list .lh { padding: 16px 16px 8px; font-size:12px; color:var(--g500); font-weight:600; }
+.C .ji { padding: 12px 16px; border-left: 2px solid transparent; }
+.C .ji.on { background: var(--panel); border-left-color: var(--accent); }
+.C .ji b { font-size:14px; font-weight:600; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.C .ji .s { display:flex; justify-content:space-between; font-size:12px; color:var(--g500); margin-top:4px; }
+.C .detail { padding: 28px 32px; overflow:hidden; display:flex; flex-direction:column; gap:20px; }
+.C .detail h3 { margin:0; font-size:21px; font-weight:700; }
+.C .detail .dsub { font-size:13px; color:var(--g500); margin-top:4px; }
+.C .budget { display:grid; grid-template-columns: 1fr auto; gap:6px 24px; align-items:end; }
+.C .budget .big { font-size:36px; font-weight:700; letter-spacing:-0.02em; }
+.C .budget .big small { font-size:15px; color:var(--g500); font-weight:500; }
+.C .budget .bar { grid-column: 1 / -1; height:8px; }
+.C .budget .legend { grid-column: 1 / -1; display:flex; gap:20px; font-size:12px; color:var(--g600); }
+.C .steps { border-radius: 14px; box-shadow: 0 0 0 1px var(--g200); overflow:hidden; }
+.C .step { display:grid; grid-template-columns: 28px 1fr auto auto; gap:12px; align-items:center; padding: 12px 16px; border-bottom:1px solid var(--g100); font-size:13px; }
+.C .step:last-child { border-bottom:0; }
+.C .step .n { width:22px; height:22px; border-radius:50%; background:var(--g100); display:grid; place-items:center; font-size:11px; color:var(--g600); font-weight:600; }
+.C .step.bad { background: #FFF8F8; }
+.C .step.bad .n { background:#FFE3E5; color:var(--danger); }
+.C .insp { border-left:1px solid var(--g100); background: var(--panel); padding: 24px 20px; display:flex; flex-direction:column; gap:22px; overflow:hidden; }
+.C .insp h6 { margin:0 0 8px; font-size:12px; color:var(--g500); font-weight:600; }
+.C .insp .bigbal { font-size:28px; font-weight:700; letter-spacing:-0.02em; }
+.C .insp .bigbal small { font-size:13px; color:var(--g500); font-weight:500; }
+.C .insp .kv { display:flex; justify-content:space-between; font-size:13px; padding:7px 0; border-bottom:1px solid var(--g200); }
+.C .insp .kv:last-child { border-bottom:0; }
+
+/* ================= 공통 — 승인 시트 ================= */
+.dim { position:absolute; inset:0; background: rgba(25,31,40,.32); backdrop-filter: blur(2px); display:flex; justify-content:center; align-items:flex-start; padding-top: 72px; z-index: 4; }
+.sheet { width: 448px; background:#fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.22); padding: 28px 28px 24px; }
+.sheet .kicker { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--g500); }
+.sheet .amount { font-size:40px; font-weight:700; letter-spacing:-0.02em; margin: 14px 0 4px; }
+.sheet .amount small { font-size:17px; color:var(--g500); font-weight:600; margin-left:4px; }
+.sheet .to { font-size:14px; color:var(--g600); }
+.sheet dl { margin: 20px 0 0; display:grid; grid-template-columns: 96px 1fr; gap: 10px 12px; font-size:13px; }
+.sheet dt { color:var(--g500); }
+.sheet dd { margin:0; color:var(--g800); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sheet .choice { margin-top: 20px; display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+.sheet .choice div { border-radius:12px; padding: 12px 14px; box-shadow: inset 0 0 0 1px var(--g200); font-size:13px; }
+.sheet .choice div b { display:block; font-size:14px; margin-bottom:2px; }
+.sheet .choice div.on { box-shadow: inset 0 0 0 1.5px var(--accent); background: var(--accent-tint); }
+.sheet input { margin-top: 16px; width:100%; height:48px; border-radius:12px; border:0; background:var(--g100); padding:0 14px; font:15px var(--font); }
+.sheet .acts { margin-top: 14px; display:grid; grid-template-columns: 1fr 2fr; gap:8px; }
+.sheet .acts .btn { height:48px; justify-content:center; font-size:15px; border-radius:12px; }
+
+.compare { width:100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; background:#fff; border-radius:12px; overflow:hidden; }
+.compare th, .compare td { text-align:left; padding: 12px 16px; border-bottom: 1px solid var(--g100); vertical-align: top; line-height:1.5; }
+.compare th { font-weight:600; color: var(--g600); font-size:13px; background: var(--g50); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-job" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-store" viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9M3 9h18M3 9v11h18V9M9 20v-6h6v6"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4M9 14h.01M15 14h.01"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.3-9.3M17 6l3 3M14 9l2 2"/></symbol>
+  </defs>
+</svg>
+
+<div class="page">
+  <h1>부두 큰 창 — 화면 시안 세 가지</h1>
+  <p class="lead">개발 6 에서 정한 방향(«마리나체인처럼 안에 뭔가 많아 보이고 간지나게, 미니멀은 유지», 왼쪽 사이드바·큰 잔액·한도 막대·진행 중 작업·결제 타임라인·판매자)을
+  세 갈래로 풀었습니다. 숫자는 개발 5 실결제(데브넷, 작업 «오슬로호 입항 준비»)와 같은 모양의 예시입니다. 공통 규칙: 흰 바탕 + 토스 그레이, 그림자 대신 옅은 회색 판,
+  <b>보라는 돈이 걸린 곳에만</b>(작업 예산 막대·한도 막대·승인 버튼). 결제 승인은 세 안 모두 같은 «승인 시트»(마지막 탭)가 창 위에 뜹니다.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-t="A" aria-selected="true">A · 콘솔</button>
+    <button class="tab" role="tab" data-t="B" aria-selected="false">B · 장부</button>
+    <button class="tab" role="tab" data-t="BA" aria-selected="false">B + A 섞기</button>
+    <button class="tab" role="tab" data-t="C" aria-selected="false">C · 관제</button>
+    <button class="tab" role="tab" data-t="S" aria-selected="false">공통 · 승인 시트</button>
+    <button class="tab" role="tab" data-t="X" aria-selected="false">비교</button>
+  </div>
+
+  <!-- ===================== A ===================== -->
+  <section class="option on" id="opt-A">
+    <h2>A · 콘솔 — 사이드바 + 카드 두 장 + 결제 표</h2>
+    <p class="note">개발 6 메모를 가장 곧게 옮긴 안. 왼쪽 사이드바(홈·작업·내역·판매자·설정), 홈은 잔액+오늘 한도 / 진행 중 작업 카드 두 장 위에 최근 결제 표.
+      «꽉 찬 느낌» 은 카드 수가 아니라 표의 진짜 줄(정산 tx·체인 확인·작업)에서 나온다. 만들기 가장 쉽고 데모 영상에서 한눈에 읽힌다.</p>
+
+    <div class="frame-label">홈</div>
+    <div class="scaler"><div class="win"><div class="lights"><i></i><i></i><i></i></div>
+      <div class="A">
+        <aside class="side">
+          <div class="acct"><div class="avatar">부</div><div><b>계정 1</b><span class="mono">7xKX…gAsU</span></div></div>
+          <div class="nav on"><svg class="ic"><use href="#i-home"/></svg>홈</div>
+          <div class="nav"><svg class="ic"><use href="#i-job"/></svg>작업<span class="cnt">1</span></div>
+          <div class="nav"><svg class="ic"><use href="#i-list"/></svg>내역</div>
+          <div class="nav"><svg class="ic"><use href="#i-store"/></svg>판매자</div>
+          <div class="nav"><svg class="ic"><use href="#i-gear"/></svg>설정</div>
+          <div class="spacer"></div>
+          <div class="agent"><b><span class="dot"></span>Claude Code 연결됨</b><div class="muted" style="margin-top:4px">budu MCP · 데브넷</div></div>
+        </aside>
+        <main class="main">
+          <div class="top">
+            <h3>홈</h3>
+            <div class="right"><span class="chip">데브넷</span><button class="btn ghost"><svg class="ic"><use href="#i-shield"/></svg>긴급 잠금</button><button class="btn ghost"><svg class="ic"><use href="#i-down"/></svg>받기</button></div>
+          </div>
+          <div class="grid">
+            <div class="card bal">
+              <div class="label">USDC 잔액</div>
+              <div class="big num">19.93<small>USDC</small></div>
+              <div class="sub">SOL 0 · 수수료는 페이실리테이터가 내요</div>
+              <div class="lim">
+                <div class="row"><span>오늘 쓴 돈</span><span class="num">0.07 / 20.00 USDC</span></div>
+                <div class="bar"><b style="width:0.35%; min-width:6px"></b></div>
+                <div class="row" style="margin-top:10px;margin-bottom:0"><span>건당 한도</span><span class="num">5.00 USDC</span></div>
+              </div>
+            </div>
+            <div class="card job">
+              <div class="head"><span class="chip accent"><span class="dot"></span>진행 중 작업</span><span class="muted" style="font-size:12px">41분 남음</span></div>
+              <h4>HMM 오슬로호 12/18 부산 입항 준비</h4>
+              <div class="amt num">0.07 <small>/ 0.20 USDC</small></div>
+              <div class="bar"><b style="width:35%"></b></div>
+              <div class="meta"><span>결제 3건</span><span>판매자 1곳</span><span>창 없이 2건</span></div>
+              <div style="display:flex;gap:8px;margin-top:16px"><button class="btn ghost"><svg class="ic"><use href="#i-file"/></svg>영수증 CSV</button><button class="btn ghost">끝내기</button></div>
+            </div>
+          </div>
+          <div class="feed">
+            <div class="fh"><span>최근 결제</span><span class="muted" style="font-weight:400">전체 보기</span></div>
+            <table>
+              <tr><td class="muted num">02:02</td><td><span class="path">/congestion</span> <span class="host">budu-port</span></td><td><span class="chip">오슬로호 입항 준비</span></td><td><span class="chip ok"><svg class="ic" style="width:12px;height:12px"><use href="#i-check"/></svg>체인 확인</span></td><td class="r num">0.05</td></tr>
+              <tr><td class="muted num">02:01</td><td><span class="path">/tide</span> <span class="host">budu-port</span></td><td><span class="chip">오슬로호 입항 준비</span></td><td><span class="chip ok"><svg class="ic" style="width:12px;height:12px"><use href="#i-check"/></svg>체인 확인</span></td><td class="r num">0.01</td></tr>
+              <tr><td class="muted num">02:01</td><td><span class="path">/wave</span> <span class="host">budu-port</span></td><td><span class="chip">오슬로호 입항 준비</span></td><td><span class="chip ok"><svg class="ic" style="width:12px;height:12px"><use href="#i-check"/></svg>체인 확인</span></td><td class="r num">0.01</td></tr>
+              <tr><td class="muted num">01:58</td><td><span class="path">/premium</span> <span class="host">port-data.example</span></td><td><span class="chip">오슬로호 입항 준비</span></td><td><span class="chip warn">창 전 거절 · 건당 한도</span></td><td class="r num" style="color:var(--g400);text-decoration:line-through">50.00</td></tr>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div></div>
+
+    <div class="frame-label">판매자</div>
+    <div class="scaler"><div class="win"><div class="lights"><i></i><i></i><i></i></div>
+      <div class="A">
+        <aside class="side">
+          <div class="acct"><div class="avatar">부</div><div><b>계정 1</b><span class="mono">7xKX…gAsU</span></div></div>
+          <div class="nav"><svg class="ic"><use href="#i-home"/></svg>홈</div>
+          <div class="nav"><svg class="ic"><use href="#i-job"/></svg>작업<span class="cnt">1</span></div>
+          <div class="nav"><svg class="ic"><use href="#i-list"/></svg>내역</div>
+          <div class="nav on"><svg class="ic"><use href="#i-store"/></svg>판매자</div>
+          <div class="nav"><svg class="ic"><use href="#i-gear"/></svg>설정</div>
+          <div class="spacer"></div>
+          <div class="agent"><b><span class="dot"></span>Claude Code 연결됨</b><div class="muted" style="margin-top:4px">budu MCP · 데브넷</div></div>
+        </aside>
+        <main class="main">
+          <div class="top"><h3>판매자</h3><div class="right"><span class="muted" style="font-size:13px">사람이 승인한 판매자만 작업 예산 안에서 창 없이 결제돼요</span></div></div>
+          <div class="sellers">
+            <div class="seller">
+              <div class="sh"><div class="logo">bp</div><div><b>budu-port</b><div class="u mono">localhost:4021 · payTo 9Wz2…k3Qe</div></div>
+                <div class="right"><div class="muted" style="font-size:12px">이번 주 쓴 돈</div><div class="spent num">0.07 USDC</div></div></div>
+              <div class="price"><span class="mono">/wave</span><span class="muted">부산 인근 파고·풍속·수온</span><span class="chip ok" style="justify-self:start">진짜 · 기상청</span><span class="num" style="text-align:right">0.01</span></div>
+              <div class="price"><span class="mono">/tide</span><span class="muted">부산항 만조·간조 예보</span><span class="chip" style="justify-self:start">샘플</span><span class="num" style="text-align:right">0.01</span></div>
+              <div class="price"><span class="mono">/congestion</span><span class="muted">터미널별 대기 선박·예상 대기</span><span class="chip" style="justify-self:start">샘플</span><span class="num" style="text-align:right">0.05</span></div>
+            </div>
+            <div class="seller placeholder">
+              <div class="sh"><div class="logo" style="background:var(--g200);color:var(--g500)">C</div><div><b style="color:var(--g700)">탄소 비용 추정 · /carbon</b><div class="u">EU ETS·FuelEU 항차 비용 — 판매자 확정 전 자리(PLAN §3-4)</div></div><div class="right"><span class="chip">준비 중</span></div></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ===================== B ===================== -->
+  <section class="option" id="opt-B">
+    <h2>B · 장부 — 큰 숫자 하나 + 오른쪽 항해 일지</h2>
+    <p class="note">가장 일본식. 아이콘만 있는 얇은 레일, 왼쪽은 잔액 하나를 64px 로 크게 두고 한도·작업 예산 게이지 둘, 오른쪽 회색 판은 시간 순 «일지»(점이 이어진 타임라인).
+      많아 보이는 건 일지의 밀도로, 화면 자체는 빈자리가 넓다. 데모에서 «50 USDC 창 전 거절» 이 붉은 점 하나로 바로 보인다. 내역 화면은 작업별 장부(합계 굵은 선).</p>
+
+    <div class="frame-label">홈</div>
+    <div class="scaler"><div class="win"><div class="lights"><i></i><i></i><i></i></div>
+      <div class="B">
+        <nav class="rail">
+          <a class="on"><svg class="ic"><use href="#i-home"/></svg></a>
+          <a><svg class="ic"><use href="#i-job"/></svg></a>
+          <a><svg class="ic"><use href="#i-list"/></svg></a>
+          <a><svg class="ic"><use href="#i-store"/></svg></a>
+          <div class="spacer"></div>
+          <a><svg class="ic"><use href="#i-shield"/></svg></a>
+          <a><svg class="ic"><use href="#i-gear"/></svg></a>
+        </nav>
+        <div class="body">
+          <section class="hero">
+            <div class="eyebrow"><span>계정 1</span><span>·</span><span class="net">데브넷</span><span>·</span><span style="color:var(--success)">● Claude Code</span></div>
+            <div class="big num">19.93<small>USDC</small></div>
+            <div class="after">오늘 0.07 USDC 를 썼어요 · SOL 은 필요 없어요</div>
+            <div class="gauges">
+              <div class="gauge"><div class="t"><span>오늘 한도</span><span class="num">20.00</span></div><div class="v num">19.93 남음</div><div class="bar"><b style="width:0.35%;min-width:6px"></b></div></div>
+              <div class="gauge"><div class="t"><span>작업 예산</span><span class="num">0.20</span></div><div class="v num">0.13 남음</div><div class="bar"><b style="width:35%"></b></div></div>
+            </div>
+            <div class="jobline">
+              <div class="ji"><svg class="ic"><use href="#i-job"/></svg></div>
+              <div><b>HMM 오슬로호 12/18 부산 입항 준비</b><span>budu-port 에서 3건 · 41분 남음</span></div>
+              <div class="right"><button class="btn ghost"><svg class="ic"><use href="#i-file"/></svg>CSV</button><button class="btn ghost">끝내기</button></div>
+            </div>
+          </section>
+          <aside class="log">
+            <h5><span>일지</span><span style="font-weight:400">오늘</span></h5>
+            <div class="entry ok"><div class="when num">02:02 · 창 없이</div><div class="what"><span>/congestion</span><span class="num">0.05</span></div><div class="why">budu-port · 체인 확인 4XdM…Ne12</div></div>
+            <div class="entry ok"><div class="when num">02:01 · 창 없이</div><div class="what"><span>/tide</span><span class="num">0.01</span></div><div class="why">budu-port · 체인 확인 63gG…akkC</div></div>
+            <div class="entry ok"><div class="when num">02:01 · 비번 승인</div><div class="what"><span>/wave</span><span class="num">0.01</span></div><div class="why">작업 예산 0.20 을 열었어요</div></div>
+            <div class="entry bad"><div class="when num">01:58 · 창 전 거절</div><div class="what"><span>/premium</span><span class="num">50.00</span></div><div class="why">port-data.example · 건당 한도 5.00 초과</div></div>
+            <div class="entry"><div class="when num">01:40</div><div class="what"><span>지갑 잠금 해제</span><span></span></div><div class="why">작업 예산의 키는 메모리에만</div></div>
+          </aside>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="frame-label">내역 — 작업별 장부</div>
+    <div class="scaler"><div class="win"><div class="lights"><i></i><i></i><i></i></div>
+      <div class="B">
+        <nav class="rail">
+          <a><svg class="ic"><use href="#i-home"/></svg></a>
+          <a><svg class="ic"><use href="#i-job"/></svg></a>
+          <a class="on"><svg class="ic"><use href="#i-list"/></svg></a>
+          <a><svg class="ic"><use href="#i-store"/></svg></a>
+          <div class="spacer"></div>
+          <a><svg class="ic"><use href="#i-shield"/></svg></a>
+          <a><svg class="ic"><use href="#i-gear"/></svg></a>
+        </nav>
+        <div class="body" style="grid-template-columns:1fr">
+          <section class="ledger">
+            <h3>내역</h3>
+            <div class="lsub">결제마다 어느 작업의 비용인지 붙어 있어요. 합계는 체인에서 확인된 것만.</div>
+            <div class="group">
+              <div class="gh"><b>HMM 오슬로호 12/18 부산 입항 준비</b><span class="muted" style="font-size:13px">3건 · 11월 22일</span><span class="tot num">0.07 USDC</span><button class="btn ghost" style="height:30px;margin-left:12px"><svg class="ic"><use href="#i-file"/></svg>CSV</button></div>
+              <div class="line"><span class="muted num">02:02</span><span>/congestion · budu-port</span><span class="mono muted">4XdM5z…Ne12</span><span><span class="chip ok">체인 확인</span></span><span class="num" style="text-align:right">0.05</span></div>
+              <div class="line"><span class="muted num">02:01</span><span>/tide · budu-port</span><span class="mono muted">63gGMm…akkCx</span><span><span class="chip ok">체인 확인</span></span><span class="num" style="text-align:right">0.01</span></div>
+              <div class="line"><span class="muted num">02:01</span><span>/wave · budu-port</span><span class="mono muted">25cyTg…E8fV</span><span><span class="chip ok">체인 확인</span></span><span class="num" style="text-align:right">0.01</span></div>
+              <div class="line"><span class="muted num">01:58</span><span>/premium · port-data.example</span><span class="muted">—</span><span><span class="chip warn">창 전 거절</span></span><span class="num" style="text-align:right;color:var(--g400);text-decoration:line-through">50.00</span></div>
+            </div>
+            <div class="group">
+              <div class="gh"><b style="color:var(--g600)">작업 없음</b><span class="muted" style="font-size:13px">1건 · 11월 21일</span><span class="tot num" style="color:var(--g600)">0.01 USDC</span></div>
+              <div class="line"><span class="muted num">21:14</span><span>/wave · budu-port</span><span class="mono muted">5fe1Q9…TfV5ur</span><span><span class="chip ok">체인 확인</span></span><span class="num" style="text-align:right">0.01</span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+
+  <!-- ===================== B + A ===================== -->
+  <section class="option" id="opt-BA">
+    <h2>B + A — 장부의 뼈대에 A 의 «줄 맞춘 결제 표»</h2>
+    <p class="note">바뀌는 건 두 군데뿐이다. ① 홈 오른쪽의 회색 «일지» 판을 빼고, 그 내용을 큰 숫자 아래 <b>열이 맞춘 줄</b>로 내린다 —
+      시각·무엇을·어느 작업·어떻게 나갔나·금액이 세로로 맞아 금액만 따라 내려 읽을 수 있다. 카드·테두리는 여전히 없고(B), 굵은 선 한 줄 + 가는 선(장부)만.
+      일지의 색 점은 줄 맨 앞에 남겨 «창 전 거절» 이 붉게 보이는 건 그대로. ② A 에만 있던 <b>판매자</b> 페이지를 B 의 장부 모양으로 들인다.
+      잃는 것: 오른쪽 판이 주던 «두 단» 의 여유 — 대신 숫자 영역이 창 폭을 다 쓴다.</p>
+
+    <div class="frame-label">홈 — 순수 B 와 비교해서 보면: 오른쪽 일지 판 → 아래 결제 줄</div>
+    <div class="scaler"><div class="win"><div class="lights"><i></i><i></i><i></i></div>
+      <div class="B BA">
+        <nav class="rail">
+          <a class="on"><svg class="ic"><use href="#i-home"/></svg></a>
+          <a><svg class="ic"><use href="#i-job"/></svg></a>
+          <a><svg class="ic"><use href="#i-list"/></svg></a>
+          <a><svg class="ic"><use href="#i-store"/></svg></a>
+          <div class="spacer"></div>
+          <a><svg class="ic"><use href="#i-shield"/></svg></a>
+          <a><svg class="ic"><use href="#i-gear"/></svg></a>
+        </nav>
+        <div class="body" style="grid-template-columns:1fr; grid-template-rows:auto 1fr">
+          <section class="hero">
+            <div class="eyebrow"><span>계정 1</span><span>·</span><span class="net">데브넷</span><span>·</span><span style="color:var(--success)">● Claude Code</span></div>
+            <div class="big num">19.93<small>USDC</small></div>
+            <div class="after">오늘 0.07 USDC 를 썼어요 · SOL 은 필요 없어요</div>
+            <div class="gauges">
+              <div class="gauge"><div class="t"><span>오늘 한도</span><span class="num">20.00</span></div><div class="v num">19.93 남음</div><div class="bar"><b style="width:0.35%;min-width:6px"></b></div></div>
+              <div class="gauge"><div class="t"><span>작업 예산 · 오슬로호 입항 준비 · 41분</span><span class="num">0.20</span></div><div class="v num">0.13 남음</div><div class="bar"><b style="width:35%"></b></div></div>
+            </div>
+          </section>
+          <section class="feed2">
+            <div class="fh"><span>최근 결제</span><span style="font-weight:400;color:var(--g500)">전체 보기</span></div>
+            <div class="row"><i class="pt"></i><span class="muted num">02:02</span><span><span class="path">/congestion</span><span class="host">budu-port</span></span><span class="jobtag">오슬로호 입항 준비</span><span class="st">창 없이 · 체인 확인</span><span class="amt num">0.05</span></div>
+            <div class="row"><i class="pt"></i><span class="muted num">02:01</span><span><span class="path">/tide</span><span class="host">budu-port</span></span><span class="jobtag">오슬로호 입항 준비</span><span class="st">창 없이 · 체인 확인</span><span class="amt num">0.01</span></div>
+            <div class="row"><i class="pt"></i><span class="muted num">02:01</span><span><span class="path">/wave</span><span class="host">budu-port</span></span><span class="jobtag">오슬로호 입항 준비</span><span class="st">비번 승인 · 체인 확인</span><span class="amt num">0.01</span></div>
+            <div class="row bad"><i class="pt"></i><span class="muted num">01:58</span><span><span class="path">/premium</span><span class="host">port-data.example</span></span><span class="jobtag">오슬로호 입항 준비</span><span class="st">창 전 거절 · 건당 한도</span><span class="amt num">50.00</span></div>
+          </section>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="frame-label">판매자 — A 에서 가져온 페이지, 모양은 B 의 장부</div>
+    <div class="scaler"><div class="win"><div class="lights"><i></i><i></i><i></i></div>
+      <div class="B BA">
+        <nav class="rail">
+          <a><svg class="ic"><use href="#i-home"/></svg></a>
+          <a><svg class="ic"><use href="#i-job"/></svg></a>
+          <a><svg class="ic"><use href="#i-list"/></svg></a>
+          <a class="on"><svg class="ic"><use href="#i-store"/></svg></a>
+          <div class="spacer"></div>
+          <a><svg class="ic"><use href="#i-shield"/></svg></a>
+          <a><svg class="ic"><use href="#i-gear"/></svg></a>
+        </nav>
+        <div class="body" style="grid-template-columns:1fr">
+          <section class="seller2">
+            <h3>판매자</h3>
+            <div class="lsub">사람이 승인한 판매자만 작업 예산 안에서 창 없이 결제돼요.</div>
+            <div class="sg">
+              <div class="gh"><b>budu-port</b><span class="mono muted">localhost:4021 · payTo 9Wz2…k3Qe</span><span class="tot num">0.07 USDC <span class="muted" style="font-weight:400;font-size:12px">이번 주</span></span></div>
+              <div class="pr"><span class="mono">/wave</span><span class="muted">부산 인근 파고·풍속·수온</span><span class="tag real">● 진짜 · 기상청</span><span class="num" style="text-align:right">0.01</span></div>
+              <div class="pr"><span class="mono">/tide</span><span class="muted">부산항 만조·간조 예보</span><span class="tag">샘플</span><span class="num" style="text-align:right">0.01</span></div>
+              <div class="pr"><span class="mono">/congestion</span><span class="muted">터미널별 대기 선박·예상 대기</span><span class="tag">샘플</span><span class="num" style="text-align:right">0.05</span></div>
+            </div>
+            <div class="sg">
+              <div class="gh"><b style="color:var(--g500)">탄소 비용 추정 · /carbon</b><span class="muted" style="font-size:13px">판매자 확정 전 자리</span><span class="tot muted" style="font-weight:500;font-size:13px">준비 중</span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ===================== C ===================== -->
+  <section class="option" id="opt-C">
+    <h2>C · 관제 — 작업 목록 · 작업 상세 · 지갑 인스펙터 세 단</h2>
+    <p class="note">«프로그램 안에 많아 보이는» 쪽으로 가장 멀리 간 안(메일·Linear 같은 세 단). 주인공이 잔액이 아니라 <b>작업</b>이다 — 부두가 파는 것(작업 예산)이 화면 구조 자체가 된다.
+      오른쪽 인스펙터에 잔액·한도·연결이 늘 붙어 있다. 정보량은 제일 많지만 만들 것도 제일 많고, 작업이 하나도 없을 때 빈 화면을 따로 설계해야 한다.</p>
+
+    <div class="frame-label">홈 = 작업</div>
+    <div class="scaler"><div class="win"><div class="lights"><i></i><i></i><i></i></div>
+      <div class="C">
+        <div class="bar-top">
+          <div class="seg"><span class="on">작업</span><span>내역</span><span>판매자</span></div>
+          <div class="right"><span class="chip">데브넷</span><span class="chip ok"><span class="dot"></span>Claude Code</span><button class="btn ghost" style="height:30px"><svg class="ic"><use href="#i-shield"/></svg>잠금</button><button class="btn ghost" style="height:30px;padding:0 8px"><svg class="ic"><use href="#i-gear"/></svg></button></div>
+        </div>
+        <div class="cols">
+          <div class="list">
+            <div class="lh">진행 중</div>
+            <div class="ji on"><b>HMM 오슬로호 12/18 부산 입항 준비</b><div class="s"><span class="num">0.07 / 0.20</span><span>41분</span></div></div>
+            <div class="lh" style="margin-top:8px">끝남</div>
+            <div class="ji"><b>현대 그린호 11/30 출항 서류</b><div class="s"><span class="num">0.12 USDC</span><span>11월 20일</span></div></div>
+            <div class="ji"><b>부산신항 4부두 대기 확인</b><div class="s"><span class="num">0.05 USDC</span><span>11월 19일</span></div></div>
+            <div class="ji"><b style="color:var(--g500)">작업 없음</b><div class="s"><span class="num">0.01 USDC</span><span>1건</span></div></div>
+          </div>
+          <div class="detail">
+            <div><h3>HMM 오슬로호 12/18 부산 입항 준비</h3><div class="dsub">Claude Code 가 붙인 이름표 · 예산은 사람이 11월 22일 02:01 에 열었어요</div></div>
+            <div class="budget">
+              <div class="big num">0.07 <small>/ 0.20 USDC</small></div>
+              <div style="display:flex;gap:8px"><button class="btn ghost"><svg class="ic"><use href="#i-file"/></svg>영수증 CSV</button><button class="btn ghost">끝내기</button></div>
+              <div class="bar"><b style="width:35%"></b></div>
+              <div class="legend"><span>41분 남음</span><span>승인한 판매자 1곳</span><span>창 없이 나간 결제 2건</span></div>
+            </div>
+            <div class="steps">
+              <div class="step"><span class="n">1</span><span><b style="font-weight:500">/wave</b> <span class="muted">· 비번 승인 · 예산 열림</span></span><span class="chip ok">체인 확인</span><span class="num">0.01</span></div>
+              <div class="step"><span class="n">2</span><span><b style="font-weight:500">/tide</b> <span class="muted">· 예산 안 · 창 없이</span></span><span class="chip ok">체인 확인</span><span class="num">0.01</span></div>
+              <div class="step"><span class="n">3</span><span><b style="font-weight:500">/congestion</b> <span class="muted">· 예산 안 · 창 없이</span></span><span class="chip ok">체인 확인</span><span class="num">0.05</span></div>
+              <div class="step bad"><span class="n">!</span><span><b style="font-weight:500">/premium</b> <span class="muted">· port-data.example · 처음 보는 판매자</span></span><span class="chip warn">창 전 거절</span><span class="num" style="color:var(--g400);text-decoration:line-through">50.00</span></div>
+            </div>
+          </div>
+          <aside class="insp">
+            <div><h6>잔액</h6><div class="bigbal num">19.93 <small>USDC</small></div><div class="muted" style="font-size:12px;margin-top:4px">SOL 0 · 7xKX…gAsU</div></div>
+            <div><h6>오늘 한도</h6><div class="bar"><b style="width:0.35%;min-width:6px"></b></div><div class="kv" style="margin-top:8px"><span class="muted">쓴 돈</span><span class="num">0.07</span></div><div class="kv"><span class="muted">하루</span><span class="num">20.00</span></div><div class="kv"><span class="muted">건당</span><span class="num">5.00</span></div></div>
+            <div><h6>판매자</h6><div class="kv"><span>budu-port</span><span class="num">0.07</span></div><div class="kv"><span class="muted">/carbon</span><span class="muted">준비 중</span></div></div>
+            <div style="margin-top:auto"><button class="btn ghost" style="width:100%;justify-content:center"><svg class="ic"><use href="#i-down"/></svg>받기</button></div>
+          </aside>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ===================== 승인 시트 ===================== -->
+  <section class="option" id="opt-S">
+    <h2>공통 · 승인 시트 — 큰 창 위에 뜨는 결제 승인</h2>
+    <p class="note">요청이 오면 큰 창이 맨 위로 고정되고 이 시트가 뜬다(개발 7 에서 이미 연결함 — 지금은 옛 승인 모달이 그대로 큰 창에 뜬다). 시안은 그 모달을 큰 창에 맞게 다시 그린 것:
+      금액이 맨 위에 크게, 받는 판매자·결제 대상·작업·남은 한도가 한 장에, «이 결제만 / 이 작업 전체» 둘 중 하나, 비번 한 칸. 뒤 화면은 A 안.</p>
+    <div class="scaler"><div class="win"><div class="lights"><i></i><i></i><i></i></div>
+      <div class="A" style="filter:saturate(.9)">
+        <aside class="side">
+          <div class="acct"><div class="avatar">부</div><div><b>계정 1</b><span class="mono">7xKX…gAsU</span></div></div>
+          <div class="nav on"><svg class="ic"><use href="#i-home"/></svg>홈</div>
+          <div class="nav"><svg class="ic"><use href="#i-job"/></svg>작업</div>
+          <div class="nav"><svg class="ic"><use href="#i-list"/></svg>내역</div>
+          <div class="nav"><svg class="ic"><use href="#i-store"/></svg>판매자</div>
+          <div class="nav"><svg class="ic"><use href="#i-gear"/></svg>설정</div>
+        </aside>
+        <main class="main"><div class="top"><h3>홈</h3></div><div class="grid"><div class="card" style="height:200px"></div><div class="card" style="height:200px"></div></div><div class="feed"></div></main>
+      </div>
+      <div class="dim">
+        <div class="sheet">
+          <div class="kicker"><span>Claude Code 가 결제를 요청했어요</span><span class="num">4:51</span></div>
+          <div class="amount num">0.01<small>USDC</small></div>
+          <div class="to">budu-port 에게 · 데브넷</div>
+          <dl>
+            <dt>결제 대상</dt><dd class="mono">localhost:4021/wave?station=22104</dd>
+            <dt>작업</dt><dd>HMM 오슬로호 12/18 부산 입항 준비</dd>
+            <dt>메모</dt><dd>오슬로호 12/18 입항 — 거제도 부이 파고</dd>
+            <dt>오늘 남은 한도</dt><dd class="num">20.00 → 19.99 USDC</dd>
+          </dl>
+          <div class="choice">
+            <div><b>이 결제만</b><span class="muted">다음 결제도 다시 물어요</span></div>
+            <div class="on"><b>이 작업 전체</b><span class="num" style="color:var(--accent)">0.20 USDC 까지 · 60분</span></div>
+          </div>
+          <input placeholder="비밀번호" type="password">
+          <div class="acts"><button class="btn ghost">거절</button><button class="btn primary">승인</button></div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ===================== 비교 ===================== -->
+  <section class="option" id="opt-X">
+    <h2>비교</h2>
+    <table class="compare">
+      <tr><th></th><th>A · 콘솔</th><th>B · 장부</th><th>C · 관제</th></tr>
+      <tr><th>첫인상</th><td>«제대로 된 핀테크 대시보드»</td><td>«조용하고 비싼 물건»</td><td>«업무용 프로 도구»</td></tr>
+      <tr><th>주인공</th><td>잔액 + 작업 카드 + 결제 표</td><td>잔액 숫자 하나 + 일지</td><td>작업(부두가 파는 것)</td></tr>
+      <tr><th>데모 영상</th><td>한 장에 다 보임 — 가장 읽기 쉬움</td><td>거절이 붉은 점 하나로 극적</td><td>작업 흐름 1→2→3→거절이 이야기처럼</td></tr>
+      <tr><th>빈 상태(작업·내역 0)</th><td>카드·표가 비어도 형태 유지</td><td>큰 숫자만으로 성립 — 가장 강함</td><td>작업이 없으면 가운데가 텅 빔 → 따로 설계</td></tr>
+      <tr><th>좁힌 창(480px)</th><td>사이드바 접고 한 단</td><td>일지가 아래로 내려감</td><td>세 단 → 한 단, 가장 손이 많이 감</td></tr>
+      <tr><th>구현 분량(추정)</th><td>중 — 지금 화면들을 사이드바 페이지로 옮기고 홈·판매자 새로</td><td>중하 — 홈·내역 새로, 나머지 레일 페이지</td><td>상 — 작업 목록·상세가 새 데이터 묶음(작업별 기록 조회) 필요</td></tr>
+      <tr><th>추천</th><td><b>추천</b> — 마감(12-09)까지 남은 개발 수와 데모 가독성. B 의 큰 숫자·일지를 A 홈에 섞는 것도 가능</td><td>디자인 점수 최우선이면</td><td>예선 뒤(데모데이 12-15) 확장판으로</td></tr>
+    </table>
+  </section>
+</div>
+
+<script>
+// 탭
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === b));
+  document.querySelectorAll('.option').forEach(o => o.classList.toggle('on', o.id === 'opt-' + b.dataset.t));
+  fit();
+}));
+// 960 창을 페이지 폭에 맞춰 줄인다
+function fit() {
+  document.querySelectorAll('.scaler').forEach(s => {
+    const w = s.clientWidth; if (!w) return;
+    const k = Math.min(1, w / 960);
+    const win = s.querySelector('.win');
+    win.style.transform = `scale(${k})`;
+    s.style.height = (720 * k) + 'px';
+  });
+}
+addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>
