@@ -196,12 +196,6 @@ export function LedgerPage({
               <Fact title={t("남은 시간", "Time left")} value={t(`${mins}분`, `${mins} min`)} />
               <Fact title={t("승인한 판매자", "Approved sellers")} value={t(`${job!.sellers}곳`, `${job!.sellers}`)} />
             </div>
-            <p className={cn("mt-6 text-md leading-relaxed", muted)}>
-              {t(
-                "예산 안에서, 승인한 판매자에게, 60분 동안만 창 없이 나가요. 같은 데이터를 10분 안에 다시 사도 앞 결제가 정산되고 내용까지 받았으면 그대로 나가요.",
-                "Within the budget, to approved sellers, for 60 minutes, payments go through without a prompt. Buying the same data again within 10 minutes goes through if the earlier one settled and its content arrived.",
-              )}
-            </p>
           </>
         )}
       </div>
