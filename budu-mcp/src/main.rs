@@ -121,9 +121,9 @@ struct X402Args {
     #[serde(default)]
     #[schemars(transform = plain_optional)]
     memo: Option<String>,
-    /// The job this payment belongs to — a short, stable label for the whole task, e.g.
+    /// The project this payment belongs to — a short, stable label for the whole task, e.g.
     /// "HMM Oslo 12/18 Busan arrival prep". Use the SAME string for every payment of one task:
-    /// the wallet groups them in history and receipts, and if the user grants a budget for the job
+    /// the wallet groups them in history and receipts, and if the user grants a budget for the project
     /// in the approval window, later payments with this exact label (to sellers already approved,
     /// within the budget) go through without asking again. It is only a label, never a permission.
     #[serde(default)]
@@ -269,7 +269,7 @@ impl ServerHandler for WalletServer {
                 "Budu (부두) — a local Solana wallet for AI agents doing port and shipping work, built first for \
                  Busan (devnet or mainnet-beta, per the user's setting; on mainnet the funds are real). The key \
                  stays on the user's Mac. Payments over the user's per-payment or daily limit are refused before any approval prompt (the reason comes back — do not retry them); anything \
-                 outside a job budget the user granted (or to a new seller) waits for the human to approve with their password.\n\n\
+                 outside a project budget the user granted (or to a new seller) waits for the human to approve with their password.\n\n\
                  Reading is free: get_wallet_status, get_balances and get_history never move money and need no \
                  approval. Check get_balances before paying — payments are in USDC and need no SOL.\n\n\
                  Paying: x402_fetch calls a URL or API (GET, or POST etc. with a JSON body) and pays only if the \
@@ -280,12 +280,12 @@ impl ServerHandler for WalletServer {
                  amount) within 10 minutes goes to the human. Never ask for or accept a password in chat or over \
                  MCP. Put what the payment is for in `memo` (for example the vessel and port call the data is \
                  for) — the human reads it in the approval window.\n\n\
-                 Jobs: when several payments serve one task (a port-call report, say), pass the same `job` label on \
-                 every one of them. The human can then approve the first with a budget for the whole job; later \
-                 payments with that exact label, to sellers already approved and within the budget, go through \
-                 without a prompt, and the history and receipt CSV are grouped by job. A different seller, an \
-                 amount over the budget, or the job's time limit sends the payment back to the human. Buying the same \
-                 URL again within the job is fine once the earlier payment settled with its content; if that one came \
+                 Projects: when several payments serve one task (a port-call report, say), pass the same `job` label \
+                 (the project name) on every one of them. The human can then approve the first with a budget for the whole \
+                 project; later payments with that exact label, to sellers already approved and within the budget, go \
+                 through without a prompt, and the history and receipt CSV are grouped by project. A different seller, an \
+                 amount over the budget, or the project's time limit sends the payment back to the human. Buying the same \
+                 URL again within the project is fine once the earlier payment settled with its content; if that one came \
                  back without content or with an unknown outcome, the repeat goes to the human.\n\n\
                  The rule that matters most: when a result says the money MAY have moved — status unknown, or an \
                  x402 payment of \"confirmed\" or \"unknown\" that came back without content — do not pay again \

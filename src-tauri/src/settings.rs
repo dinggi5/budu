@@ -2,6 +2,7 @@
 
 use crate::i18n::ts;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use crate::chain::{active_chain, chain_by_id};
@@ -10,8 +11,7 @@ use crate::policy::{self, SettingsFile};
 use crate::store::{budu_dir, write_json};
 
 /// 한도 기본값 (사용자가 설정 화면에서 조정 가능). 권한 모델의 가드레일.
-/// 신규 기본 체인은 데브넷이지만 메인넷으로 바꾸면 이 값이 곧 **실돈 한도**다 — USDC 5/20 은 실돈으로도
-/// «AI 소액 결제 가드레일» 로 적정하다. (원본 지갑의 ETH 한도 칸은 읽을 때 무시되고 다음 저장 때 빠진다.)
+/// 신규 기본 체인은 메인넷이라 이 값이 곧 **첫 사용자의 실돈 한도**다 — USDC 5/20 은 «AI 소액 결제 가드레일» 로 적정하다. (원본 지갑의 ETH 한도 칸은 읽을 때 무시되고 다음 저장 때 빠진다.)
 const DEFAULT_SINGLE_USDC: &str = "5";
 const DEFAULT_DAILY_USDC: &str = "20";
 
@@ -20,6 +20,31 @@ const DEFAULT_DAILY_USDC: &str = "20";
 const DEFAULT_AUTO_APPROVE_USDC: &str = "0";
 /// 세션 자동 잠금까지 유휴 시간(분). 0 = 유휴 잠금 안 함(앱 종료·긴급 잠금 시엔 항상 잠김).
 const DEFAULT_AUTO_LOCK_MINS: &str = "30";
+/// 설정 화면 자동 잠금 목록(분). 0 = 잠그지 않음. 목록 밖의 옛 값은 읽을 때 `snap_lock_mins` 가 짧은 쪽으로 접는다.
+pub(crate) const LOCK_CHOICES: [u64; 7] = [10, 30, 60, 240, 1440, 10080, 0];
+
+/// 목록 밖의 자동 잠금 값을 **가장 가까운 짧은 쪽**으로(잠금이 늦어지지 않게). 0·목록 값은 그대로.
+/// 10분보다 짧은 값(1~9)은 더 짧은 목록 값이 없어 그대로 둔다 — 화면이 그 값을 한 칸 더 보여 준다.
+/// 숫자가 아니면 손대지 않는다(저장 검증이 따로 막는다).
+fn snap_lock_mins(v: &str) -> String {
+    let Ok(n) = v.trim().parse::<u64>() else {
+        return v.to_string();
+    };
+    if n == 0 || n < 10 || LOCK_CHOICES.contains(&n) {
+        return n.to_string();
+    }
+    let down = LOCK_CHOICES.iter().copied().filter(|&c| c != 0 && c <= n).max().unwrap_or(10);
+    down.to_string()
+}
+
+/// 네트워크 하나의 한도 묶음 — 결제당·하루·자율 결제 금액. 체인마다 따로 둔다
+/// (사용액·내역·화이트리스트가 이미 체인별이라, 한도만 공통이면 데브넷 연습 값이 메인넷 실돈에 그대로 걸린다).
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub(crate) struct NetLimits {
+    pub(crate) single_usdc: String,
+    pub(crate) daily_usdc: String,
+    pub(crate) auto_approve_usdc: String,
+}
 
 /// **chain_id 필드가 없는 설정 파일**의 serde 기본값 — `policy::FALLBACK_CHAIN_ID`(데브넷).
 /// 신규 기본(`Settings::default()`, 파일 자체가 없음)과는 다른 질문이다 — «필드가 없는 옛 파일» 의 해석은
@@ -34,6 +59,10 @@ fn default_chain_id() -> u64 {
 }
 
 /// 사용자 조정 가능한 한도 설정 (십진수 문자열). 권한 모델의 가드레일.
+///
+/// 🔴 한도 셋(single·daily·auto_approve)의 정본은 **`limits`(체인별)** 다. 평평한 세 칸은 읽을 때
+/// `normalize` 가 활성 체인 값으로 채우는 **보기 칸**이다 — 결제·세션·홈은 지금처럼 평평한 칸을 읽으면 된다.
+/// 평평한 칸은 파일에도 함께 쓴다(옛 빌드로 되돌려도 활성 체인 한도가 그대로 걸리게).
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct Settings {
     pub(crate) single_usdc: String,
@@ -102,6 +131,16 @@ pub(crate) struct Settings {
     /// 폼에서 오는 값이 아니라 앱 관리 필드다(set_menubar 가 따로 저장하고 그 자리에서 아이콘을 켜고 끈다).
     #[serde(default = "default_true")]
     pub(crate) menubar: bool,
+
+    /// 체인별 한도(키 = chain_id 문자열, 예 "101"). 옛 파일엔 없다 → 읽을 때 평평한 칸의 값을
+    /// **모든 체인에 복사**한다(누구의 한도도 몰래 풀리지 않게). 폼에서 오는 값이다(`limits.<id>.<칸>` 으로 합침).
+    #[serde(default)]
+    pub(crate) limits: BTreeMap<String, NetLimits>,
+
+    /// 사람이 비번으로 승인한 x402 받는 주소를 화이트리스트에 저절로 넣을까. 기본 꺼짐 —
+    /// 화이트리스트는 사용자가 직접 넣은 것만. 이미 학습된 주소는 그대로 남는다.
+    #[serde(default)]
+    pub(crate) auto_learn_trusted: bool,
 }
 
 fn default_true() -> bool {
@@ -128,13 +167,15 @@ impl Default for Settings {
             notify_auto: true,
             notify_hide_amount: false,
             auto_trusted_only: true,
-            // 신규 기본 = 데브넷(연습용, `policy::NEW_INSTALL_CHAIN_ID`). 메인넷은 사용자가 설정에서 고른다.
+            // 신규 기본 = 메인넷(`policy::NEW_INSTALL_CHAIN_ID`, 개발 14). 내려받는 사람은 쓰려고 받는다.
             // 옛 파일(필드 없음)은 default_chain_id 가, 깨진 파일과 «설정 파일만 없는 기존 지갑» 은
             // conservative() 가 따로 맡는다 — 여기는 **진짜 신규**(지갑도 설정도 없는 첫 실행)만.
-            chain_id: policy::NEW_INSTALL_CHAIN_ID, // 데브넷 (policy.rs 주석)
+            chain_id: policy::NEW_INSTALL_CHAIN_ID, // 메인넷 (policy.rs 주석)
             autostart: None,    // 아직 모름 → 첫 실행에서 OS 상태를 채택
             lang: None,         // 아직 안 고름 → 시스템 언어
             menubar: true,      // 개발 7 — 필드 doc 참고
+            limits: BTreeMap::new(), // normalize 가 평평한 칸으로 체인마다 채운다
+            auto_learn_trusted: false,
         }
     }
 }
@@ -158,6 +199,33 @@ impl Settings {
         ] {
             *slot = crate::limits::LIMIT_UNKNOWN.into();
         }
+        self.limits.clear(); // normalize 가 「모름」을 체인마다 복사한다
+        self
+    }
+
+    /// 지금 평평한 칸의 한도 셋.
+    fn flat_limits(&self) -> NetLimits {
+        NetLimits {
+            single_usdc: self.single_usdc.clone(),
+            daily_usdc: self.daily_usdc.clone(),
+            auto_approve_usdc: self.auto_approve_usdc.clone(),
+        }
+    }
+
+    /// 읽은 뒤 한 번 — ① 체인별 한도에 빠진 체인은 평평한 칸 값으로 채운다(옛 파일 = 두 네트워크에 복사)
+    /// ② 평평한 칸을 **활성 체인** 값으로 맞춘다 ③ 자동 잠금을 목록으로 접는다.
+    /// 모르는 키(지원 안 하는 체인)는 남겨 둔다 — 지우면 그 체인을 아는 다른 빌드의 한도가 사라진다.
+    pub(crate) fn normalize(mut self) -> Self {
+        let flat = self.flat_limits();
+        for id in policy::SUPPORTED_CHAIN_IDS {
+            self.limits.entry(id.to_string()).or_insert_with(|| flat.clone());
+        }
+        if let Some(l) = self.limits.get(&self.chain_id.to_string()).cloned() {
+            self.single_usdc = l.single_usdc;
+            self.daily_usdc = l.daily_usdc;
+            self.auto_approve_usdc = l.auto_approve_usdc;
+        }
+        self.auto_lock_mins = snap_lock_mins(&self.auto_lock_mins);
         self
     }
 
@@ -220,7 +288,7 @@ fn settings_for_read(file: &SettingsFile, wallet_exists: bool) -> Settings {
     // 로 같은 파일을 읽는다. 한도 필드 하나가 깨진 파일에서 화면은 「공식」이라 그리는데 잔액은
     // 커스텀 RPC 에 붙거나(또는 그 반대) MCP 만 커스텀을 쓰는 상태를 없앤다.
     s.rpc_url = policy::rpc_url_for(file);
-    s
+    s.normalize()
 }
 
 /// 통째로는 못 읽는 설정에서 **한도 넷만은 살린다**. 다른 필드 하나가 깨졌다고 보수 기본값으로
@@ -241,6 +309,25 @@ fn salvage_limits(text: &str) -> Settings {
     ] {
         if let Some(x) = v.get(key).and_then(|x| x.as_str()) {
             *slot = x.to_string();
+        }
+    }
+    // 체인별 한도도 같은 처방 — 있는 칸만 살리고 못 살린 칸은 「모름」, 자율 금액은 꺼짐(0).
+    // 체인 항목 자체가 없으면 normalize 가 위 평평한 값으로 채운다.
+    if let Some(map) = v.get("limits").and_then(|m| m.as_object()) {
+        let unknown = || crate::limits::LIMIT_UNKNOWN.to_string();
+        let str_of = |o: &serde_json::Value, k: &str| o.get(k).and_then(|x| x.as_str()).map(str::to_string);
+        for (id, o) in map {
+            if !o.is_object() {
+                continue;
+            }
+            s.limits.insert(
+                id.clone(),
+                NetLimits {
+                    single_usdc: str_of(o, "single_usdc").unwrap_or_else(unknown),
+                    daily_usdc: str_of(o, "daily_usdc").unwrap_or_else(unknown),
+                    auto_approve_usdc: DEFAULT_AUTO_APPROVE_USDC.into(),
+                },
+            );
         }
     }
     s
@@ -267,8 +354,8 @@ pub(crate) fn read_settings_for_update() -> Option<Settings> {
 /// 있는데 못 읽음(권한·홈 못 정함)·해석 안 됨 → None: 덮어쓰지 않는다.
 fn settings_for_update(file: &SettingsFile, wallet_exists: bool) -> Option<Settings> {
     match file {
-        SettingsFile::Missing if !wallet_exists => Some(Settings::default()),
-        SettingsFile::Missing => Some(Settings::conservative()),
+        SettingsFile::Missing if !wallet_exists => Some(Settings::default().normalize()),
+        SettingsFile::Missing => Some(Settings::conservative().normalize()),
         SettingsFile::Unreadable => None,
         SettingsFile::Text(text) => serde_json::from_str::<Settings>(text).ok().map(|mut s| {
             // 모르는 체인이면 RPC 도 같이 버린다 — 읽기 경로(`policy::rpc_url_for`)는 이미 버리는데,
@@ -278,7 +365,7 @@ fn settings_for_update(file: &SettingsFile, wallet_exists: bool) -> Option<Setti
                 s.rpc_url.clear();
             }
             s.chain_id = supported_or_fallback(s.chain_id);
-            s
+            s.normalize()
         }),
     }
 }
@@ -297,6 +384,13 @@ fn supported_or_fallback(id: u64) -> u64 {
 /// 자동 시작 기록 같은 게 저장에 실패한다). 검증이 필요한 값은 여기로 오지 않는다.
 pub(crate) fn save_settings(settings: &Settings) -> Result<(), String> {
     write_json(settings_path()?, settings)
+}
+
+/// 설정 파일이 없고 지갑도 없으면(진짜 신규) 신규 기본을 저장한다. 그 밖엔 아무것도 안 한다.
+pub(crate) fn pin_new_install() {
+    if settings_file() == SettingsFile::Missing && !wallet_exists() {
+        let _ = save_settings(&Settings::default().normalize());
+    }
 }
 
 /// 잔액·송금·서명이 실제로 붙는 RPC. 판정은 `policy::rpc_url_for` + `policy::pick_rpc` — MCP
@@ -395,38 +489,21 @@ pub(crate) fn get_lang() -> String {
 /// 한도 설정을 저장한다. 모든 값이 십진수로 파싱되는지 검증 후 기록.
 #[tauri::command]
 pub(crate) fn set_settings(mut settings: Settings) -> Result<(), String> {
-    // 체인을 먼저 검증한다(미지원 거부) — 그리고 한도는 **들어온 chain_id 의 decimals** 로 검증한다.
-    // 저장 전 활성 체인(active_chain) 기준으로 검증하면, 다른 decimals 의 체인으로 토글하는 저장에서
-    // 한도 의미가 어긋난다(현재 두 체인 다 6자리라 무해하나, 미래 체인 대비 원자성).
-    let dec = chain_by_id(settings.chain_id)
-        .ok_or(ts!(
-            "지원하지 않는 체인입니다",
-            "That chain isn't supported"
-        ))?
-        .usdc_decimals;
+    // 체인을 먼저 검증한다(미지원 거부). 한도는 아래에서 **체인마다 그 체인의 decimals** 로 검증한다.
+    chain_by_id(settings.chain_id).ok_or(ts!(
+        "지원하지 않는 체인입니다",
+        "That chain isn't supported"
+    ))?;
+    // 체인별 한도가 정본 — 빠진 체인은 채우고 평평한 칸을 들어온 체인 값으로 맞춘 뒤 **모든 체인**을 검증한다.
     // 음수 거부(parse_usdc_nonneg) — 옛 alloy 시절 음수 한도가 거대 U256 = "사실상 무제한"으로 둔갑해 가드레일이
-    // 조용히 무력화되는 함정 차단. 0 은 정상(=무제한 의도).
-    parse_usdc_nonneg(&settings.single_usdc, dec).map_err(|_| {
-        ts!(
-            "단일 USDC 한도가 올바르지 않습니다 (음수 불가)",
-            "The per-payment USDC limit isn't valid (no negatives)"
-        )
-        .to_string()
-    })?;
-    parse_usdc_nonneg(&settings.daily_usdc, dec).map_err(|_| {
-        ts!(
-            "일일 USDC 한도가 올바르지 않습니다 (음수 불가)",
-            "The daily USDC limit isn't valid (no negatives)"
-        )
-        .to_string()
-    })?;
-    parse_usdc_nonneg(&settings.auto_approve_usdc, dec).map_err(|_| {
-        ts!(
-            "자율 결제 한도가 올바르지 않습니다 (음수 불가)",
-            "The autopay limit isn't valid (no negatives)"
-        )
-        .to_string()
-    })?;
+    // 조용히 무력화되는 함정 차단. 0 은 정상(=무제한 의도). 모르는 체인 키는 normalize 가 남기지만 검증은 아는 체인만.
+    settings = settings.normalize();
+    for (id, l) in &settings.limits {
+        let Some(c) = id.parse::<u64>().ok().and_then(chain_by_id) else {
+            continue;
+        };
+        validate_limits(l, c.usdc_decimals)?;
+    }
     settings.auto_lock_mins.trim().parse::<u64>().map_err(|_| {
         ts!(
             "자동 잠금(분)은 정수로 입력하세요",
@@ -447,6 +524,32 @@ pub(crate) fn set_settings(mut settings: Settings) -> Result<(), String> {
     // 그대로 쓰면 "저장하고 닫기" 한 번에 자동 시작 희망값이 지워진다(=고치려던 버그의 재발).
     preserve_managed(&mut settings, &read_settings());
     save_settings(&settings)
+}
+
+/// 한도 셋을 검증한다 — 숫자·음수 아님.
+fn validate_limits(l: &NetLimits, dec: u8) -> Result<(), String> {
+    parse_usdc_nonneg(&l.single_usdc, dec).map_err(|_| {
+        ts!(
+            "단일 USDC 한도가 올바르지 않습니다 (음수 불가)",
+            "The per-payment USDC limit isn't valid (no negatives)"
+        )
+        .to_string()
+    })?;
+    parse_usdc_nonneg(&l.daily_usdc, dec).map_err(|_| {
+        ts!(
+            "일일 USDC 한도가 올바르지 않습니다 (음수 불가)",
+            "The daily USDC limit isn't valid (no negatives)"
+        )
+        .to_string()
+    })?;
+    parse_usdc_nonneg(&l.auto_approve_usdc, dec).map_err(|_| {
+        ts!(
+            "자율 결제 한도가 올바르지 않습니다 (음수 불가)",
+            "The autopay limit isn't valid (no negatives)"
+        )
+        .to_string()
+    })?;
+    Ok(())
 }
 
 /// 설정 화면의 저장 — **이 창에서 바꾼 칸만** 지금 저장된 값 위에 얹는다.
@@ -493,6 +596,26 @@ fn merge_edit(
         return Err(bad());
     };
     for k in changed {
+        // 체인별 한도는 칸 하나씩 — `limits.<chain_id>.<칸>`. 통째로 얹으면 다른 창이 고친 다른 네트워크 한도가 되돌아간다.
+        if let Some(rest) = k.strip_prefix("limits.") {
+            let Some((id, field)) = rest.split_once('.') else { continue };
+            if !["single_usdc", "daily_usdc", "auto_approve_usdc"].contains(&field) {
+                continue;
+            }
+            let Some(v) = f.get("limits").and_then(|m| m.get(id)).and_then(|l| l.get(field)).cloned() else {
+                continue;
+            };
+            let map = o.entry("limits").or_insert_with(|| serde_json::json!({}));
+            let Some(map) = map.as_object_mut() else { continue };
+            // 지금 파일에 그 체인이 없으면(있을 수 없지만) 폼의 그 체인 묶음을 통째로 바탕으로 쓴다.
+            let entry = map
+                .entry(id.to_string())
+                .or_insert_with(|| f["limits"][id].clone());
+            if let Some(e) = entry.as_object_mut() {
+                e.insert(field.to_string(), v);
+            }
+            continue;
+        }
         // 모르는 이름은 버린다 — 프론트가 엉뚱한 키를 보내도 파일에 새 칸이 생기지 않게.
         if o.contains_key(k) {
             if let Some(v) = f.get(k) {

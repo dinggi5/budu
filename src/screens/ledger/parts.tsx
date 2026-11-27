@@ -61,12 +61,16 @@ export function Loading() {
   return <p className={cn("text-md", faint)}>{t("불러오는 중…", "Loading…")}</p>;
 }
 
-export function Empty({ title, body }: { title: string; body: string }) {
+export function Empty({ title, body }: { title: string; body?: string }) {
   return (
     <p className={cn("text-md leading-relaxed", muted)}>
       {title}
-      <br />
-      <span className={cn("text-md", faint)}>{body}</span>
+      {body && (
+        <>
+          <br />
+          <span className={cn("text-md", faint)}>{body}</span>
+        </>
+      )}
     </p>
   );
 }
@@ -199,7 +203,7 @@ export function PaymentDetail({ entry }: { entry: HistoryEntry }) {
           </span>
         </FactRow>
         {job && (
-          <FactRow name={t("작업", "Job")}>
+          <FactRow name={t("프로젝트", "Project")}>
             {names.label(job)}
             {names.renamed(job) && <span className={cn("block text-sm", muted)}>{t(`AI 이름표 ${job}`, `AI label ${job}`)}</span>}
           </FactRow>
@@ -267,10 +271,7 @@ export function PaymentList({
           {entries == null ? (
             <Loading />
           ) : entries.length === 0 ? (
-            <Empty
-              title={t("아직 결제가 없어요.", "No payments yet.")}
-              body={t("AI 가 한 결제와 막힌 시도가 여기 쌓여요.", "Payments the AI makes and blocked attempts land here.")}
-            />
+            <Empty title={t("아직 결제가 없어요.", "No payments yet.")} />
           ) : (
             <ul className="-mx-3">
               {entries.map((e, i) => {

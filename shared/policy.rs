@@ -37,9 +37,10 @@ pub const SOLANA_MAINNET_ID: u64 = 101;
 pub const SUPPORTED_CHAIN_IDS: [u64; 2] = [SOLANA_DEVNET_ID, SOLANA_MAINNET_ID];
 /// 못 읽은·깨진·모르는 설정이 접히는 곳. 실돈 클러스터로 접지 않는다.
 pub const FALLBACK_CHAIN_ID: u64 = SOLANA_DEVNET_ID;
-/// 진짜 신규 설치(지갑도 설정도 없음)의 기본. 대회 데모 단계라 데브넷 — 메인넷은 사람이 설정에서 고를 때만.
-/// (원본은 신규 기본이 메인넷이라 아래 `chain_id_for` 의 갈래가 넷이었다. 갈래는 그대로 두고 값만 같다.)
-pub const NEW_INSTALL_CHAIN_ID: u64 = SOLANA_DEVNET_ID;
+/// 진짜 신규 설치(지갑도 설정도 없음)의 기본 = 메인넷(개발 14). 내려받는 사람은 쓰려고 받는다.
+/// 기존 사용자는 옮기지 않는다 — 설정 파일이 있으면 그 값, 파일 없이 지갑만 있으면 `FALLBACK_CHAIN_ID`(데브넷).
+/// GUI 는 첫 실행에 이 값을 settings.json 에 박아 둔다(지갑을 만든 뒤 「파일 없음 + 지갑 있음」 갈래로 넘어가지 않게).
+pub const NEW_INSTALL_CHAIN_ID: u64 = SOLANA_MAINNET_ID;
 
 // ── ~/.budu ────────────────────────────────────────────────────────────────────────────────
 
@@ -940,8 +941,9 @@ mod tests {
             chain_id_for(&text("{ 깨진 JSON"), || unreachable!()),
             FALLBACK_CHAIN_ID
         );
-        // 🔴 데모 단계: 신규 설치가 실돈 클러스터로 시작하지 않는다.
-        assert_eq!(NEW_INSTALL_CHAIN_ID, SOLANA_DEVNET_ID);
+        // 개발 14: 신규 설치는 메인넷, 폴백(기존·깨짐)은 여전히 데브넷 — 둘이 갈려야 기존 사용자가 옮겨지지 않는다.
+        assert_eq!(NEW_INSTALL_CHAIN_ID, SOLANA_MAINNET_ID);
+        assert_ne!(NEW_INSTALL_CHAIN_ID, FALLBACK_CHAIN_ID);
     }
 
     // settings.json 본문 → rpc_url. 한도 필드가 깨져 Settings 로는 못 읽는 파일에서도 지정 RPC 는

@@ -41,16 +41,15 @@ export const HELP_SECTIONS: HelpSection[] = [
   {
     id: "fund",
     icon: <ArrowDownLeft size={22} />,
-    title: t("AI한테 돈은 어떻게 줘요?", "How do I give the AI money?"),
+    title: t("AI한테 돈은 어떻게 주나요?", "How do I give the AI money?"),
     body: t(
       <div className="space-y-2.5">
         <p>
-          AI가 지갑을 활용할 수 있게 지갑에 <b className={em}>USDC</b>를 채워 주세요. <b className={em}>받기</b> 버튼을 누르면
+          AI가 지갑을 활용할 수 있게 지갑에 <b className={em}>USDC</b>를 채워야 합니다. <b className={em}>받기</b> 버튼을 누르면
           지갑 주소가 나옵니다.
         </p>
         <p>
-          거래소나 다른 지갑에서 보낼 때는 네트워크를 반드시 <b className={em}>솔라나</b>로 고르세요. (다른 네트워크로 보내면
-          자금을 잃을 수 있어요.)
+          거래소나 다른 지갑에서 보낼 때는 네트워크를 반드시 <b className={em}>솔라나</b>로 골라야 합니다.
         </p>
       </div>,
       <div className="space-y-2.5">
@@ -59,8 +58,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           wallet address.
         </p>
         <p>
-          When you send from an exchange or another wallet, always pick the <b className={em}>Solana</b> network. (Sending over
-          another network can lose the funds.)
+          When you send from an exchange or another wallet, always pick the <b className={em}>Solana</b> network.
         </p>
       </div>,
     ),
@@ -71,7 +69,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: t("결제에 솔라나가 필요한가요?", "Do I need SOL to pay?"),
     body: t(
       <p>
-        결제에 <b className={em}>SOL은 없어도 돼요.</b> 네트워크 수수료는 x402 판매자 쪽(이하 페이실리테이터)이 내요.
+        결제에 <b className={em}>SOL은 없어도 됩니다.</b> 네트워크 수수료는 x402 판매자 쪽(이하 페이실리테이터)이 냅니다.
       </p>,
       <p>
         <b className={em}>You don't need SOL to pay.</b> The network fee is paid by the x402 seller's side (the facilitator).
@@ -86,13 +84,13 @@ export const HELP_SECTIONS: HelpSection[] = [
       <ol className="space-y-1.5 list-decimal pl-5 marker:text-[var(--color-ink-500)]">
         <li>AI가 데이터를 요청하고, 판매자가 x402 결제를 요청합니다.</li>
         <li>승인 창이 뜨고 금액과 판매자를 보여 줍니다.</li>
-        <li>사용자가 비밀번호로 승인해요. 자동 승인도 설정에서 켤 수 있어요.</li>
-        <li>결제 트랜잭션을 만들고 서명해요.</li>
-        <li>판매자가 정산하면 데이터가 AI에게 전달돼요. 모든 결제 내역은 블록체인에 공개됩니다.</li>
-        <li>5분 안에 승인하지 않으면 자동으로 거부돼요.</li>
+        <li>사용자가 비밀번호로 승인합니다. 자동 승인도 설정에서 켤 수 있습니다.</li>
+        <li>결제 트랜잭션을 만들고 서명합니다.</li>
+        <li>판매자가 정산하면 데이터가 AI에게 전달됩니다. 모든 결제 내역은 블록체인에 공개됩니다.</li>
+        <li>5분 안에 승인하지 않으면 자동으로 거부됩니다.</li>
         <li>
-          나갔는지 바로 확인이 안 되면 내역에 <b className={em}>«정산 대기»</b>로 남아요. AI에게는 다시 결제하지 말고 먼저
-          물어보라고 알려 둬요.
+          나갔는지 바로 확인이 안 되면 내역에 <b className={em}>«정산 대기»</b>로 남습니다. AI에게는 다시 결제하지 말고 먼저
+          물어보라고 알려 둡니다.
         </li>
       </ol>,
       <ol className="space-y-1.5 list-decimal pl-5 marker:text-[var(--color-ink-500)]">
@@ -112,19 +110,19 @@ export const HELP_SECTIONS: HelpSection[] = [
   {
     id: "uses",
     icon: <Compass size={22} />,
-    title: t("부두로 이런 일을 할 수 있어요", "What you can do with Budu"),
+    title: t("부두로 어떤 일을 할 수 있나요?", "What can I do with Budu?"),
     body: t(
       <ul className="space-y-2">
         <li>
           <b className={em}>입항 준비 보고서</b> — AI에게 «오슬로호 12월 18일 부산 입항 준비해»라고 하면 AI가 파고·조석·터미널
-          대기 데이터를 사서 입항 창과 대기 예상을 정리하고 CSV로 만들어요.
+          대기 데이터를 사서 입항 창과 대기 예상을 정리하고 CSV로 만듭니다.
         </li>
         <li>
-          <b className={em}>기상 확인</b> — 부산 인근 파고·풍속 최신 관측을 한 건당 0.01 USDC로 호출할 수 있어요.
+          <b className={em}>기상 확인</b> — 부산 인근 파고·풍속 최신 관측을 한 건당 0.01 USDC로 호출할 수 있습니다.
         </li>
         <li>
           <b className={em}>다른 x402 판매자</b> — 블록체인 생태계가 커져 x402 시장이 활성화되면 여러 판매자에게서 다양한 데이터를
-          호출할 수 있어요.
+          호출할 수 있습니다.
         </li>
       </ul>,
       <ul className="space-y-2">
@@ -145,57 +143,47 @@ export const HELP_SECTIONS: HelpSection[] = [
   {
     id: "safety",
     icon: <ShieldCheck size={22} />,
-    title: t("안전장치", "Safeguards"),
+    title: t("결제 보호 장치가 따로 있나요?", "Is there anything that protects payments?"),
+    // 사장이 준 문장 그대로(개발 14). 사실 문제가 보이면 고치지 말고 묻는다.
     body: t(
       <ul className="space-y-2">
         <li>
-          <b className={em}>비밀번호</b> — 기본은 결제마다 비밀번호를 입력해야 승인됩니다(아래 자율 결제·작업 예산을 켠 경우만 예외).
+          <b className={em}>비밀번호</b> — 결제마다 비밀번호를 입력해야 승인됩니다
         </li>
         <li>
-          <b className={em}>한도</b> — 결제당 한도, 하루 한도 등을 자세히 설정할 수 있습니다. 한도는 AI 의 결제에 걸려요 — 홈의 «보내기»(USDC·SOL 을 직접 보내는 것)는 한도 밖이고 언제나 비밀번호를 물어요.
+          <b className={em}>한도</b> — 결제당 한도, 하루 한도 등을 자세히 설정할 수 있습니다. 한도는 AI 의 결제에 걸립니다 — 홈의 «보내기»(USDC·SOL 을 직접 보내는 것)는 한도 밖이고 언제나 비밀번호를 묻습니다.
         </li>
         <li>
-          <b className={em}>긴급 잠금</b> — 헤더의 방패 버튼을 켜면 모든 결제가 즉시 막힙니다.
+          <b className={em}>긴급 잠금</b> — 헤더의 방패 버튼을 누르면 모든 결제를 즉시 막아 사용자를 보호합니다.
         </li>
         <li>
-          <b className={em}>화이트리스트</b> — 비밀번호로 승인한 적 있는 주소의 목록이에요. 설정에서 «화이트리스트에만 자율 결제»를
-          켜 두면 처음 보는 주소에는 언제나 비밀번호를 물어요.
+          <b className={em}>자율 결제</b> — 설정 금액 이하의 결제를 자동으로 승인합니다. (첫 거래 시 비밀번호 승인 필요)
         </li>
         <li>
-          <b className={em}>자율 결제</b> — 설정에서 켜고 비밀번호로 한 번 잠금을 풀면, 정한 금액 이하의 결제는 비밀번호 없이
-          나가요. 앱을 끄거나 긴급 잠금을 켜거나 한동안 쓰지 않으면 다시 잠겨요.
+          <b className={em}>프로젝트 예산</b> — 프로젝트마다 쓸 수 있는 예산을 정해 둘 수 있습니다.
         </li>
         <li>
-          <b className={em}>작업 예산</b> — 작업(예: «오슬로호 입항 준비»)마다 쓸 수 있는 예산을 정해 둘 수 있습니다.
-        </li>
-        <li>
-          <b className={em}>정산 확인</b> — 서명한 결제는 체인에서 지갑 서명으로 직접 확인할 수 있습니다.
+          <b className={em}>정산 확인</b> — 서명한 결제는 블록체인 내역으로 직접 확인할 수 있습니다.
         </li>
       </ul>,
       <ul className="space-y-2">
         <li>
-          <b className={em}>Password</b> — by default every payment needs your password to be approved (except with autopay or a job budget, below).
+          <b className={em}>Password</b> — every payment needs your password to be approved
         </li>
         <li>
-          <b className={em}>Limits</b> — set a per-payment limit, a daily limit and more, in detail. Limits apply to the AI's USDC payments — sending SOL yourself is outside them and always asks for your password.
+          <b className={em}>Limits</b> — set a per-payment limit, a daily limit and more, in detail. Limits apply to the AI's payments — «Send» on Home (sending USDC or SOL yourself) is outside them and always asks for your password.
         </li>
         <li>
-          <b className={em}>Emergency lock</b> — turn on the shield button in the header and every payment is blocked at once.
+          <b className={em}>Emergency lock</b> — press the shield button in the header to block every payment at once and protect you.
         </li>
         <li>
-          <b className={em}>Whitelist</b> — the addresses you've approved with your password before. Turn on «Autopay to the
-          whitelist only» in Settings and a new address always asks for your password.
+          <b className={em}>Autopay</b> — approves payments up to the amount you set automatically. (Your password is needed for the first payment.)
         </li>
         <li>
-          <b className={em}>Autopay</b> — turn it on in Settings and unlock it once with your password, and payments up to the
-          amount you set go through without your password. It locks again when you quit the app, turn on the emergency lock, or
-          leave it idle.
+          <b className={em}>Project budget</b> — set a budget for each project.
         </li>
         <li>
-          <b className={em}>Job budget</b> — set a budget for each job (for example «Oslo Busan arrival»).
-        </li>
-        <li>
-          <b className={em}>Settlement check</b> — every payment you sign can be checked on-chain by the wallet's own signature.
+          <b className={em}>Settlement check</b> — every payment you sign can be checked yourself in the blockchain's history.
         </li>
       </ul>,
     ),

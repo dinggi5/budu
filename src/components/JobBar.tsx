@@ -29,8 +29,8 @@ export function JobBar({ job, onEnd }: { job: JobView; onEnd: () => void }) {
         </p>
         <p className="mt-0.5 text-sm text-[var(--color-ink-300)] num">
           {t(
-            `작업 예산 ${money(job.spent)} / ${money(job.budget)} USDC · ${fmtCountdown(job.secs_left)} 남음`,
-            `Job budget ${money(job.spent)} / ${money(job.budget)} USDC · ${fmtCountdown(job.secs_left)} left`,
+            `프로젝트 예산 ${money(job.spent)} / ${money(job.budget)} USDC · ${fmtCountdown(job.secs_left)} 남음`,
+            `Project budget ${money(job.spent)} / ${money(job.budget)} USDC · ${fmtCountdown(job.secs_left)} left`,
           )}
         </p>
       </div>

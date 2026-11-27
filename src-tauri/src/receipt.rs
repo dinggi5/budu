@@ -57,7 +57,7 @@ fn receipt_csv(job: &str, entries: &[HistoryEntry], network: &str, explorer_suff
     let mut out = String::from("\u{FEFF}");
     let head = [
         ts!("시각(UTC)", "Time (UTC)"),
-        ts!("작업", "Job"),
+        ts!("프로젝트", "Project"),
         ts!("상태", "Status"),
         ts!("금액", "Amount"),
         ts!("토큰", "Token"),
@@ -135,11 +135,11 @@ fn slug(job: &str) -> String {
 pub(crate) fn export_job_receipt(job: String) -> Result<String, String> {
     let job = crate::policy::clip_job(&job);
     if job.is_empty() {
-        return Err(ts!("작업 이름이 비어 있어요.", "The job name is empty.").into());
+        return Err(ts!("프로젝트 이름이 비어 있어요.", "The project name is empty.").into());
     }
     let entries = crate::history::get_history(Some(100_000));
     if !entries.iter().any(|e| e.job == job) {
-        return Err(ts!("이 작업의 기록이 없어요.", "There are no records for this job.").into());
+        return Err(ts!("이 프로젝트의 기록이 없어요.", "There are no records for this project.").into());
     }
     let chain = crate::chain::active_chain();
     let (network, suffix) = if chain.chain_id == crate::policy::SOLANA_MAINNET_ID {

@@ -23,6 +23,9 @@ export type WalletStatus = {
  *  `usdc` = 결제에 쓰는 돈. 내 USDC 토큰 계정이 아직 없으면 "0.000000". */
 export type Balances = { sol: string; usdc: string };
 
+/** 네트워크 하나의 한도 셋. */
+export type NetLimits = { single_usdc: string; daily_usdc: string; auto_approve_usdc: string };
+
 export type Settings = {
   single_usdc: string;
   daily_usdc: string;
@@ -41,8 +44,12 @@ export type Settings = {
   /** 자율 결제는 화이트리스트(비번으로 승인한 적 있는 주소)만. */
   auto_trusted_only: boolean;
   /** 활성 클러스터 번호 — 103=솔라나 데브넷 / 101=솔라나 메인넷.
-   *  클러스터별로 사용액·내역·신뢰목록 파일이 분리된다(한도는 settings.json 하나 — 모든 체인 공통). 목록은 lib/chain.ts 의 CHAINS 가 정본. */
+   *  클러스터별로 사용액·내역·신뢰목록·한도가 분리된다. 목록은 lib/chain.ts 의 CHAINS 가 정본. */
   chain_id: number;
+  /** 체인별 한도(키 = chain_id 문자열) — 한도의 정본. 위 평평한 세 칸은 활성 체인 값을 비춘 보기 칸. */
+  limits: Record<string, NetLimits>;
+  /** 비번 승인한 x402 받는 주소를 화이트리스트에 저절로 넣을까. 기본 꺼짐. */
+  auto_learn_trusted: boolean;
 };
 
 /** 백엔드가 찾은 업데이트. 사람이 설치를 누르기 전에 보는 값 = 판단 근거 전부. */

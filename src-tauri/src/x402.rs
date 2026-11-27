@@ -99,7 +99,7 @@ pub(crate) fn resolve_terms(
     })
 }
 
-/// x402 결제를 서명한다 — 비번 승인 경로. 서명 성공 = 신뢰 주소 학습.
+/// x402 결제를 서명한다 — 비번 승인 경로. 서명 성공 + 자동 학습 켬 = 신뢰 주소 학습.
 /// **`#[tauri::command]` 가 아니다** — 시작점은 승인(`approve_payment`) 하나뿐이다.
 /// `keep_key` = 사람이 작업 예산을 열었다 → 서명에 쓴 12단어를 돌려준다(호출자가 `job.rs` 에 메모리로만 든다).
 #[allow(clippy::too_many_arguments)]
@@ -126,7 +126,10 @@ pub(crate) async fn sign_x402_payment(
             };
             let to_addr = to.clone();
             let signed = do_sign_x402(&signer, to, amount_usdc, terms, resource, job).await?;
-            record_trusted(&to_addr);
+            // 자동 학습은 사용자가 켰을 때만(기본 꺼짐, 개발 14) — 화이트리스트는 직접 넣은 주소가 기본이다.
+            if crate::settings::read_settings().auto_learn_trusted {
+                record_trusted(&to_addr);
+            }
             Ok((signed, keep_key.then_some(phrase)))
         }),
     )

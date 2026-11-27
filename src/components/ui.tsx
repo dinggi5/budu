@@ -406,7 +406,7 @@ export function AgentBadge({
       ) : state === "ready" ? (
         <>
           <span className="inline-flex w-1.5 h-1.5 rounded-full bg-[var(--color-ok)] opacity-70" aria-hidden />
-          <span>{t("준비됨 · Claude를 켜면 자동으로 붙어요", "Ready · attaches when you open Claude")}</span>
+          <span>{t("준비됨 · Claude를 켜면 자동으로 연결돼요", "Ready · connects when you open Claude")}</span>
         </>
       ) : (
         <>

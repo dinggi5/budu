@@ -163,6 +163,10 @@ pub fn run() {
             // 업데이트가 자동 시작 설정을 지우고 갔는지 확인해 되살린다.
             // 트레이보다 뒤, 창을 띄우기 전 — 실패해도 앱은 그대로 뜬다.
             autostart::reconcile(app.handle());
+            // 진짜 신규(설정도 지갑도 없음)면 신규 기본(메인넷)을 파일에 박는다 — 안 박으면 지갑을 만든 순간
+            // 「파일 없음 + 지갑 있음」 갈래(데브넷)로 넘어가 화면·MCP 의 체인이 바뀐다. reconcile 이 OS 상태를
+            // 못 읽어 저장을 건너뛴 경우의 안전망.
+            settings::pin_new_install();
             // Claude Code 등록이 이 설치본을 가리키는지 보고 어긋났으면 고친다. 새 등록은 안 만든다.
             connect::spawn_heal();
             // 로그인 셸의 CODEX_HOME — Codex 등록 확인이 맞는 설정 폴더를 보게.
@@ -259,6 +263,7 @@ pub fn run() {
             trusted::is_trusted_addr,
             trusted::get_trusted_addrs,
             trusted::remove_trusted_addr,
+            trusted::add_trusted_addr,
             raise_main_window,
             release_main_window,
             hide_main_window,

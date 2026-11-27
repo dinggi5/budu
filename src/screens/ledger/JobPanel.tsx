@@ -39,9 +39,9 @@ export function JobPanel({
   const [journal, setJournal] = usePref<"open" | "closed">("journal", "open");
   const mins = job ? Math.max(0, Math.ceil(job.secs_left / 60)) : 0;
   return (
-    <aside className={cn("min-w-0 px-6 pt-14 pb-6 overflow-y-auto", sunken, className)} aria-label={t("작업과 일지", "Job and journal")}>
+    <aside className={cn("min-w-0 px-6 pt-14 pb-6 overflow-y-auto", sunken, className)} aria-label={t("프로젝트와 기록", "Project and log")}>
       <div className="flex items-center justify-between mb-3 min-h-8">
-        <h2 className={cn("text-md font-semibold", inkSoft)}>{t("진행 중인 작업", "Job in progress")}</h2>
+        <h2 className={cn("text-md font-semibold", inkSoft)}>{t("진행 중인 프로젝트", "Project in progress")}</h2>
       </div>
       {job ? (
         <div>
@@ -63,7 +63,7 @@ export function JobPanel({
         </div>
       ) : (
         <p className={cn("text-md leading-relaxed", muted)}>
-          {locked ? t("긴급 잠금 중이에요.", "Emergency lock is on.") : t("진행 중인 작업이 없어요.", "No job in progress.")}
+          {locked ? t("긴급 잠금 중이에요.", "Emergency lock is on.") : t("진행 중인 프로젝트가 없어요.", "No project in progress.")}
         </p>
       )}
 
@@ -74,7 +74,7 @@ export function JobPanel({
         aria-expanded={journal === "open"}
         className={cn("mt-10 mb-[18px] w-full flex items-center justify-between text-md font-semibold", inkSoft)}
       >
-        <span>{t("일지", "Journal")}</span>
+        <span>{t("기록", "Log")}</span>
         <ChevronDown
           size={15}
           className={cn("transition-transform duration-[var(--duration-fast)]", muted, journal === "closed" && "-rotate-90")}

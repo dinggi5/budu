@@ -72,23 +72,23 @@ pub(crate) fn clear() {
 pub(crate) fn check_budget(job: &str, budget_usdc: &str, amount_usdc: &str) -> Result<u64, String> {
     if crate::policy::clip_job(job).is_empty() {
         return Err(ts!(
-            "작업 이름이 없는 결제라 작업 예산을 열 수 없어요. 아무것도 결제하지 않았습니다.",
-            "This payment has no job name, so a job budget can't be set. Nothing was paid."
+            "프로젝트 이름이 없는 결제라 프로젝트 예산을 열 수 없어요. 아무것도 결제하지 않았습니다.",
+            "This payment has no project name, so a project budget can't be set. Nothing was paid."
         )
         .into());
     }
     let budget = usdc_units(budget_usdc).filter(|b| *b > 0).ok_or_else(|| {
         ts!(
-            "작업 예산은 0보다 큰 USDC 금액이어야 해요(소수 6자리까지). 아무것도 결제하지 않았습니다.",
-            "The job budget must be a USDC amount above 0 (up to 6 decimals). Nothing was paid."
+            "프로젝트 예산은 0보다 큰 USDC 금액이어야 해요(소수 6자리까지). 아무것도 결제하지 않았습니다.",
+            "The project budget must be a USDC amount above 0 (up to 6 decimals). Nothing was paid."
         )
         .to_string()
     })?;
     let amount = usdc_units(amount_usdc).unwrap_or(u64::MAX);
     if budget < amount {
         return Err(ts!(
-            "작업 예산이 이 결제 금액보다 작아요. 아무것도 결제하지 않았습니다.",
-            "The job budget is smaller than this payment. Nothing was paid."
+            "프로젝트 예산이 이 결제 금액보다 작아요. 아무것도 결제하지 않았습니다.",
+            "The project budget is smaller than this payment. Nothing was paid."
         )
         .into());
     }

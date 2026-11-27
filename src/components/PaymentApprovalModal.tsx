@@ -300,14 +300,14 @@ export function PaymentApprovalModal({
           {job && (
             <>
               {/* 작업 이름표 — AI 가 붙인 이름이라 판단 근거가 아니라 묶음 표시다. */}
-              <dt className="text-[var(--color-ink-500)]">{t("작업", "Job")}</dt>
+              <dt className="text-[var(--color-ink-500)]">{t("프로젝트", "Project")}</dt>
               {/* 사람이 단 별명이 있으면 그것 + AI 이름표 — 예산은 이름표로 맞춘다. */}
               <dd className="text-[var(--color-ink-900)] dark:text-[#E8E5DD] break-words">
                 {jobNames.label(job)}
                 {jobNames.renamed(job) && <span className="block text-sm text-[var(--color-ink-500)]">{t(`AI 이름표 ${job}`, `AI label ${job}`)}</span>}
                 {!jobNames.renamed(job) && jobNames.collides(job) && (
                   <span className="block text-sm text-[var(--color-danger)]">
-                    {t("다른 작업에 붙인 별명과 글자가 같지만 그 작업과는 다른 작업이에요.", "Same text as another job's display name, but it is a different job.")}
+                    {t("다른 프로젝트에 붙인 별명과 글자가 같지만 그 프로젝트와는 다른 프로젝트예요.", "Same text as another project's display name, but it is a different project.")}
                   </span>
                 )}
               </dd>
@@ -370,8 +370,8 @@ export function PaymentApprovalModal({
             {openJob && (
               <p className="text-sm leading-snug text-[var(--color-ink-500)] num">
                 {t(
-                  `이 작업 예산 ${money(openJob.spent)} / ${money(openJob.budget)} USDC 사용 중 — 예산을 넘거나 처음 보는 판매자, 또는 앞의 같은 결제가 내용을 못 받아 다시 물어요`,
-                  `Job budget ${money(openJob.spent)} / ${money(openJob.budget)} USDC used — asking again: over budget, a new seller, or the same payment earlier didn't deliver`,
+                  `이 프로젝트 예산 ${money(openJob.spent)} / ${money(openJob.budget)} USDC 사용 중 — 예산을 넘거나 처음 보는 판매자, 또는 앞의 같은 결제가 내용을 못 받아 다시 물어요`,
+                  `Project budget ${money(openJob.spent)} / ${money(openJob.budget)} USDC used — asking again: over budget, a new seller, or the same payment earlier didn't deliver`,
                 )}
               </p>
             )}
@@ -440,7 +440,7 @@ export function PaymentApprovalModal({
                     )}
                   >
                     <b className="block text-md font-semibold text-[var(--color-ink-900)] dark:text-[#E8E5DD]">
-                      {m === "once" ? t("이 결제만", "Just this one") : t("이 작업 전체", "Whole job")}
+                      {m === "once" ? t("이 결제만", "Just this one") : t("이 프로젝트 전체", "Whole project")}
                     </b>
                     <span
                       className={cn(
@@ -472,7 +472,7 @@ export function PaymentApprovalModal({
                     }}
                     inputMode="decimal"
                     disabled={busy}
-                    aria-label={t("작업 예산", "Job budget")}
+                    aria-label={t("프로젝트 예산", "Project budget")}
                     className={cn(inputBase, "num text-right")}
                   />
                   <span className="shrink-0 text-sm text-[var(--color-ink-500)]">{t("USDC 까지", "USDC max")}</span>
@@ -486,8 +486,8 @@ export function PaymentApprovalModal({
                         )
                       : t("이 결제 금액 이상인 USDC 금액을 넣어 주세요.", "Enter a USDC amount at least this payment.")
                     : t(
-                        "이 결제를 포함해 예산 안에서, 이 판매자에게 같은 작업으로 오는 결제는 60분 동안 비번 없이 나가요. 한도·긴급 잠금은 그대로예요.",
-                        "Within this budget (this payment included), payments for this job to this seller go through without a password for 60 minutes. Limits and the emergency lock still apply.",
+                        "이 결제를 포함해 예산 안에서, 이 판매자에게 같은 프로젝트로 오는 결제는 60분 동안 비번 없이 나가요. 한도·긴급 잠금은 그대로예요.",
+                        "Within this budget (this payment included), payments for this project to this seller go through without a password for 60 minutes. Limits and the emergency lock still apply.",
                       )}
                 </p>
               </>

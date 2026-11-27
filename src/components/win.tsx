@@ -250,7 +250,7 @@ export function RenameField({
             }
           }}
           disabled={busy}
-          aria-label={t("작업 이름", "Job name")}
+          aria-label={t("프로젝트 이름", "Project name")}
           className={cn(
             "min-w-0 flex-1 bg-transparent outline-none rounded-[8px] px-1.5 -mx-1.5",
             "shadow-[inset_0_0_0_1.5px_var(--color-ok)]",

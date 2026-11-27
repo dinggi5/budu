@@ -40,7 +40,7 @@ fn default_settings_values() {
     assert_eq!(s.auto_lock_mins, "30");
     assert!(s.rpc_url.is_empty()); // 빈 값 = 활성 체인 공식 RPC 따라감
     assert!(!s.lock_on_blur);
-    assert_eq!(s.chain_id, policy::NEW_INSTALL_CHAIN_ID); // 신규 기본 = 데브넷
+    assert_eq!(s.chain_id, policy::NEW_INSTALL_CHAIN_ID); // 신규 기본 = 메인넷(개발 14)
 }
 
 // 🔴 개발 71: 다른 필드 하나가 깨져 통째로 못 읽는 파일에서도 사용자가 정한 한도는 살아남는다
@@ -339,3 +339,88 @@ fn set_settings_rejects_unknown_chain() {
 }
 
 // redact_urls 테스트는 policy::tests 가 본다(정본이 그쪽으로 갔다).
+
+// 개발 14 — 한도는 네트워크별. 옛 파일(한도가 평평한 칸뿐)은 그 값을 **두 네트워크에 복사**한다(누구의 한도도 풀리지 않게).
+#[test]
+fn legacy_limits_copy_to_every_network() {
+    let f = SettingsFile::Text(
+        r#"{"single_usdc":"1","daily_usdc":"2","auto_approve_usdc":"0.5","auto_lock_mins":"30","chain_id":103}"#.into(),
+    );
+    let s = settings_for_read(&f, true);
+    for id in policy::SUPPORTED_CHAIN_IDS {
+        let l = &s.limits[&id.to_string()];
+        assert_eq!((l.single_usdc.as_str(), l.daily_usdc.as_str(), l.auto_approve_usdc.as_str()), ("1", "2", "0.5"), "{id}");
+    }
+}
+
+// 활성 체인의 한도가 평평한 칸(결제·세션·홈이 읽는 곳)에 비친다.
+#[test]
+fn flat_fields_follow_active_network() {
+    let f = SettingsFile::Text(
+        r#"{"single_usdc":"9","daily_usdc":"9","auto_approve_usdc":"9","auto_lock_mins":"30","chain_id":101,
+            "limits":{"101":{"single_usdc":"1","daily_usdc":"3","auto_approve_usdc":"0"},
+                      "103":{"single_usdc":"50","daily_usdc":"100","auto_approve_usdc":"5"}}}"#
+            .into(),
+    );
+    let s = settings_for_read(&f, true);
+    assert_eq!((s.single_usdc.as_str(), s.daily_usdc.as_str(), s.auto_approve_usdc.as_str()), ("1", "3", "0"));
+    let dev = SettingsFile::Text(
+        r#"{"single_usdc":"9","daily_usdc":"9","auto_lock_mins":"30","chain_id":103,
+            "limits":{"101":{"single_usdc":"1","daily_usdc":"3","auto_approve_usdc":"0"},
+                      "103":{"single_usdc":"50","daily_usdc":"100","auto_approve_usdc":"5"}}}"#
+            .into(),
+    );
+    assert_eq!(settings_for_read(&dev, true).daily_usdc, "100");
+}
+
+// 깨진 파일: 체인별 한도도 있는 칸만 살리고, 못 살린 칸은 「모름」, 자율 금액은 꺼짐.
+#[test]
+fn broken_file_salvages_network_limits() {
+    let f = SettingsFile::Text(
+        r#"{"single_usdc":"9","daily_usdc":"9","auto_lock_mins":42,"chain_id":101,
+            "limits":{"101":{"single_usdc":"1","auto_approve_usdc":"7"}}}"#
+            .into(),
+    );
+    let s = settings_for_read(&f, true);
+    assert_eq!(s.single_usdc, "1");
+    assert_eq!(s.daily_usdc, crate::limits::LIMIT_UNKNOWN);
+    assert_eq!(s.auto_approve_usdc, "0");
+}
+
+// 저장 합치기: `limits.<id>.<칸>` 은 그 칸만 — 다른 창이 고친 다른 네트워크 한도를 되돌리지 않는다.
+#[test]
+fn edit_merge_limits_per_field() {
+    let mut cur = Settings::default().normalize();
+    cur.limits.get_mut("103").unwrap().daily_usdc = "77".into(); // 다른 창이 데브넷 하루 한도를 바꿨다
+    let mut form = Settings::default().normalize();
+    form.limits.get_mut("101").unwrap().single_usdc = "2".into();
+    let out = merge_edit(&cur, &form, &["limits.101.single_usdc".into(), "limits.101.bogus".into()], cur.chain_id)
+        .unwrap()
+        .normalize();
+    assert_eq!(out.limits["101"].single_usdc, "2");
+    assert_eq!(out.limits["103"].daily_usdc, "77");
+    assert_eq!(out.single_usdc, "2"); // 활성 체인(메인넷) 값이 평평한 칸에
+}
+
+// 자동 잠금: 목록 밖 값은 짧은 쪽으로, 0·목록 값·10분 미만은 그대로.
+#[test]
+fn lock_minutes_snap_down() {
+    assert_eq!(snap_lock_mins("45"), "30");
+    assert_eq!(snap_lock_mins("120"), "60");
+    assert_eq!(snap_lock_mins("99999"), "10080");
+    assert_eq!(snap_lock_mins("0"), "0");
+    assert_eq!(snap_lock_mins("5"), "5");
+    assert_eq!(snap_lock_mins("240"), "240");
+    assert_eq!(snap_lock_mins("abc"), "abc");
+}
+
+// 신규 설치는 메인넷 + 두 네트워크 모두 기본 한도, 자동 학습 꺼짐.
+#[test]
+fn new_install_is_mainnet_with_limits() {
+    let s = settings_for_read(&SettingsFile::Missing, false);
+    assert_eq!(s.chain_id, policy::SOLANA_MAINNET_ID);
+    assert_eq!(s.limits.len(), 2);
+    assert!(!s.auto_learn_trusted);
+    // 지갑만 있는 옛 설치는 여전히 데브넷.
+    assert_eq!(settings_for_read(&SettingsFile::Missing, true).chain_id, policy::FALLBACK_CHAIN_ID);
+}

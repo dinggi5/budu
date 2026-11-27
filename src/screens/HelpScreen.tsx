@@ -2,13 +2,12 @@
 // 콘텐츠는 helpContent.tsx 한 곳에 있다.
 
 import { useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { motion } from "framer-motion";
-import { ExternalLink, HelpCircle } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { GITHUB_URL, HELP_SECTIONS } from "@/lib/helpContent";
+import { HELP_SECTIONS } from "@/lib/helpContent";
 import { cardBase, pageShell, ScreenHeader } from "@/components/ui";
-import { Eyebrow, PageTitle, Selectable, ink, inkSoft, muted, sunken, useWidth } from "@/components/win";
+import { Eyebrow, PageTitle, Selectable, ink, inkSoft, sunken, useWidth } from "@/components/win";
 import { isWindow } from "@/lib/win";
 import { t } from "@/lib/i18n";
 
@@ -41,15 +40,6 @@ export function HelpScreen({ onClose }: { onClose: () => void }) {
             </div>
           </motion.section>
         ))}
-
-        <button
-          type="button"
-          onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-          className="mt-1 inline-flex items-center justify-center gap-1.5 text-sm text-[var(--color-ink-500)] hover:text-[var(--color-ok)] transition-colors"
-        >
-          <ExternalLink size={12} />
-          {t("GitHub에서 전체 문서 보기", "Read the full docs on GitHub")}
-        </button>
       </div>
     </main>
   );
@@ -82,14 +72,6 @@ function HelpWindow() {
         <nav className={cn("h-full w-[228px] shrink-0 overflow-y-auto px-3 pt-14 pb-6", sunken)}>
           <Eyebrow className="px-3 mb-2">{t("도움말", "Help")}</Eyebrow>
           {list}
-          <button
-            type="button"
-            onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-            className={cn("mt-6 px-3 inline-flex items-center gap-1.5 text-sm hover:text-[var(--color-ok)] transition-colors", muted)}
-          >
-            <ExternalLink size={12} />
-            {t("GitHub 전체 문서", "Full docs on GitHub")}
-          </button>
         </nav>
       )}
       <section className="flex-1 min-w-0 h-full overflow-y-auto px-6 min-[1100px]:px-10 pt-14 pb-12">
@@ -110,16 +92,6 @@ function HelpWindow() {
         <motion.div key={sec.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}>
           <PageTitle title={sec.title} />
           <div className={cn("mt-5 text-md leading-[1.75] max-w-[72ch]", inkSoft)}>{sec.body}</div>
-          {!wide && (
-            <button
-              type="button"
-              onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-              className={cn("mt-8 inline-flex items-center gap-1.5 text-sm hover:text-[var(--color-ok)] transition-colors", muted)}
-            >
-              <ExternalLink size={12} />
-              {t("GitHub 전체 문서", "Full docs on GitHub")}
-            </button>
-          )}
         </motion.div>
       </section>
     </div>

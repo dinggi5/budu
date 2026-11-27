@@ -72,7 +72,7 @@ pub(crate) fn get_job_names() -> BTreeMap<String, String> {
 pub(crate) fn rename_job(job: String, name: String) -> Result<BTreeMap<String, String>, String> {
     let _g = NAMES_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let mut map = read_checked()?;
-    apply(&mut map, &job, &name).map_err(|_| String::from(ts!("작업 이름표가 비어 있어요", "The job label is empty")))?;
+    apply(&mut map, &job, &name).map_err(|_| String::from(ts!("프로젝트 이름표가 비어 있어요", "The project label is empty")))?;
     write_json(names_path()?, &map)?;
     Ok(map)
 }

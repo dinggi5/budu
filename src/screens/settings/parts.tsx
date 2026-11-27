@@ -4,11 +4,11 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { getVersion } from "@tauri-apps/api/app";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { motion } from "framer-motion";
-import { ExternalLink, Info, ShieldCheck, Trash2, X } from "lucide-react";
+import { ChevronDown, ExternalLink, Info, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { fmtExact, shortenAddress } from "@/lib/format";
+import { shortenAddress } from "@/lib/format";
 import { GITHUB_URL } from "@/lib/helpContent";
-import { cardBase, enter, inputBase, LedgerHead, modalCard, modalOverlay, Switch } from "@/components/ui";
+import { cardBase, enter, inputBase, LedgerHead, Switch } from "@/components/ui";
 import { isWindow } from "@/lib/win";
 import { chooseLang, lang, t, type Lang } from "@/lib/i18n";
 
@@ -74,170 +74,206 @@ export function AboutSection() {
 
   return (
     <Section icon={<Info size={13} className="text-[var(--color-ok)]" />} title={t("정보", "About")} delay={0.2}>
-      <div className="flex items-baseline justify-between">
-        <span className="text-md tracking-tight">Budu</span>
-        <span className="num font-mono text-sm text-[var(--color-ink-300)]">
-          {version ? `v${version}` : "—"}
-        </span>
-      </div>
+      <p className="text-md tracking-tight">Budu</p>
+      <p className="mt-0.5 num font-mono text-sm text-[var(--color-ink-300)]">{version ? `v${version}` : "—"}</p>
 
-      {/* 개발 29에서 현재형으로 복원 — 저장소가 실제로 공개됐다. 다시 비공개로 돌리는 일이
-          생기면 이 문장부터 미래형으로 되돌릴 것. 신뢰의 근거로 내세운 문장이라, 사실과
-          어긋나면 뒤에 단서를 붙이는 걸로는 못 고친다. */}
+      {/* 저장소가 공개라 쓸 수 있는 문장이다 — 다시 비공개로 돌리면 이 문장부터 고친다. */}
       <p className="mt-3 text-md leading-relaxed text-[var(--color-ink-500)]">
-        {t(
-          "Budu는 소스 코드가 MIT 라이선스로 공개돼 있어요. 열쇠와 돈을 다루는 코드를 직접 읽어 확인하고, 직접 빌드해서 쓸 수 있어요.",
-          "Budu's source is public under the MIT license. You can read the code that handles your key and your money, and build it yourself.",
-        )}
+        {t("Budu는 코드가 오픈 소스로 공개되어 있습니다.", "Budu's code is open source.")}
       </p>
-      {/* 저장(로컬)과 전송(RPC)을 나눠 쓴 건 개발 27 판단 그대로. 개발 29 에서 한 겹 더 —
-          "내역이 ~/.budu 에만 있다"가 "내 거래가 비공개다"로 읽히면 안 된다. 보낸 거래는
-          공개 체인에 영구히 남는다. 지갑에서 이 오해는 값이 비싸다. */}
-      <p className="mt-1.5 text-sm leading-snug text-[var(--color-ink-300)]">
+      <p className="mt-1 text-md leading-relaxed text-[var(--color-ink-500)]">
         {t(
           <>
-            지갑 키·설정·거래 내역은 이 컴퓨터의 <span className="font-mono">~/.budu</span>{" "}
-            폴더에만 저장돼요. 잔액을 확인하고 결제를 준비할 때만 위에서 고른 RPC 서버로 요청이 나가요 —
-            그쪽은 내 주소를 볼 수 있고, 보낸 거래는 공개 블록체인에 남아요.
+            지갑 키·설정·거래 내역은 컴퓨터의 <span className="font-mono">~/.budu</span> 폴더에 저장됩니다.
           </>,
           <>
-            Your key, settings, and history stay in the <span className="font-mono">~/.budu</span>{" "}
-            folder on this computer. Requests only leave for the RPC server you picked above, to read
-            balances and send payments — that server can see your address, and payments you send stay
-            on a public blockchain.
+            Your wallet key, settings, and history are stored in the <span className="font-mono">~/.budu</span> folder on
+            your computer.
           </>,
         )}
       </p>
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-4 flex flex-col items-start gap-1.5 text-sm">
         <button
           type="button"
           onClick={() => openUrl(GITHUB_URL).catch(() => {})}
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--color-ok)] hover:underline transition-colors"
+          className="inline-flex items-center gap-1.5 text-[var(--color-ink-700)] dark:text-[#E8E5DD] hover:underline"
         >
           <ExternalLink size={12} />
-          {t("소스 코드 보기", "Read the source")}
+          {t("소스 코드 보기", "View source code")}
         </button>
-        <span className="text-sm text-[var(--color-ink-300)]">{t("MIT 라이선스", "MIT license")}</span>
+        <span className="text-[var(--color-ink-300)]">{t("MIT 라이선스", "MIT License")}</span>
+        {/* 앱에 Pretendard 를 함께 담아 배포하므로 OFL 1.1 이 고지를 요구한다. */}
+        <span className="text-[var(--color-ink-300)]">
+          {t("글꼴 Pretendard — SIL Open Font License 1.1", "Font Pretendard — SIL Open Font License 1.1")}
+        </span>
       </div>
-      {/* 글꼴 고지 — 앱에 Pretendard 를 함께 담아 배포하므로 OFL 1.1 이 고지를 요구한다.
-          라이선스 전문은 번들 안(fonts/LICENSE-Pretendard.txt)에도 같이 들어간다. */}
-      <p className="mt-3 text-sm text-[var(--color-ink-300)]">
-        {t("글꼴 Pretendard — SIL Open Font License 1.1", "Pretendard typeface — SIL Open Font License 1.1")}
-      </p>
     </Section>
   );
 }
 
-/** 화이트리스트 주소 목록 모달 — 주소가 많아져도 설정 화면이 안 길어지게 분리. */
-export function TrustedAddrsModal({
+/** 화이트리스트 — 한 줄(«아직 없어요» / «N개»)을 누르면 아래로 목록이 펼쳐진다(결제 내역 줄 펼치기와 같은 방식).
+ *  안에서 주소를 직접 넣고 뺀다(즉시 저장). 자동 학습 옵션은 다른 토글처럼 «저장하기» 로 적용된다. */
+export function TrustedList({
   addrs,
+  onAdd,
   onRevoke,
-  onClose,
+  autoLearn,
+  onToggleAutoLearn,
 }: {
-  addrs: string[];
+  addrs: string[] | null;
+  onAdd: (addr: string) => Promise<string | null>;
   onRevoke: (addr: string) => Promise<void>;
-  onClose: () => void;
+  autoLearn: boolean;
+  onToggleAutoLearn: () => void;
 }) {
-  // 철회는 실수 방지로 행별 2단계 확인 (휴지통 → "철회할까요?" → 철회).
+  const [open, setOpen] = useState(false);
+  // 빼기는 실수 방지로 행별 2단계 확인.
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+
+  async function add() {
+    if (!draft.trim() || adding) return;
+    setAdding(true);
+    const e = await onAdd(draft);
+    setAdding(false);
+    setErr(e);
+    if (!e) setDraft("");
+  }
+
+  const summary =
+    addrs === null ? t("불러오는 중…", "Loading…") : addrs.length === 0 ? t("아직 없어요", "None yet") : t(`${addrs.length}개`, `${addrs.length}`);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      onClick={onClose}
-      className={modalOverlay}
-    >
-      <motion.section
-        initial={{ scale: 0.9, opacity: 0, y: 12 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 340, damping: 24 }}
-        onClick={(e) => e.stopPropagation()}
-        className={cn(modalCard, "px-7 py-6")}
+    <RowGroup>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between px-4 py-3.5 text-left"
       >
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-sm tracking-[0.04em] text-[var(--color-ok)]">
-            <ShieldCheck size={13} />
-            {t("화이트리스트", "Whitelist")}
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("닫기", "Close")}
-            className="p-1 text-[var(--color-ink-300)] hover:text-[var(--color-ink-900)] dark:hover:text-[#E8E5DD] transition-colors"
-          >
-            <X size={14} />
-          </button>
-        </div>
-        <p className="mt-3 text-sm leading-relaxed text-[var(--color-ink-500)]">
-          {t(
-            "비번으로 승인하면 자동으로 학습돼요. 철회하면 다음 결제 때 다시 비번을 받아요.",
-            "Approving with your password adds an address here. Remove one and the next payment to it asks again.",
-          )}
-        </p>
-
-        {addrs.length === 0 ? (
-          <p className="mt-5 mb-1 text-sm text-[var(--color-ink-300)]">
-            {t(
-              "모두 철회했어요. 비번으로 승인하면 다시 학습돼요.",
-              "All removed. Approving with your password adds them back.",
-            )}
-          </p>
-        ) : (
-          <ul className="mt-4 max-h-72 overflow-y-auto space-y-0.5 -mx-2">
-            {addrs.map((addr) => (
-              <li
-                key={addr}
-                className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 hover:bg-[var(--color-ivory-200)] dark:hover:bg-[var(--color-night-700)]/50 transition-colors"
-              >
-                <span className="num font-mono text-sm text-[var(--color-ink-500)]" title={addr}>
-                  {shortenAddress(addr)}
-                </span>
-                {confirming === addr ? (
-                  <span className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm text-[var(--color-ink-500)]">{t("철회할까요?", "Remove it?")}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setConfirming(null);
-                        void onRevoke(addr);
-                      }}
-                      className="text-sm font-medium text-[var(--color-danger)] hover:underline"
-                    >
-                      {t("철회", "Remove")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirming(null)}
-                      className="text-sm text-[var(--color-ink-300)] hover:underline"
-                    >
-                      {t("취소", "Cancel")}
-                    </button>
+        <span className="text-md tracking-tight">{t("화이트리스트", "Whitelist")}</span>
+        <span className="flex items-center gap-1.5 text-sm text-[var(--color-ink-300)]">
+          {summary}
+          <ChevronDown size={14} className={cn("transition-transform duration-[var(--duration-base)]", open && "rotate-180")} />
+        </span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 win:pt-0">
+          {addrs && addrs.length > 0 && (
+            <ul className="-mx-2 mb-3 space-y-0.5">
+              {addrs.map((addr) => (
+                <li key={addr} className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5">
+                  <span className="num font-mono text-sm text-[var(--color-ink-500)]" title={addr}>
+                    {shortenAddress(addr)}
                   </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setConfirming(addr)}
-                    aria-label={t(
-                      `${shortenAddress(addr)} 철회`,
-                      `Remove ${shortenAddress(addr)}`,
-                    )}
-                    title={t("화이트리스트에서 빼기", "Remove from the whitelist")}
-                    className="shrink-0 p-1 rounded-md text-[var(--color-ink-300)] hover:text-[var(--color-danger-active)] transition-colors"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </motion.section>
-    </motion.div>
+                  {confirming === addr ? (
+                    <span className="flex items-center gap-2 shrink-0 text-sm">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirming(null);
+                          void onRevoke(addr);
+                        }}
+                        className="font-medium text-[var(--color-danger)] hover:underline"
+                      >
+                        {t("빼기", "Remove")}
+                      </button>
+                      <button type="button" onClick={() => setConfirming(null)} className="text-[var(--color-ink-300)] hover:underline">
+                        {t("취소", "Cancel")}
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirming(addr)}
+                      aria-label={t(`${shortenAddress(addr)} 빼기`, `Remove ${shortenAddress(addr)}`)}
+                      className="shrink-0 p-1 rounded-md text-[var(--color-ink-300)] hover:text-[var(--color-danger)] transition-colors"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex gap-2">
+            <input
+              value={draft}
+              onChange={(e) => {
+                setDraft(e.target.value);
+                setErr(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void add();
+                }
+              }}
+              placeholder={t("솔라나 주소", "Solana address")}
+              spellCheck={false}
+              autoCapitalize="off"
+              className={cn(inputBase, "flex-1 min-w-0 font-mono text-sm")}
+            />
+            <button
+              type="button"
+              onClick={() => void add()}
+              disabled={!draft.trim() || adding}
+              className="shrink-0 px-3 text-sm text-[var(--color-ink-700)] dark:text-[#E8E5DD] disabled:text-[var(--color-ink-300)] hover:underline"
+            >
+              {t("추가", "Add")}
+            </button>
+          </div>
+          {err && <p className="mt-1.5 text-sm text-[var(--color-danger)]">{err}</p>}
+          <div className="mt-3 flex items-center justify-between">
+            <p className="text-md tracking-tight pr-3">
+              {t("결제 승인 시 자동으로 화이트리스트에 추가", "Add to the whitelist automatically when I approve a payment")}
+            </p>
+            <Switch
+              checked={autoLearn}
+              onToggle={onToggleAutoLearn}
+              label={t("결제 승인 시 자동으로 화이트리스트에 추가", "Add to the whitelist automatically when I approve a payment")}
+            />
+          </div>
+        </div>
+      )}
+    </RowGroup>
+  );
+}
+
+/** 자동 잠금 — 목록에서 고른다. 목록 밖의 옛 값(1~9분)은 그 값을 한 칸 더 보여 준다. */
+const LOCK_CHOICES: { mins: string; ko: string; en: string }[] = [
+  { mins: "10", ko: "10분", en: "10 min" },
+  { mins: "30", ko: "30분", en: "30 min" },
+  { mins: "60", ko: "1시간", en: "1 hour" },
+  { mins: "240", ko: "4시간", en: "4 hours" },
+  { mins: "1440", ko: "1일", en: "1 day" },
+  { mins: "10080", ko: "7일", en: "7 days" },
+  { mins: "0", ko: "잠그지 않음", en: "Never" },
+];
+
+export function LockRow({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const v = value.trim();
+  const known = LOCK_CHOICES.some((c) => c.mins === v);
+  return (
+    <div className="flex items-center justify-between px-4 py-3.5">
+      <p className="text-md tracking-tight pr-3">{t("자동 잠금", "Auto-lock")}</p>
+      <select
+        value={v}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={t("자동 잠금", "Auto-lock")}
+        className={cn(inputBase, "w-auto text-md py-1.5")}
+      >
+        {!known && <option value={v}>{t(`${v}분`, `${v} min`)}</option>}
+        {LOCK_CHOICES.map((c) => (
+          <option key={c.mins} value={c.mins}>
+            {t(c.ko, c.en)}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -266,7 +302,7 @@ export function ToggleRow({
   onToggle,
 }: {
   title: string;
-  desc: string;
+  desc?: string;
   checked: boolean;
   onToggle: () => void;
 }) {
@@ -274,7 +310,7 @@ export function ToggleRow({
     <div className="flex items-center justify-between px-4 py-3.5">
       <div className="min-w-0 pr-3">
         <p className="text-md tracking-tight">{title}</p>
-        <p className="mt-0.5 text-sm leading-snug text-[var(--color-ink-300)]">{desc}</p>
+        {desc && <p className="mt-0.5 text-sm leading-snug text-[var(--color-ink-300)]">{desc}</p>}
       </div>
       <Switch checked={checked} onToggle={onToggle} label={title} />
     </div>
@@ -307,21 +343,18 @@ export function LanguageRow({ dirty }: { dirty: boolean }) {
     <div className="flex items-center justify-between px-4 py-3.5">
       <div className="min-w-0 pr-3">
         <p className="text-md tracking-tight">{t("언어", "Language")}</p>
-        <p
-          className={cn(
-            "mt-0.5 text-sm leading-snug",
-            failed ? "text-[var(--color-danger)]" : "text-[var(--color-ink-300)]",
-          )}
-        >
-          {failed
-            ? t("언어를 저장하지 못했어요. 그대로 뒀어요.", "Couldn't save the language, so nothing changed.")
-            : dirty
-              ? t(
-                  "저장 안 한 변경이 있어요. 먼저 저장한 뒤에 바꿔주세요.",
-                  "You have unsaved changes. Save them first, then switch.",
-                )
-              : t("고르면 이 화면이 새 언어로 다시 열려요.", "Picking one reopens this screen in that language.")}
-        </p>
+        {(failed || dirty) && (
+          <p
+            className={cn(
+              "mt-0.5 text-sm leading-snug",
+              failed ? "text-[var(--color-danger)]" : "text-[var(--color-ink-300)]",
+            )}
+          >
+            {failed
+              ? t("언어를 저장하지 못했어요. 그대로 뒀어요.", "Couldn't save the language, so nothing changed.")
+              : t("저장 안 한 변경이 있어요. 먼저 저장한 뒤에 바꿔주세요.", "You have unsaved changes. Save them first, then switch.")}
+          </p>
+        )}
       </div>
       <div className="shrink-0 flex gap-1 p-1 rounded-[var(--radius-pill)] bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-900)]">
         {(
@@ -395,39 +428,17 @@ export function LimitGroup({
   daily,
   onSingle,
   onDaily,
-  usedToday,
 }: {
   token: string;
   single: string;
   daily: string;
   onSingle: (v: string) => void;
   onDaily: (v: string) => void;
-  usedToday: string | undefined;
 }) {
-  const used = fmtExact(usedToday); // 정확한 값 — 반올림하면 한도 계산과 어긋나 보인다. ETH 갈래는 개발 6 에 걷어 냄.
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--color-ivory-300)] dark:border-[var(--color-night-700)] px-4 py-4 win:border-0 win:p-0">
-      <div className="flex items-center justify-between">
-        <span className="text-md tracking-tight">{token}</span>
-        <span className="text-sm text-[var(--color-ink-300)] num">
-          {/* 정확한 값 — 0.045 를 「0.05 사용」으로 반올림하면 한도 계산과 어긋나 보인다 */}
-          {t(`오늘 ${used} 사용`, `${used} used today`)}
-        </span>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <UnitInput
-          label={t("단일 거래 한도", "Per payment")}
-          unit={token}
-          value={single}
-          onChange={onSingle}
-        />
-        <UnitInput
-          label={t("하루 누적 한도", "Per day")}
-          unit={token}
-          value={daily}
-          onChange={onDaily}
-        />
-      </div>
+    <div className="grid grid-cols-2 gap-3">
+      <UnitInput label={t("결제당 한도", "Per payment")} unit={token} value={single} onChange={onSingle} />
+      <UnitInput label={t("하루 한도", "Per day")} unit={token} value={daily} onChange={onDaily} />
     </div>
   );
 }

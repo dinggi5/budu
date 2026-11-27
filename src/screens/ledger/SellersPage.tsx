@@ -80,13 +80,7 @@ export function SellersPage({
       <div ref={page} className="h-screen min-w-0 flex-1 overflow-y-auto px-6 min-[1100px]:px-10 pt-14 pb-10">
         <PageTitle title={t("데이터 구매처", "Data sources")} />
         <div className="mt-7">
-          <Empty
-            title={t("아직 거래한 판매자가 없어요.", "No sellers yet.")}
-            body={t(
-              "AI 가 x402 판매자에게 결제하면 여기 판매자별로 묶여요. 데모 판매자 budu-port 는 부산항 파고·조석·혼잡을 팔아요.",
-              "When the AI pays an x402 seller it shows up here. The demo seller budu-port sells Busan wave, tide and congestion data.",
-            )}
-          />
+          <Empty title={t("아직 거래한 판매자가 없어요.", "No sellers yet.")} />
         </div>
       </div>
     );

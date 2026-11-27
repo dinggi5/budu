@@ -1,8 +1,9 @@
 // 신뢰 주소(화이트리스트) — 자율 결제 가드.
 //
 // 자율 한도(금액)만으로는 "처음 보는 주소"로도 비번 없이 나간다(악의적 엔드포인트가
-// 소액으로 일일 한도까지 야금야금). 사람이 비번으로 승인/송금한 적 있는 받는 주소를
-// 학습해 두고, 자율 승인은 그 주소들에만 허용한다(설정 auto_trusted_only, 기본 켜짐).
+// 소액으로 일일 한도까지 야금야금). 자율 승인은 이 목록의 주소에만 허용한다(설정 auto_trusted_only, 기본 켜짐).
+// 목록은 사용자가 설정에서 직접 넣는다(add_trusted_addr). 비번 승인 때 저절로 넣는 학습은 옵션이다
+// (설정 auto_learn_trusted, 기본 꺼짐 — 개발 14 전까지는 늘 학습했고, 그때 들어간 주소는 그대로 남는다).
 // 신뢰 목록 = 받는 주소(공개 정보)일 뿐 비밀 없음.
 
 use std::fs;
@@ -88,6 +89,31 @@ pub(crate) fn is_trusted_addr(to: String) -> bool {
 #[tauri::command]
 pub(crate) fn get_trusted_addrs() -> Vec<String> {
     read_trusted()
+}
+
+/// 사용자가 직접 주소를 넣는다. 보내기와 같은 규칙 — base58 32바이트 공개키여야 한다.
+/// 곡선 위 여부는 보지 않는다: x402 판매자의 받는 주소가 프로그램 소유(PDA) 금고일 수도 있다.
+#[tauri::command]
+pub(crate) fn add_trusted_addr(to: String) -> Result<(), String> {
+    let a = normalize_addr(&to);
+    if crate::solana::parse_pubkey(&a).is_none() {
+        return Err(crate::i18n::ts!(
+            "솔라나 주소가 아니에요",
+            "That isn't a Solana address"
+        )
+        .to_string());
+    }
+    let _g = trusted_guard();
+    let mut list = read_trusted_checked().map_err(|e| {
+        tf!(
+            "화이트리스트를 읽지 못해 추가하지 않았어요: {e}",
+            "Couldn't read the whitelist, so nothing was added: {e}"
+        )
+    })?;
+    if add_trusted(&mut list, &a) {
+        write_json(trusted_path()?, &list)?;
+    }
+    Ok(())
 }
 
 /// 목록에서 제거 (빈 값·없는 주소 무시). 바뀌었으면 true. 순수 함수 — 테스트용 분리.

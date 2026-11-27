@@ -303,9 +303,9 @@ export function ConnectScreen({
           <span className={cn("w-2 h-2 rounded-full", agent.connected ? "bg-[var(--color-ok)]" : isReady ? "bg-[var(--color-ok)]" : "bg-[var(--color-ink-300)]")} aria-hidden />
           <span className={inkSoft}>
             {agent.connected
-              ? t(`지금 ${agent.client || "AI"} 가 붙어 있어요`, `${agent.client || "An AI"} is attached now`)
+              ? t(`지금 ${agent.client || "AI"} 가 연결되어 있어요`, `${agent.client || "An AI"} is connected`)
               : isReady
-                ? t("준비돼 있어요. AI 를 켜면 알아서 붙어요", "Ready. Open the AI and it attaches on its own")
+                ? t("준비돼 있어요. AI 를 켜면 연결돼요", "Ready. Open the AI and it connects")
                 : t("아직 연결된 AI 가 없어요", "No AI connected yet")}
           </span>
         </div>
@@ -429,7 +429,7 @@ export function ConnectScreen({
           <BoardRow
             icon={<Plug size={16} />}
             name={t("다른 AI (Cursor 등)", "Other AIs (Cursor etc.)")}
-            sub={t("MCP 를 지원하는 프로그램에 다음 경로를 서버로 등록하세요.", "Register this path as a server in any MCP-capable app.")}
+            sub={t("MCP를 지원하는 프로그램에 다음 경로를 서버로 등록하세요.", "Register this path as a server in any MCP-capable app.")}
             tag={<Tag tone="idle">{t("직접 추가", "Manual")}</Tag>}
             action={
               status == null || tempNoPath ? null : (
@@ -766,7 +766,7 @@ export function ConnectScreen({
           <div className="space-y-2.5">
             <p>
               {t(
-                "MCP를 지원하는 앱이면 어디든 붙어요. 서버로 이 경로를 등록하면 돼요:",
+                "MCP를 지원하는 앱이면 어디든 연결돼요. 서버로 이 경로를 등록하면 돼요:",
                 "Any app that speaks MCP can use this. Register this path as the server:",
               )}
             </p>

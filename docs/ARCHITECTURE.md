@@ -12,7 +12,7 @@
 ```
  AI 에이전트 ──stdio MCP──▶ budu-mcp (Rust)          ~/.budu/ (파일)            Budu.app (Tauri: Rust + React)
                            · HTTP·402 파싱·재요청  ──payment_request.json──▶  · 키 보관(암호화)·서명
-                           · 키 없음, 비번 없음    ◀──payment_result.json───  · 한도·잠금·작업 예산
+                           · 키 없음, 비번 없음    ◀──payment_result.json───  · 한도·잠금·프로젝트 예산
                            · 요청만 한다           ──x402_settlements──────▶  · 승인 창(사람)·내역·정산 확정
                                                    ◀──app_alive.json────────
 ```
@@ -33,8 +33,8 @@
 **알려진 한계(1.0):** 설정 파일(`settings.json` — 한도·자율 결제)과 화이트리스트(`trusted*.json`)는 평문이고
 무결성 표시가 없다. 같은 사용자 권한으로 도는 악성 코드는 요청 파일처럼 이 파일들도 고칠 수 있다 —
 **자율 결제 세션이 열려 있는 동안**엔 한도·화이트리스트를 바꿔 승인 창 없이 결제를 낼 수 있다는 뜻이다.
-작업 예산이 열려 있을 때도 같은 한도 검사를 거치지만, 판매자 목록과 예산은 메모리에만 있어 넓힐 수 있는 폭은 그 예산 안이다.
-자율 결제 세션도 작업 예산도 열려 있지 않으면(기본) 모든 결제가 비밀번호를 거치므로 이 경로는 없다. 자율 결제는 믿는 환경에서만, 짧게 켠다.
+프로젝트 예산이 열려 있을 때도 같은 한도 검사를 거치지만, 판매자 목록과 예산은 메모리에만 있어 넓힐 수 있는 폭은 그 예산 안이다.
+자율 결제 세션도 프로젝트 예산도 열려 있지 않으면(기본) 모든 결제가 비밀번호를 거치므로 이 경로는 없다. 자율 결제는 믿는 환경에서만, 짧게 켠다.
 세션 키에서 파생한 MAC 으로 두 파일을 묶는 일은 다음 버전 몫이다.
 
 ---
@@ -60,7 +60,7 @@ sequenceDiagram
     M->>F: payment_request.json (조건·체인·계정·작업·임대)
     G->>F: 1초 폴링 / 감시 스레드 (ipc.rs, ipc/watchdog.rs)
     G->>G: 창 전 한도 검사 — 넘으면 창 없이 거절 (refuse_over_limit)
-    alt 작업 예산·자율 결제 안
+    alt 프로젝트 예산·자율 결제 안
         G->>G: 메모리 키로 자동 승인 (job.rs / session.rs)
     else
         G->>G: 승인 시트 — 사람이 비번 (PaymentApprovalModal → approve_payment)
@@ -97,7 +97,7 @@ sequenceDiagram
 |---|---|---|
 | 1 | `src-tauri/src/svm_x402.rs` (~380줄) | 트랜잭션 4명령 손 직렬화, `verify_message` 의 자체 검증 규칙, 정답지 테스트 `matches_official_client_byte_for_byte` |
 | 2 | `src-tauri/src/x402.rs` | 정책 껍데기: 조건 대조 → 잠금 → 한도 예약 → 블록해시 → 서명 → 먼저 적기. 실패 시 환불 |
-| 3 | `src-tauri/src/limits.rs` · `job.rs` · `session.rs` | 한도 장부, 작업 예산(사람이 연 «이 작업 N USDC 까지»), 자율 결제 세션. 키는 메모리에만(zeroize) |
+| 3 | `src-tauri/src/limits.rs` · `job.rs` · `session.rs` | 한도 장부, 프로젝트 예산(사람이 연 «이 프로젝트 N USDC 까지»), 자율 결제 세션. 키는 메모리에만(zeroize) |
 | 4 | `src-tauri/src/ipc.rs` · `ipc/watchdog.rs` | 요청·결과 파일, 승인 중재(동시에 한 건), 웹뷰가 잠들어도 창을 깨우는 감시 스레드 |
 | 5 | `src-tauri/src/confirm.rs` · `history.rs` | 정산 확정, 감사 로그(내역) |
 | 6 | `budu-mcp/src/flow.rs` · `x402.rs` · `payment.rs` | 402 고르기, 리다이렉트 가드, 한 번에 한 결제, 승인 대기, 결과 JSON |
@@ -128,13 +128,13 @@ sequenceDiagram
 | 파일 | 쓰는 쪽 → 읽는 쪽 | 내용 |
 |---|---|---|
 | `wallet.enc` | GUI | 암호화된 시드 + 평문 계정 주소 목록(MCP 도 비번 없이 주소를 읽는다) |
-| `settings.json` | GUI → MCP | 체인·한도·RPC·언어 |
+| `settings.json` | GUI → MCP | 체인·체인별 한도(`limits`)·RPC·언어 |
 | `payment_request.json` / `payment_result.json` | MCP ↔ GUI | 결제 요청 한 건 / 그 결과 |
 | `app_alive.json` / `mcp_alive.json` | 서로 | 하트비트(앱이 꺼져 있으면 MCP 가 즉시 안내) |
 | `history[-<체인>][-a<계정>].json` | GUI → MCP | 감사 로그. 넘친 기록은 옆의 `.archive.jsonl` |
 | `sol_sends[-<체인>][-a<계정>].json` | GUI | 사람이 직접 한 «보내기»(USDC·SOL, 줄마다 `token`) 기록 — AI 결제 내역·한도와 따로. 파일 이름은 SOL 만 보내던 때 그대로. «보내는 중» 은 체인 확인·블록해시 만료로 결말 |
 | `x402_settlements[-<체인>].json` | MCP → GUI | 판매자가 준 정산 결과와 «본문 받음» 신호 |
-| `spend` · `trusted` · `job_names` `[-<체인>].json` | GUI | 오늘 사용액 · 화이트리스트 · 작업 별명 |
+| `spend` · `trusted` · `job_names` `[-<체인>].json` | GUI | 오늘 사용액 · 화이트리스트(사용자가 직접 추가, 승인 때 자동 학습은 옵션) · 프로젝트 별명 |
 | `lock.json` | GUI | 긴급 잠금 |
 | `approvals/<id>.json` | GUI → MCP | 결제 시도 기록(sending → done/failed/handed). 요청이 사라져도 MCP 가 결말을 읽는 자리. 경합은 순서로 닫는다: **GUI 는 기록을 먼저 쓰고 요청을 확인, MCP 는 시간 초과면 요청을 먼저 지우고 기록을 읽는다**(`shared/policy.rs` 결제 시도 기록 절) |
 
@@ -161,7 +161,7 @@ npm run check
 ## 7. 알려진 한계 (데모 범위)
 
 - 결제 방식은 x402 V2 · 솔라나 `exact` · USDC 하나. EVM·V1·다른 토큰은 버렸다.
-- 한 번에 결제 한 건, 열린 작업 예산 하나.
+- 한 번에 결제 한 건, 열린 프로젝트 예산 하나.
 - 서명·공증 없는 빌드. 맥 전용.
 - 정산 확인(`confirm.rs`)은 **지금 활성 체인**의 내역 중 본 파일에 남은 기록만 본다. 보관 파일로 밀려난 기록·다른 체인의 기록은
   «정산 대기» 로 남고 한도도 돌려받지 못한다(보수 쪽 실패 — 나간 돈을 안 나갔다고 적지는 않는다).

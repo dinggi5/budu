@@ -621,9 +621,12 @@ export function WalletScreen({
     return withModal(framed(
       <SettingsScreen
         current={settings}
-        spend={spend}
         initialGroup={settingsGroup}
         onGuard={onSettingsGuard}
+        onSaved={() => {
+          loadLimits();
+          notifySync();
+        }}
         onClose={() => {
           setShowSettings(false);
           setSettingsGroup(undefined); // 언어 바꿔 돌아온 한 번만 «앱» 묶음으로 연다.
@@ -792,7 +795,7 @@ export function WalletScreen({
               label={
                 locked
                   ? t("긴급 잠금 해제", "Turn off emergency lock")
-                  : t("긴급 잠금 (모든 결제 차단)", "Emergency lock (blocks every payment)")
+                  : t("긴급 잠금 (모든 결제 즉시 차단)", "Emergency lock (blocks every payment at once)")
               }
               tone={locked ? "danger" : "default"}
             >

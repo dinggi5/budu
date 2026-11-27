@@ -77,7 +77,7 @@ export function LedgerPage({
       </ul>
       {openLabel && (
         <>
-          <Eyebrow className="px-3 mt-6 mb-1">{t("진행 중인 작업", "Job in progress")}</Eyebrow>
+          <Eyebrow className="px-3 mt-6 mb-1">{t("진행 중인 프로젝트", "Project in progress")}</Eyebrow>
           <ul>
             <LibraryItem
               accent={!locked}
@@ -89,7 +89,7 @@ export function LedgerPage({
           </ul>
         </>
       )}
-      <Eyebrow className="px-3 mt-6 mb-1">{t("지난 작업", "Past jobs")}</Eyebrow>
+      <Eyebrow className="px-3 mt-6 mb-1">{t("지난 프로젝트", "Past projects")}</Eyebrow>
       {entries == null ? (
         <p className={cn("px-3 text-sm", faint)}>…</p>
       ) : past.length === 0 ? (
@@ -106,7 +106,7 @@ export function LedgerPage({
           <LibraryItem
             on={scope === "nojob"}
             onPick={() => onScope("nojob")}
-            name={t("작업 없음", "No job")}
+            name={t("프로젝트 없음", "No project")}
             meta={t(`${noJob.length}건 · ${fromUnits(paidNoJob)} USDC`, `${noJob.length} · ${fromUnits(paidNoJob)} USDC`)}
           />
         </ul>
@@ -125,7 +125,7 @@ export function LedgerPage({
       <select
         value={scope}
         onChange={(e) => onScope(e.target.value as Scope)}
-        aria-label={t("볼 작업", "Job to show")}
+        aria-label={t("볼 프로젝트", "Project to show")}
         className={cn(
           "h-8 max-w-full rounded-full px-3 text-md outline-none",
           "bg-[var(--color-ivory-200)] dark:bg-[var(--color-night-700)]",
@@ -139,7 +139,7 @@ export function LedgerPage({
             {names.label(g.job)}
           </option>
         ))}
-        {noJob.length > 0 && <option value="nojob">{t("작업 없음", "No job")}</option>}
+        {noJob.length > 0 && <option value="nojob">{t("프로젝트 없음", "No project")}</option>}
       </select>
     </div>
   );
@@ -154,8 +154,8 @@ export function LedgerPage({
   } else if (scope === "nojob") {
     head = (
       <PageTitle
-        title={t("작업 없음", "No job")}
-        sub={t("AI 가 작업 이름표를 붙이지 않은 결제예요.", "Payments the AI didn't tag with a job.")}
+        title={t("프로젝트 없음", "No project")}
+        sub={t("AI 가 프로젝트 이름표를 붙이지 않은 결제예요.", "Payments the AI didn't tag with a project.")}
       />
     );
   } else {
@@ -166,7 +166,7 @@ export function LedgerPage({
     const note = receipt.note(label);
     head = (
       <div>
-        <Eyebrow className="mb-1">{isOpen ? t("진행 중인 작업", "Job in progress") : t("지난 작업", "Past job")}</Eyebrow>
+        <Eyebrow className="mb-1">{isOpen ? t("진행 중인 프로젝트", "Project in progress") : t("지난 프로젝트", "Past project")}</Eyebrow>
         <RenameField key={label} value={names.label(label)} placeholder={label} onSave={(n) => renameJob(label, n)} />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <p className={cn("min-w-0 text-md num", muted)}>

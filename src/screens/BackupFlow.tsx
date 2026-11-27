@@ -20,7 +20,7 @@ import {
 } from "@/components/ui";
 import { t } from "@/lib/i18n";
 import { isWindow } from "@/lib/win";
-import { Eyebrow, ink, muted } from "@/components/win";
+import { ink, muted } from "@/components/win";
 
 /** 큰 창 백업 왼쪽 단 — 12단어를 지키는 법 둘. */
 function BackupGuide() {
@@ -31,7 +31,6 @@ function BackupGuide() {
   // 최소 폭 — 옆 판이 폭을 먹어도 글자가 한 자씩 세로로 떨어지지 않게.
   return (
     <div className="min-w-[220px]">
-      <Eyebrow className="mb-3">{t("지키는 법", "Keeping it safe")}</Eyebrow>
       <ol className="flex flex-col gap-6">
         {items.map(([h, b], i) => (
           <li key={h} className="flex gap-4">

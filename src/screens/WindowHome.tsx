@@ -56,7 +56,7 @@ export function Rail({
       <RailButton on={page === "home"} onClick={() => onPage("home")} label={t("홈", "Home")}>
         <Home size={18} />
       </RailButton>
-      <RailButton on={page === "history"} onClick={() => onPage("history")} label={t("작업 내역", "Job history")}>
+      <RailButton on={page === "history"} onClick={() => onPage("history")} label={t("결제 내역", "Payments")}>
         <History size={18} />
       </RailButton>
       <RailButton on={page === "sellers"} onClick={() => onPage("sellers")} label={t("데이터 구매처", "Data sources")}>
@@ -69,7 +69,7 @@ export function Rail({
       <RailButton
         on={page === "backup"}
         onClick={() => onPage("backup")}
-        label={backedUp ? t("시드 백업", "Back up your words") : t("시드 백업 — 아직 안 했어요", "Back up your words — not done yet")}
+        label={t("시드 백업", "Back up your words")}
         dot={!backedUp}
       >
         <KeyRound size={18} />
@@ -80,7 +80,7 @@ export function Rail({
         label={
           locked
             ? t("긴급 잠금 해제", "Turn off emergency lock")
-            : t("긴급 잠금 (모든 결제 차단)", "Emergency lock (blocks every payment)")
+            : t("긴급 잠금 (모든 결제 즉시 차단)", "Emergency lock (blocks every payment at once)")
         }
         danger={locked}
       >
@@ -208,7 +208,7 @@ export function WindowHome({
       {/* 패널 토글 — 열려 있든 닫혀 있든 같은 자리의 네모 단추 하나(장부의 목록 접기와 같은 모양). */}
       <div className="fixed top-3 right-4 z-40">
         <IconButton
-          label={panelOpen ? t("작업 패널 닫기", "Hide job panel") : t("작업 패널 열기", "Show job panel")}
+          label={panelOpen ? t("프로젝트 패널 닫기", "Hide project panel") : t("프로젝트 패널 열기", "Show project panel")}
           onClick={() => onPanel(!panelOpen)}
         >
           <PanelRight size={16} />
@@ -219,7 +219,7 @@ export function WindowHome({
         <div className="flex items-center gap-2 text-md text-[var(--color-ink-500)] min-w-0">
           <span className="truncate text-[var(--color-ink-700)] dark:text-[#B5AFA2]">{accountName(account)}</span>
           <span aria-hidden>·</span>
-          <span className={cn("shrink-0", !chain.testnet && "text-[var(--color-danger)] font-medium")}>{chain.name}</span>
+          <span className={cn("shrink-0", !chain.testnet && "text-[var(--color-ink-900)] dark:text-[#E8E5DD] font-medium")}>{chain.name}</span>
           <span aria-hidden>·</span>
           <button
             type="button"
@@ -263,8 +263,8 @@ export function WindowHome({
           )}
         </p>
 
-        {/* 게이지 둘 — 오늘 한도 · 작업 예산. */}
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-8">
+        {/* 게이지 둘 — 오늘 한도 위, 프로젝트 예산 아래. 한 단으로 쌓고 폭(GAUGE_W)을 아래 띠와 맞춘다. */}
+        <div className={cn("mt-12 grid grid-cols-1 gap-8", GAUGE_W)}>
           <Gauge
             title={t("오늘 한도", "Today's limit")}
             total={dailyKind === "set" ? money(daily) : dailyKind === "unlimited" ? t("없음", "none") : ""}
@@ -283,25 +283,24 @@ export function WindowHome({
             warn={dailyKind === "unknown"}
           />
           <Gauge
-            title={t("작업 예산", "Job budget")}
+            title={t("프로젝트 예산", "Project budget")}
             total={job ? money(job.budget) : ""}
             value={
               locked
                 ? t("긴급 잠금 중 · 결제 멈춤", "Emergency lock on · payments paused")
                 : job
                   ? t(`${money(job.left)} 남음`, `${money(job.left)} left`)
-                  : t("진행 중인 작업 없음", "No job in progress")
+                  : t("진행 중인 프로젝트 없음", "No project in progress")
             }
             fill={job && !locked ? ratio(job.spent, job.budget) : 0}
             muted={!job || locked}
           />
         </div>
 
-        {/* 띠(잠금·자율 결제·백업·설정 고장) — 있을 때만, 게이지 아래 조용히. */}
-        {notices && <div className="mt-10 max-w-md flex flex-col gap-3">{notices}</div>}
-
-        {/* 맨 아래 — 받는 주소 · SOL. */}
+        {/* 맨 아래 — 띠(잠금·자율 결제·백업·설정 고장, 있을 때만) 그리고 SOL · 받는 주소.
+            띠는 가운데 떠 있지 않게 바닥 줄 바로 위에 붙이고, 폭은 게이지 줄과 맞춘다. */}
         <div className="mt-auto pt-10">
+          {notices && <div className={cn("mb-6 flex flex-col gap-3 [&>*]:max-w-none", GAUGE_W)}>{notices}</div>}
           <div>
             <AddressLine address={address} sol={balances?.sol} onReceive={onReceive} onSend={onSend} />
           </div>
@@ -322,6 +321,9 @@ export function WindowHome({
   );
 }
 
+/** 홈의 게이지 단과 띠가 함께 쓰는 폭. */
+const GAUGE_W = "w-full max-w-[520px]";
+
 function AddressLine({
   address,
   sol,
@@ -333,20 +335,10 @@ function AddressLine({
   onReceive: () => void;
   onSend: () => void;
 }) {
+  // 받기·보내기를 오른쪽 끝에 떼어 두지 않고 SOL · 받는 주소 바로 위에 나란히 — 게이지 단과 같은 왼쪽 선.
   return (
-    <div className="flex flex-wrap items-center gap-x-8 gap-y-4 min-w-0">
-      <div className="min-w-0">
-        <span className="block text-sm text-[var(--color-ink-500)]">{t("받는 주소", "Receiving address")}</span>
-        <span className="block mt-0.5 font-mono text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2] truncate" title={address}>
-          {shortenAddress(address)}
-        </span>
-      </div>
-      {/* SOL — 결제엔 필요 없지만 솔라나 지갑이라 받고 보낼 수는 있다. */}
-      <div className="min-w-0">
-        <span className="block text-sm text-[var(--color-ink-500)]">SOL</span>
-        <span className="block mt-0.5 num text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2]">{sol != null ? fmtExact(sol) : "—"}</span>
-      </div>
-      <div className="ml-auto flex items-center gap-2 shrink-0">
+    <div className={cn("flex flex-col gap-5 min-w-0", GAUGE_W)}>
+      <div className="flex items-center gap-2">
         <GhostButton onClick={onReceive}>
           <QrCode size={14} />
           {t("받기", "Receive")}
@@ -355,6 +347,19 @@ function AddressLine({
           <Send size={14} />
           {t("보내기", "Send")}
         </GhostButton>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-4 min-w-0">
+        {/* SOL — 결제엔 필요 없지만 솔라나 지갑이라 받고 보낼 수는 있다. */}
+        <div className="min-w-0">
+          <span className="block text-sm text-[var(--color-ink-500)]">SOL</span>
+          <span className="block mt-0.5 num text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2]">{sol != null ? fmtExact(sol) : "—"}</span>
+        </div>
+        <div className="min-w-0">
+          <span className="block text-sm text-[var(--color-ink-500)]">{t("받는 주소", "Receiving address")}</span>
+          <span className="block mt-0.5 font-mono text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2] truncate" title={address}>
+            {shortenAddress(address)}
+          </span>
+        </div>
       </div>
     </div>
   );

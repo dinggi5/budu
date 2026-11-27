@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, Gauge, Globe, Loader2, Network, Power, Settings as SettingsIcon, Zap } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { CHAINS, chainFromId, type ChainConfig } from "@/lib/chain";
-import type { Settings, SpendView } from "@/lib/types";
+import type { NetLimits, Settings } from "@/lib/types";
 import { cardBase, inputBase, pageColumn, pageShell, primaryBtn, ScreenHeader , enter } from "@/components/ui";
 import { isWindow } from "@/lib/win";
 import { Selectable, ink, inkSoft } from "@/components/win";
@@ -16,9 +16,10 @@ import {
   NavCtx,
   Section,
   AboutSection,
-  TrustedAddrsModal,
+  TrustedList,
   RowGroup,
   ToggleRow,
+  LockRow,
   LanguageRow,
   UnitInput,
   LimitGroup,
@@ -31,7 +32,12 @@ type BoolSettingKey =
   | "lock_on_blur"
   | "notify_auto"
   | "notify_hide_amount"
-  | "auto_trusted_only";
+  | "auto_trusted_only"
+  | "auto_learn_trusted";
+
+// 한도 셋 — 체인별(`limits`)이 정본이고 평평한 세 칸은 백엔드가 활성 체인 값으로 채우는 보기 칸이라 보내지 않는다.
+const LIMIT_KEYS = ["single_usdc", "daily_usdc", "auto_approve_usdc"] as const;
+type LimitKey = (typeof LIMIT_KEYS)[number];
 
 // RPC 프리셋은 활성 체인에 따라 달라진다(공식·PublicNode URL이 체인별로 다름).
 // ①공식 ②로그 안 남긴다 표방하는 대체 공개 RPC ③직접 입력(본인 키/노드 = 진짜 프라이버시).
@@ -55,14 +61,15 @@ function presetUrl(rpc: string | undefined, chain: ChainConfig): string {
 
 export function SettingsScreen({
   current,
-  spend,
   onClose,
+  onSaved,
   onGuard,
   initialGroup,
 }: {
   current: Settings | null;
-  spend: SpendView | null;
   onClose: () => void;
+  /** 저장이 끝났다 — 부모가 설정·한도를 다시 읽는다(화면은 설정에 머문다). */
+  onSaved: () => void;
   /** 큰 창의 레일이 떠나도 되는지 묻는 데 쓴다 — 저장 중(busy)·저장 안 한 변경(dirty). */
   onGuard?: (g: { busy: boolean; dirty: boolean }) => void;
   /** 처음 열 묶음 — "app" 이면 «앱»(언어). */
@@ -84,16 +91,15 @@ export function SettingsScreen({
     const c = chainFromId(current?.chain_id);
     return !rpcPresets(c).some((p) => p.url === presetUrl(current?.rpc_url, c));
   });
-  // 화이트리스트 주소 목록 — null=로딩 중. 철회는 즉시 반영(저장 버튼과 무관).
+  // 화이트리스트 주소 목록 — null=로딩 중. 추가·철회는 즉시 반영(저장 버튼과 무관).
   const [trusted, setTrusted] = useState<string[] | null>(null);
-  const [showTrusted, setShowTrusted] = useState(false);
   // 로그인 시 자동 시작 — OS 로그인 아이템 상태가 진실 원천이라 즉시 적용(저장 버튼과 무관).
   const [autostart, setAutostart] = useState<boolean | null>(null);
   // 메뉴바 아이콘 — 앱 관리 필드라 저장 버튼과 무관하게 즉시 적용.
   const [menubar, setMenubar] = useState<boolean | null>(null);
-  // 저장 성공 후 자동 닫기 타이머 — 언마운트/수동 닫기 때 정리해 옛 인스턴스 타이머가 부모를 다시 닫지 않게.
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // 이미 닫혔는지 — 저장 invoke 가 늦게 resolve 돼도(닫기를 그 사이 눌렀을 때) 상태 변경·타이머 생성을 막는다.
+  // «저장됨» 을 거두는 타이머 — 언마운트 때 정리.
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 이미 닫혔는지 — 저장 invoke 가 늦게 resolve 돼도(닫기를 그 사이 눌렀을 때) 늦은 상태 변경을 막는다.
   const closed = useRef(false);
 
   useEffect(() => {
@@ -108,14 +114,16 @@ export function SettingsScreen({
       .catch(() => setMenubar(true));
   }, []);
 
-  // 언마운트 시 닫힘 표시 + 자동 닫기 타이머 정리.
-  useEffect(
-    () => () => {
+  // 언마운트 시 닫힘 표시 + 타이머 정리.
+  // 마운트 때 false 로 되돌린다 — 개발 모드(StrictMode)는 effect 를 한 번 걷었다 다시 붙여서, 되돌리지 않으면
+  // 첫 저장부터 «닫힘» 으로 보고 busy 를 영영 안 푼다.
+  useEffect(() => {
+    closed.current = false;
+    return () => {
       closed.current = true;
-      if (closeTimer.current) clearTimeout(closeTimer.current);
-    },
-    [],
-  );
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+    };
+  }, []);
 
   async function toggleAutostart() {
     if (autostart === null) return;
@@ -145,6 +153,18 @@ export function SettingsScreen({
       setTrusted((prev) => (prev ? prev.filter((a) => a !== addr) : prev));
     } catch {
       /* 철회 실패는 목록 유지 — 다음 시도에서 다시 */
+    }
+  }
+
+  // 직접 추가 — 검증(32바이트 base58)은 백엔드가 한다. 실패하면 이유를 그대로 돌려준다.
+  async function addTrusted(addr: string): Promise<string | null> {
+    const a = addr.trim();
+    try {
+      await invoke("add_trusted_addr", { to: a });
+      setTrusted((prev) => (prev && !prev.includes(a) ? [...prev, a] : prev));
+      return null;
+    } catch (e) {
+      return String(e);
     }
   }
 
@@ -187,6 +207,22 @@ export function SettingsScreen({
     setDirty(true);
   }
 
+  // 지금 고른 네트워크의 한도 — 없으면(옛 백엔드) 평평한 칸.
+  const lim: NetLimits | null = s
+    ? (s.limits?.[String(s.chain_id)] ?? { single_usdc: s.single_usdc, daily_usdc: s.daily_usdc, auto_approve_usdc: s.auto_approve_usdc })
+    : null;
+  const autopayOff = !lim || !(Number(lim.auto_approve_usdc) > 0);
+  function limitField(key: LimitKey, value: string) {
+    setS((prev) => {
+      if (!prev) return prev;
+      const id = String(prev.chain_id);
+      const cur = prev.limits?.[id] ?? { single_usdc: prev.single_usdc, daily_usdc: prev.daily_usdc, auto_approve_usdc: prev.auto_approve_usdc };
+      return { ...prev, limits: { ...prev.limits, [id]: { ...cur, [key]: value } } };
+    });
+    setSaved(false);
+    setDirty(true);
+  }
+
   function toggle(key: BoolSettingKey) {
     setS((prev) => (prev ? { ...prev, [key]: !prev[key] } : prev));
     setSaved(false);
@@ -221,19 +257,29 @@ export function SettingsScreen({
       // 바꾼 칸만 보낸다 — 합치기는 백엔드가 한 줄로 서서 한다(settings.rs `save_settings_edit`).
       // 폼을 채운 원본이 없으면(있을 수 없지만) 전부 바꾼 것으로 — 예전 동작.
       const from = base.current;
-      const changed = (Object.keys(s) as (keyof Settings)[]).filter((k) => !from || s[k] !== from[k]);
+      const changed: string[] = (Object.keys(s) as (keyof Settings)[]).filter(
+        (k) => k !== "limits" && !(LIMIT_KEYS as readonly string[]).includes(k) && (!from || s[k] !== from[k]),
+      );
+      // 체인별 한도는 칸 하나씩 — 다른 창이 고친 다른 네트워크 한도를 되돌리지 않게.
+      for (const [id, l] of Object.entries(s.limits ?? {})) {
+        for (const k of LIMIT_KEYS) {
+          if (!from || from.limits?.[id]?.[k] !== l[k]) changed.push(`limits.${id}.${k}`);
+        }
+      }
       await invoke("save_settings_edit", {
         form: s,
         changed,
         baseChainId: from?.chain_id ?? s.chain_id,
       });
-      if (closed.current) return; // 저장 도중 닫혔으면 늦은 setState·자동 닫기 타이머 생성을 막는다
+      if (closed.current) return; // 저장 도중 닫혔으면 늦은 setState 를 막는다
+      // 설정에 머문다. 폼 기준을 지금 값으로 — 부모가 다시 읽어 온 값(백엔드가 정규화한 것)이 오면 위 effect 가 갈아 끼운다.
+      base.current = s;
       setSaved(true);
       setDirty(false);
-      // 저장 성공 → "저장됨"을 잠깐 보여준 뒤 메인 화면으로 자동 복귀(매번 닫기를 또 누르는 번거로움 제거).
-      // busy 를 유지해 닫히는 동안 폼 전체(아래 fieldset)가 잠긴다 → 이 0.5초 사이 입력이 조용히
-      // 버려지는 일을 막는다. onClose 는 부모가 설정을 다시 불러오게 한다.
-      closeTimer.current = setTimeout(onClose, 500);
+      setBusy(false);
+      onSaved();
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => setSaved(false), 1600);
     } catch (e) {
       if (closed.current) return;
       const msg = String(e);
@@ -247,10 +293,9 @@ export function SettingsScreen({
     }
   }
 
-  // 수동 닫기 — 닫힘 표시 후 자동 닫기 타이머를 정리하고 닫는다(이중 onClose·늦은 setState 방지).
+  // 수동 닫기 — 닫힘 표시 후 닫는다(늦은 setState 방지).
   function close() {
     closed.current = true;
-    if (closeTimer.current) clearTimeout(closeTimer.current);
     onClose();
   }
 
@@ -265,7 +310,6 @@ export function SettingsScreen({
         <ScreenHeader
           icon={<SettingsIcon size={12} />}
           title={t("설정", "Settings")}
-          sub={t("바꾼 뒤 맨 아래 저장을 눌러야 적용돼요.", "Changes apply when you press Save at the bottom.")}
           onClose={close}
           closeDisabled={busy}
         />
@@ -295,7 +339,7 @@ export function SettingsScreen({
             </div>
           </motion.section>
         ) : (
-          // 저장 직후 자동 닫기 대기(busy) 동안 폼 전체를 잠가, 그 사이 입력이 조용히 버려지지 않게 한다.
+          // 저장 중(busy)엔 폼 전체를 잠가, 그 사이 입력이 조용히 버려지지 않게 한다.
           <fieldset disabled={busy} className="flex flex-col gap-3 win:gap-0 border-0 p-0 m-0 min-w-0">
             {/* 한도 — 단일/하루 누적 한도(USDC) */}
             <Section
@@ -305,22 +349,18 @@ export function SettingsScreen({
             >
               <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
                 {t(
-                  "단일 거래·하루 누적 한도를 넘으면 결제를 막아줘요. AI의 큰 지출을 막기 위한 안전 장치예요.",
-                  "Anything over the per-payment or daily limit is blocked. This is the guardrail against a big spend by the AI.",
+                  "한도를 넘으면 결제를 막아줍니다. (0으로 두면 한도 무제한)",
+                  "Payments over a limit are blocked. (0 means no limit.)",
                 )}
               </p>
-              <p className="mt-1.5 text-sm text-[var(--color-ink-300)]">
-                {t("0으로 두면 무제한이에요.", "Leave a limit at 0 for no limit.")}
-              </p>
 
-              <div className="mt-5 space-y-3">
+              <div className="mt-5">
                 <LimitGroup
                   token="USDC"
-                  single={s.single_usdc}
-                  daily={s.daily_usdc}
-                  onSingle={(v) => field("single_usdc", v)}
-                  onDaily={(v) => field("daily_usdc", v)}
-                  usedToday={spend?.usdc}
+                  single={lim!.single_usdc}
+                  daily={lim!.daily_usdc}
+                  onSingle={(v) => limitField("single_usdc", v)}
+                  onDaily={(v) => limitField("daily_usdc", v)}
                 />
               </div>
             </Section>
@@ -333,112 +373,70 @@ export function SettingsScreen({
             >
               <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
                 {t(
-                  "이 금액 이하의 AI 결제 요청은, 세션을 잠금 해제해 두면 비번 없이 자동 승인돼요. 넘는 금액은 항상 비번을 받아요.",
-                  "With the session unlocked, AI payments at or under this amount go through without your password. Anything larger always asks.",
-                )}
-              </p>
-              <p className="mt-1.5 text-sm text-[var(--color-ink-300)]">
-                {t(
-                  "한도를 0으로 두면 자율 결제가 꺼져요(항상 비번). 단일·하루 한도는 그대로 함께 적용돼요.",
-                  "Set the limit to 0 to turn autopay off (always ask). The per-payment and daily limits still apply on top.",
+                  "설정 금액 이하의 결제를 자동으로 승인합니다. (0으로 두면 항상 비밀번호)",
+                  "Payments up to the amount you set are approved automatically. (0 means always ask for the password.)",
                 )}
               </p>
 
-              <div className="mt-5 rounded-[var(--radius-card)] border border-[var(--color-ivory-300)] dark:border-[var(--color-night-700)] px-4 py-4 win:border-0 win:p-0">
-                <div className="grid grid-cols-2 gap-3">
-                  <UnitInput
-                    label={t("자율 한도", "Autopay limit")}
-                    unit="USDC"
-                    value={s.auto_approve_usdc}
-                    onChange={(v) => field("auto_approve_usdc", v)}
-                  />
-                  <UnitInput
-                    label={t("자동 잠금", "Auto-lock")}
-                    unit={t("분", "min")}
-                    intOnly
-                    value={s.auto_lock_mins}
-                    onChange={(v) => field("auto_lock_mins", v)}
-                  />
-                </div>
-                <p className="mt-2.5 text-sm text-[var(--color-ink-300)]">
-                  {t(
-                    "유휴 시간이 지나면 자동으로 다시 잠겨요. 0이면 유휴 잠금 안 함(앱 종료·긴급 잠금 시엔 항상 잠김).",
-                    "The session locks itself after this much idle time. 0 means no idle lock (quitting the app or the emergency lock still locks it).",
-                  )}
-                </p>
+              <div className="mt-5 max-w-[calc(50%-6px)]">
+                <UnitInput
+                  label={t("자율 결제 금액", "Autopay amount")}
+                  unit="USDC"
+                  value={lim!.auto_approve_usdc}
+                  onChange={(v) => limitField("auto_approve_usdc", v)}
+                />
               </div>
 
-              {/* 자율 결제 부속 토글·목록 — 낱개 카드 대신 구분선 리스트 하나로.
-                  상자 안 상자가 다섯 겹 쌓이던 걸 한 컨테이너로 접어 시각 소음을 줄인다. */}
-              <RowGroup>
-                {/* 자리비움 자동 잠금 */}
-                <ToggleRow
-                  title={t("자리 비우면 자동 잠금", "Lock when you step away")}
-                  desc={t(
-                    "다른 앱으로 전환하거나 화면이 잠기면 세션을 즉시 잠가요.",
-                    "Switching to another app or locking your screen locks the session at once.",
-                  )}
-                  checked={s.lock_on_blur}
-                  onToggle={() => toggle("lock_on_blur")}
-                />
-                {/* 자율 결제 알림 — 비번 없이 나간 돈을 보호자가 사후 인지 */}
-                <ToggleRow
-                  title={t("자율 결제 알림", "Autopay notifications")}
-                  desc={t(
-                    "비번 없이 자동 승인된 결제를 macOS 알림으로 알려줘요.",
-                    "A macOS notification tells you about payments approved without your password.",
-                  )}
-                  checked={s.notify_auto}
-                  onToggle={() => toggle("notify_auto")}
-                />
-                {/* 알림 금액 숨기기 — macOS 알림은 잠금 화면·화면 공유에도 뜬다.
-                    알림이 꺼져 있으면 의미 없는 토글이라 행 자체를 접는다. */}
-                {s.notify_auto && (
+              {/* 잠금·알림은 자율 결제에만 의미가 있다 — 금액이 0(꺼짐)이면 흐리게. 미리 맞춰 둘 수는 있다. */}
+              <div className={cn("transition-opacity duration-[var(--duration-base)]", autopayOff && "opacity-40")}>
+                <RowGroup>
+                  <LockRow value={s.auto_lock_mins} onChange={(v) => field("auto_lock_mins", v)} />
                   <ToggleRow
-                    title={t("알림에 금액 숨기기", "Hide amounts in notifications")}
+                    title={t("자리 비우면 자동 잠금", "Lock when you step away")}
                     desc={t(
-                      "잠금 화면·화면 공유에 금액이 보이지 않게 「자율 결제」로만 알려줘요.",
-                      "Notifications say just “Autopay,” so amounts don't show on the lock screen or a shared screen.",
+                      "다른 앱으로 전환하거나 화면이 전환되면 세션을 즉시 잠가 보호합니다.",
+                      "Switching to another app or another screen locks the session at once.",
                     )}
-                    checked={s.notify_hide_amount}
-                    onToggle={() => toggle("notify_hide_amount")}
+                    checked={s.lock_on_blur}
+                    onToggle={() => toggle("lock_on_blur")}
                   />
-                )}
-                {/* 자율 결제 화이트리스트 — 처음 보는 주소는 자율 대상에서 제외 */}
-                <ToggleRow
-                  title={t("화이트리스트에만 자율 결제", "Autopay to the whitelist only")}
-                  desc={t(
-                    "비번으로 승인한 적 있는 주소에만 자율 결제를 허용해요. 새 주소는 첫 결제만 비번이 필요해요.",
-                    "Autopay only goes to addresses you've approved with your password before. A new address needs your password once.",
+                  <ToggleRow
+                    title={t("자율 결제 알림", "Autopay notifications")}
+                    desc={t(
+                      "자동 승인된 결제를 macOS 알림으로 알려줍니다.",
+                      "A macOS notification tells you about payments approved automatically.",
+                    )}
+                    checked={s.notify_auto}
+                    onToggle={() => toggle("notify_auto")}
+                  />
+                  {/* 알림이 꺼져 있으면 의미 없는 토글이라 행 자체를 접는다. */}
+                  {s.notify_auto && (
+                    <ToggleRow
+                      title={t("알림에 금액 숨기기", "Hide amounts in notifications")}
+                      desc={t("알림에 금액이 보이지 않게 합니다.", "Notifications don't show the amount.")}
+                      checked={s.notify_hide_amount}
+                      onToggle={() => toggle("notify_hide_amount")}
+                    />
                   )}
-                  checked={s.auto_trusted_only}
-                  onToggle={() => toggle("auto_trusted_only")}
-                />
-                {/* 화이트리스트 — 목록은 모달로 (많아지면 설정이 길어지니) */}
-                <div className="flex items-center justify-between px-4 py-3.5">
-                  <div className="min-w-0 pr-3">
-                    <p className="text-md tracking-tight">{t("화이트리스트", "Whitelist")}</p>
-                    <p className="mt-0.5 text-sm leading-snug text-[var(--color-ink-300)]">
-                      {trusted === null
-                        ? t("불러오는 중…", "Loading…")
-                        : trusted.length === 0
-                          ? t(
-                              "아직 없어요 — 비번으로 승인하면 자동으로 학습돼요.",
-                              "None yet — approving with your password adds one.",
-                            )
-                          : t(`${trusted.length}개 학습됨`, `${trusted.length} learned`)}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowTrusted(true)}
-                    disabled={!trusted || trusted.length === 0}
-                    className="shrink-0 text-sm text-[var(--color-ok)] disabled:text-[var(--color-ink-300)] hover:underline transition-colors"
-                  >
-                    {t("주소 보기", "View")}
-                  </button>
-                </div>
-              </RowGroup>
+                  <ToggleRow
+                    title={t("화이트리스트에만 자율 결제", "Autopay to the whitelist only")}
+                    desc={t(
+                      "화이트리스트로 등록한 주소에만 자율 결제를 허용합니다.",
+                      "Autopay only goes to addresses on your whitelist.",
+                    )}
+                    checked={s.auto_trusted_only}
+                    onToggle={() => toggle("auto_trusted_only")}
+                  />
+                </RowGroup>
+              </div>
+
+              <TrustedList
+                addrs={trusted}
+                onAdd={addTrusted}
+                onRevoke={revokeTrusted}
+                autoLearn={s.auto_learn_trusted ?? false}
+                onToggleAutoLearn={() => toggle("auto_learn_trusted")}
+              />
             </Section>
 
             {/* 네트워크 — 데브넷 ↔ 메인넷 런타임 전환.
@@ -448,13 +446,7 @@ export function SettingsScreen({
               title={t("네트워크", "Network")}
               delay={0.08}
             >
-              <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
-                {t(
-                  "잔액·결제가 이뤄지는 블록체인이에요. 메인넷은 실제 자금이 오가고, 데브넷은 테스트 코인으로 연습해요. 사용액·내역·화이트리스트는 네트워크별로 따로, 한도는 모든 네트워크에 같이 적용돼요.",
-                  "The blockchain your balance and payments live on. Mainnet moves real funds; devnet is practice with test coins. Spending, history, and the whitelist are kept per network; limits apply to every network.",
-                )}
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {CHAINS.map((c) => {
                   const active = c.id === s.chain_id;
                   return (
@@ -477,20 +469,10 @@ export function SettingsScreen({
                   );
                 })}
               </div>
-              {chain.testnet ? (
-                <p className="mt-2.5 text-sm text-[var(--color-ink-300)]">
-                  {t("바꾼 뒤 저장을 누르면 적용돼요.", "Press save to apply the change.")}
+              {!chain.testnet && (
+                <p className="mt-2.5 text-sm text-[var(--color-danger)]">
+                  {t("메인넷은 실제 USDC가 오가요.", "Mainnet moves real USDC.")}
                 </p>
-              ) : (
-                // 실돈 경고는 문장 한 줄이 아니라 콜아웃 — 일상 설정과 위험 설정의 시각 위계 분리.
-                <div className="mt-2.5 rounded-[var(--radius-card)] bg-[var(--color-danger-tint)] px-3.5 py-2.5">
-                  <p className="text-sm leading-relaxed text-[var(--color-danger)]">
-                    {t(
-                      "메인넷은 실제 USDC가 오가요. 운영 예산만 소액 충전하고, 위의 한도를 확인해 두세요. 바꾼 뒤 저장을 누르면 적용돼요.",
-                      "Mainnet moves real USDC. Top up only what the agent needs, and check your limits above. Press save to apply the change.",
-                    )}
-                  </p>
-                </div>
               )}
             </Section>
 
@@ -502,8 +484,8 @@ export function SettingsScreen({
             >
               <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
                 {t(
-                  "잔액 조회·결제 준비(블록해시)에 쓰는 솔라나 서버예요. 공개 RPC는 내 IP와 지갑 주소를 볼 수 있고 요청 제한도 빡빡해요. 메인넷에서 쓰거나 프라이버시가 중요하면 본인 키 엔드포인트(Helius·QuickNode·Triton 등)를 직접 넣으세요.",
-                  "The Solana server used to read balances and prepare payments (recent blockhash). A public RPC can see your IP and wallet address and is tightly rate-limited. On mainnet, or if privacy matters, paste your own endpoint (Helius, QuickNode, Triton and so on).",
+                  "메인넷이나 프라이버시가 중요하면 본인 엔드포인트(Helius·QuickNode 등)를 넣으세요.",
+                  "On mainnet, or if privacy matters, use your own endpoint (Helius, QuickNode and so on).",
                 )}
               </p>
               <select
@@ -544,28 +526,14 @@ export function SettingsScreen({
               title={t("앱", "App")}
               delay={0.16}
             >
-              <p className="text-md leading-relaxed text-[var(--color-ink-500)]">
-                {t(
-                  "창을 닫아도 앱은 종료되지 않고 백그라운드에서 결제 요청을 받아요 — 요청이 오면 창이 다시 떠요. 완전히 끄려면 ⌘Q를 누르세요.",
-                  "Closing the window doesn't quit Budu — it keeps taking payment requests in the background and brings the window back when one arrives. Press ⌘Q to quit for real.",
-                )}
-              </p>
               <RowGroup>
                 <ToggleRow
                   title={t("로그인 시 자동 시작", "Start at login")}
-                  desc={t(
-                    "Mac에 로그인하면 지갑이 자동으로 켜져요. 끄고 켜는 즉시 적용돼요.",
-                    "The wallet opens when you log in to your Mac. This applies the moment you flip it.",
-                  )}
                   checked={autostart ?? false}
                   onToggle={toggleAutostart}
                 />
                 <ToggleRow
                   title={t("메뉴바에 두기", "Show in menu bar")}
-                  desc={t(
-                    "메뉴바 아이콘에서 잔액과 진행 중인 작업을 바로 봐요. 결제 승인은 늘 이 창에서 해요.",
-                    "See your balance and the running job from the menu bar. Payments are always approved in this window.",
-                  )}
                   checked={menubar ?? true}
                   onToggle={toggleMenubar}
                 />
@@ -575,14 +543,26 @@ export function SettingsScreen({
 
             {error && <p className="text-sm text-[var(--color-danger)] font-mono break-all win:mb-3">{error}</p>}
 
-            <button type="button" onClick={save} disabled={busy} className={cn(primaryBtn, "mt-2 win:w-auto win:px-8 win:self-start", isWindow && navSel === groups.length - 1 && "hidden")}>
-              {saved ? (
-                <Check size={15} />
-              ) : busy ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : null}
-              {saved ? t("저장됨", "Saved") : t("저장하고 닫기", "Save and close")}
-            </button>
+            <div className={cn("mt-2 flex items-center gap-3", isWindow && navSel === groups.length - 1 && "hidden")}>
+              <button type="button" onClick={save} disabled={busy || !dirty} className={cn(primaryBtn, "win:w-auto win:px-8")}>
+                {busy && <Loader2 size={15} className="animate-spin" />}
+                {t("저장하기", "Save")}
+              </button>
+              <AnimatePresence>
+                {saved && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    className="shrink-0 inline-flex items-center gap-1 text-sm text-[var(--color-ink-500)]"
+                  >
+                    <Check size={13} />
+                    {t("저장됨", "Saved")}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
           </fieldset>
         )}
 
@@ -595,15 +575,6 @@ export function SettingsScreen({
         </div>
       </div>
 
-      <AnimatePresence>
-        {showTrusted && trusted && (
-          <TrustedAddrsModal
-            addrs={trusted}
-            onRevoke={revokeTrusted}
-            onClose={() => setShowTrusted(false)}
-          />
-        )}
-      </AnimatePresence>
     </main>
     </NavCtx.Provider>
   );

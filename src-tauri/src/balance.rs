@@ -32,7 +32,7 @@ pub(crate) fn describe(e: BalanceError, want_genesis: &str) -> String {
             let got_name = solana::cluster_name_of(&got).unwrap_or("?");
             let want_name = solana::cluster_name_of(want_genesis).unwrap_or("?");
             tf!(
-                "지정한 RPC 가 다른 클러스터({got_name})에 붙어 있어요 — 고른 네트워크({want_name})와 달라서 잔액을 보여주지 않아요. 설정에서 RPC 를 비우거나 맞는 주소로 바꾸세요.",
+                "지정한 RPC 가 다른 클러스터({got_name})에 연결되어 있어요 — 고른 네트워크({want_name})와 달라서 잔액을 보여주지 않아요. 설정에서 RPC 를 비우거나 맞는 주소로 바꾸세요.",
                 "The custom RPC is on a different cluster ({got_name}) than the network you picked ({want_name}), so the balance isn't shown. Clear the RPC in Settings or point it at the right cluster."
             )
         }
