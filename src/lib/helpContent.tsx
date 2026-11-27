@@ -81,11 +81,6 @@ export const HELP_SECTIONS: HelpSection[] = [
         <li>사용자가 비밀번호로 승인합니다. 자동 승인도 설정에서 켤 수 있습니다.</li>
         <li>결제 트랜잭션을 만들고 서명합니다.</li>
         <li>판매자가 정산하면 데이터가 AI에게 전달됩니다. 모든 결제 내역은 블록체인에 공개됩니다.</li>
-        <li>5분 안에 승인하지 않으면 자동으로 거부됩니다.</li>
-        <li>
-          나갔는지 바로 확인이 안 되면 내역에 <b className={em}>«정산 대기»</b>로 남습니다. AI에게는 다시 결제하지 말고 먼저
-          물어보라고 알려 둡니다.
-        </li>
       </ol>,
       <ol className="space-y-1.5 list-decimal pl-5 marker:text-[var(--color-ink-500)]">
         <li>The AI asks for data, and the seller asks for an x402 payment.</li>
@@ -93,11 +88,6 @@ export const HELP_SECTIONS: HelpSection[] = [
         <li>You approve with your password. You can also turn on automatic approval in Settings.</li>
         <li>The wallet builds the payment transaction and signs it.</li>
         <li>Once the seller settles, the data goes to the AI. Every payment is public on the blockchain.</li>
-        <li>If you don't approve within five minutes, it's rejected automatically.</li>
-        <li>
-          If it can't be confirmed right away, the history keeps it as <b className={em}>«awaiting settlement»</b>, and the AI
-          is told to ask you before paying again.
-        </li>
       </ol>,
     ),
   },
