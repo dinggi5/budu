@@ -584,6 +584,7 @@ export function WalletScreen({
           if (live && !ok) setEndedJob(null);
         })
         .catch(() => {});
+    void check();
     const h = setInterval(check, 1000);
     return () => {
       live = false;

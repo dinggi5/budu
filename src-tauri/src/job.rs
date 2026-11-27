@@ -312,12 +312,10 @@ pub(crate) fn job_status() -> Option<JobView> {
 #[tauri::command]
 pub(crate) fn end_job() {
     let idle = idle_secs();
-    let taken = {
-        let mut g = guard();
-        expire(&mut g, idle); // 이미 시간이 지난 예산은 끝내기로 옮기지 않는다(다시 열기로 되살아나지 않게)
-        g.take()
-    };
-    if let Some(grant) = taken {
+    // GRANT 를 쥔 채 ENDED 에 쓴다(순서 GRANT→ENDED, clear 와 같음) — 그 사이 긴급 잠금이 끼어 끝낸 키를 되살리지 않게.
+    let mut g = guard();
+    expire(&mut g, idle); // 이미 시간이 지난 예산은 끝내기로 옮기지 않는다(다시 열기로 되살아나지 않게)
+    if let Some(grant) = g.take() {
         *ended() = Some(Ended { grant, at: now_secs() });
     }
 }
@@ -525,7 +523,9 @@ mod tests {
         end_job();
         assert!(!covers(&req("오슬로호", SELLER, "0.01")));
         assert!(job_status().is_none());
+        let before = ended().as_ref().map(|x| x.grant.last_active);
         assert!(resume_job());
+        assert_eq!(guard().as_ref().map(|x| x.last_active), before); // 마지막 사용 시각은 그대로(끝낸 동안도 유휴)
         assert!(covers(&req("오슬로호", SELLER, "0.01")));
         assert!(!resume_job()); // 한 번만
 
@@ -539,6 +539,11 @@ mod tests {
         ended().as_mut().unwrap().at = 0;
         assert!(!can_resume_job());
         assert!(ended().is_none()); // 시간이 지나면 키째 버린다
+        open("0.20");
+        end_job();
+        ended().as_mut().unwrap().at = 0;
+        let _ = job_status();
+        assert!(ended().is_none()); // 1초 폴링(job_status)도 치운다
         assert!(!resume_job());
 
         // 끝낸 동안도 유휴로 센다 — 시간 상한이 지난 예산은 다시 열 수 없다.
