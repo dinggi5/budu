@@ -44,7 +44,7 @@ pub(crate) struct SessionInner {
 
 /// 설정의 자동 잠금(분)을 초로 환산한다. 0이면 유휴 잠금 안 함.
 /// 깨진 값(수동 편집 등)이면 기본 30분 — 보안 기능의 실패 방향이 "조용히 꺼짐"이면 안 된다.
-fn auto_lock_secs(settings: &Settings) -> u64 {
+pub(crate) fn auto_lock_secs(settings: &Settings) -> u64 {
     settings
         .auto_lock_mins
         .trim()

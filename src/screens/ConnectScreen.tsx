@@ -428,8 +428,8 @@ export function ConnectScreen({
           </BoardRow>
           <BoardRow
             icon={<Plug size={16} />}
-            name={t("다른 AI (Cursor 등)", "Other AIs (Cursor etc.)")}
-            sub={t("MCP를 지원하는 프로그램에 다음 경로를 서버로 등록하세요.", "Register this path as a server in any MCP-capable app.")}
+            name={t("기타 AI (Cursor 등)", "Other AIs (Cursor etc.)")}
+            sub={t("MCP를 지원하는 프로그램에 다음 경로를 서버로 등록합니다.", "Register this path as a server in any MCP-capable app.")}
             tag={<Tag tone="idle">{t("직접 추가", "Manual")}</Tag>}
             action={
               status == null || tempNoPath ? null : (
@@ -745,7 +745,7 @@ export function ConnectScreen({
         </ClientCard>
 
         {/* 그 외 MCP 클라이언트 — 경로만 있으면 어디든 */}
-        <ClientCard icon={<Bot size={14} />} title={t("다른 AI 앱 (Cursor 등)", "Other AI apps (Cursor and friends)")}>
+        <ClientCard icon={<Bot size={14} />} title={t("기타 AI 앱 (Cursor 등)", "Other AI apps (Cursor and friends)")}>
           {tempNoPath ? (
             // 이 상태의 mcpPath 폴백(/Applications/…)은 아직 없는 파일이다 — 복사하게
             // 두면 죽은 경로를 등록한다. 같은 "옮기기" 안내로 대체.

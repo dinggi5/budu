@@ -19,8 +19,12 @@ use zeroize::Zeroizing;
 
 use crate::store::now_secs;
 
-/// 작업 예산의 시간 상한 — 예산을 연(또는 마지막으로 늘린) 뒤 이만큼 지나면 닫는다(«job 이 끝나면(시간 상한)»).
-pub(crate) const JOB_TTL_SECS: u64 = 60 * 60;
+/// 작업 예산의 시간 상한 = 설정의 «자동 잠금» 과 같은 값(개발 14, 시간 손잡이는 하나).
+/// 마지막으로 쓴(열거나 늘리거나 예산으로 결제한) 뒤 이만큼 아무 결제도 없으면 닫는다. 0(«잠그지 않음») 이면 시간으로는 안 닫는다.
+/// 설정을 바꾸면 바로 적용되게 저장하지 않고 볼 때마다 읽는다(깨진 값은 자율 세션과 같이 30분).
+fn idle_secs() -> u64 {
+    crate::session::auto_lock_secs(&crate::settings::read_settings())
+}
 
 /// USDC 소수 자릿수 — 솔라나 USDC 민트는 데브넷·메인넷 모두 6.
 const USDC_DEC: u8 = 6;
@@ -37,7 +41,8 @@ struct Grant {
     spent: u64,
     /// 사람이 이 작업에서 비번으로 승인한 판매자(payTo, base58 정확 일치).
     sellers: Vec<String>,
-    expires: u64,
+    /// 마지막으로 쓴 시각(유닉스 초) — `idle_secs` 동안 쓰지 않으면 닫는다.
+    last_active: u64,
     mnemonic: Zeroizing<String>,
     /// 이 예산의 사용액에 넣은 서명과 금액 — 체인 확인이 「안 나감」 으로 닫으면 이것만 돌려준다.
     charged: Vec<(String, u64)>,
@@ -128,7 +133,7 @@ pub(crate) fn after_human_approval(
                 if !x.sellers.iter().any(|s| s == to.trim()) {
                     x.sellers.push(to.trim().to_string());
                 }
-                x.expires = now + JOB_TTL_SECS;
+                x.last_active = now;
                 x.mnemonic = mnemonic;
                 if !signature.is_empty() {
                     x.charged.push((signature.to_string(), amount));
@@ -142,7 +147,7 @@ pub(crate) fn after_human_approval(
                     budget,
                     spent: amount,
                     sellers: vec![to.trim().to_string()],
-                    expires: now + JOB_TTL_SECS,
+                    last_active: now,
                     mnemonic,
                     charged: if signature.is_empty() { Vec::new() } else { vec![(signature.to_string(), amount)] },
                 });
@@ -162,13 +167,14 @@ pub(crate) fn after_human_approval(
 
 /// 작업 예산이 이 요청을 덮는가 — 차감 없이 보기만(자율 경로가 먼저 고르는 데 쓴다).
 pub(crate) fn covers(req: &crate::ipc::PaymentRequest) -> bool {
+    let idle = idle_secs();
     let mut g = guard();
-    expire(&mut g);
+    expire(&mut g, idle);
     g.as_ref().is_some_and(|x| matches(x, req).is_ok())
 }
 
-fn expire(g: &mut Option<Grant>) {
-    if g.as_ref().is_some_and(|x| now_secs() >= x.expires) {
+fn expire(g: &mut Option<Grant>, idle: u64) {
+    if idle > 0 && g.as_ref().is_some_and(|x| now_secs().saturating_sub(x.last_active) >= idle) {
         *g = None;
     }
 }
@@ -204,11 +210,13 @@ pub(crate) struct Claim {
 
 /// 예산에서 이 결제 금액을 **먼저 떼고** 키를 내준다. 못 덮으면 None(→ 사람에게).
 pub(crate) fn claim(req: &crate::ipc::PaymentRequest) -> Option<(Zeroizing<String>, Claim)> {
+    let idle = idle_secs();
     let mut g = guard();
-    expire(&mut g);
+    expire(&mut g, idle);
     let x = g.as_mut()?;
     let units = matches(x, req).ok()?;
     x.spent += units;
+    x.last_active = now_secs();
     Some((x.mnemonic.clone(), Claim { generation: x.generation, units }))
 }
 
@@ -260,14 +268,15 @@ pub(crate) struct JobView {
 
 #[tauri::command]
 pub(crate) fn job_status() -> Option<JobView> {
+    let idle = idle_secs();
     let mut g = guard();
-    expire(&mut g);
+    expire(&mut g, idle);
     g.as_ref().map(|x| JobView {
         job: x.job.clone(),
         spent: fmt_units(x.spent),
         budget: fmt_units(x.budget),
         left: fmt_units(x.budget.saturating_sub(x.spent)),
-        secs_left: x.expires.saturating_sub(now_secs()),
+        secs_left: if idle == 0 { 0 } else { (x.last_active + idle).saturating_sub(now_secs()) },
         sellers: x.sellers.len(),
         seller_addrs: x.sellers.clone(),
         chain_id: x.chain_id,
@@ -409,14 +418,33 @@ mod tests {
         assert!(check_budget("  ", "1", "0.01").is_err());
     }
 
-    /// 시간 상한이 지나면 닫힌다.
+    /// 자동 잠금 시간 동안 안 쓰면 닫힌다(빈 설정 = 기본 자동 잠금).
     #[test]
     fn grant_expires() {
         let _l = test_lock();
+        let _d = crate::store::test_dir::use_temp("job-expire");
         clear();
         open("0.20");
-        guard().as_mut().unwrap().expires = now_secs();
+        guard().as_mut().unwrap().last_active = 0; // 아주 오래전 — 자동 잠금이 0 이 아닌 한 닫힌다
         assert!(!covers(&req("오슬로호", SELLER, "0.01")));
         assert!(job_status().is_none());
+    }
+
+    /// 자동 잠금 «잠그지 않음»(0) 이면 시간으로는 안 닫힌다. 예산으로 결제하면 마지막 사용 시각이 갱신된다.
+    #[test]
+    fn grant_follows_auto_lock_setting() {
+        let _l = test_lock();
+        let _d = crate::store::test_dir::use_temp("job-nolock");
+        let mut s = crate::settings::Settings::default().normalize();
+        s.auto_lock_mins = "0".into();
+        crate::settings::set_settings(s).unwrap();
+        clear();
+        open("0.20");
+        guard().as_mut().unwrap().last_active = 0;
+        assert!(covers(&req("오슬로호", SELLER, "0.01")));
+        let (_, c) = claim(&req("오슬로호", SELLER, "0.01")).unwrap();
+        assert!(guard().as_ref().unwrap().last_active > 0);
+        release_claim(c);
+        clear();
     }
 }

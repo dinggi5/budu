@@ -418,7 +418,7 @@ export function PaymentApprovalModal({
           </div>
         )}
 
-        {/* 작업 예산 고르기 — «이 결제만» 이 기본. 고르면 같은 작업·이 판매자·예산 안의 다음 결제는 비번 없이 나간다(60분). */}
+        {/* 작업 예산 고르기 — «이 결제만» 이 기본. 고르면 같은 작업·이 판매자·예산 안의 다음 결제는 비번 없이 나간다(자동 잠금 시간 동안 안 쓰면 닫힘). */}
         {job && (
           <div className="mt-5">
             <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("승인 범위", "Approval scope")}>
@@ -455,7 +455,7 @@ export function PaymentApprovalModal({
                               `총 ${budgetUnits != null ? money(budget.trim()) : "—"} 까지 · 쓴 ${money(openJob.spent)} 포함`,
                               `${budgetUnits != null ? money(budget.trim()) : "—"} total · ${money(openJob.spent)} spent incl.`,
                             )
-                          : t(`${budgetUnits != null ? money(budget.trim()) : "—"} USDC 까지 · 60분`, `Up to ${budgetUnits != null ? money(budget.trim()) : "—"} USDC · 60 min`)}
+                          : t(`${budgetUnits != null ? money(budget.trim()) : "—"} USDC 까지`, `Up to ${budgetUnits != null ? money(budget.trim()) : "—"} USDC`)}
                     </span>
                   </button>
                 );
@@ -486,8 +486,8 @@ export function PaymentApprovalModal({
                         )
                       : t("이 결제 금액 이상인 USDC 금액을 넣어 주세요.", "Enter a USDC amount at least this payment.")
                     : t(
-                        "이 결제를 포함해 예산 안에서, 이 판매자에게 같은 프로젝트로 오는 결제는 60분 동안 비번 없이 나가요. 한도·긴급 잠금은 그대로예요.",
-                        "Within this budget (this payment included), payments for this project to this seller go through without a password for 60 minutes. Limits and the emergency lock still apply.",
+                        "이 결제를 포함해 예산 안에서, 이 판매자에게 같은 프로젝트로 오는 결제는 비번 없이 나가요. 한도·긴급 잠금은 그대로예요.",
+                        "Within this budget (this payment included), payments for this project to this seller go through without a password. Limits and the emergency lock still apply.",
                       )}
                 </p>
               </>

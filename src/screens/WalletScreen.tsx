@@ -340,7 +340,7 @@ export function WalletScreen({
         .then((v) => {
           if (active)
             setJobView((prev) =>
-              prev && v && prev.job === v.job && prev.spent === v.spent && prev.budget === v.budget && prev.secs_left === v.secs_left
+              prev && v && prev.job === v.job && prev.spent === v.spent && prev.budget === v.budget
                 ? prev
                 : v,
             );

@@ -37,7 +37,6 @@ export function JobPanel({
   const receipt = useReceipt();
   const rows = (entries ?? []).slice(0, JOURNAL_ROWS);
   const [journal, setJournal] = usePref<"open" | "closed">("journal", "open");
-  const mins = job ? Math.max(0, Math.ceil(job.secs_left / 60)) : 0;
   return (
     <aside className={cn("min-w-0 px-6 pt-14 pb-6 overflow-y-auto", sunken, className)} aria-label={t("프로젝트와 기록", "Project and log")}>
       <div className="flex items-center justify-between mb-3 min-h-8">
@@ -50,7 +49,7 @@ export function JobPanel({
             {receipt.note(job.job) ??
               (locked
                 ? t("긴급 잠금 중, 결제 멈춤", "Emergency lock on, payments paused")
-                : t(`${mins}분 남음 · 판매자 ${job.sellers}곳`, `${mins} min left · ${job.sellers} seller(s)`))}
+                : t(`판매자 ${job.sellers}곳`, `${job.sellers} seller(s)`))}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <GhostButton onClick={() => onOpenJob(job.job)}>{t("결제 보기", "Payments")}</GhostButton>

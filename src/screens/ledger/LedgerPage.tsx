@@ -162,7 +162,6 @@ export function LedgerPage({
     const label = scopeJob!;
     const g = jobGroups.find((x) => x.job === label);
     const isOpen = label === openLabel && job != null;
-    const mins = isOpen ? Math.max(0, Math.ceil(job!.secs_left / 60)) : 0;
     const note = receipt.note(label);
     head = (
       <div>
@@ -185,7 +184,7 @@ export function LedgerPage({
         </div>
         {isOpen && (
           <>
-            <div className="mt-8 grid grid-cols-1 min-[560px]:grid-cols-3 gap-8">
+            <div className="mt-8 grid grid-cols-1 min-[560px]:grid-cols-2 gap-8">
               <Gauge
                 title={t("예산", "Budget")}
                 total={money(job!.budget)}
@@ -193,7 +192,6 @@ export function LedgerPage({
                 fill={locked ? 0 : ratio(job!.spent, job!.budget)}
                 muted={locked}
               />
-              <Fact title={t("남은 시간", "Time left")} value={t(`${mins}분`, `${mins} min`)} />
               <Fact title={t("승인한 판매자", "Approved sellers")} value={t(`${job!.sellers}곳`, `${job!.sellers}`)} />
             </div>
           </>

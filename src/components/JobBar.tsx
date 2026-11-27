@@ -4,7 +4,6 @@
 import { motion } from "framer-motion";
 import { Briefcase } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { fmtCountdown } from "@/lib/format";
 import { money } from "@/lib/ledger";
 import { useJobNames } from "@/lib/jobNames";
 import type { JobView } from "@/lib/types";
@@ -29,8 +28,8 @@ export function JobBar({ job, onEnd }: { job: JobView; onEnd: () => void }) {
         </p>
         <p className="mt-0.5 text-sm text-[var(--color-ink-300)] num">
           {t(
-            `프로젝트 예산 ${money(job.spent)} / ${money(job.budget)} USDC · ${fmtCountdown(job.secs_left)} 남음`,
-            `Project budget ${money(job.spent)} / ${money(job.budget)} USDC · ${fmtCountdown(job.secs_left)} left`,
+            `프로젝트 예산 ${money(job.spent)} / ${money(job.budget)} USDC`,
+            `Project budget ${money(job.spent)} / ${money(job.budget)} USDC`,
           )}
         </p>
       </div>

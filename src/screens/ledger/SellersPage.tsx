@@ -143,7 +143,7 @@ export function SellersPage({
               )}
             </div>
           )}
-          <Eyebrow className="mt-8 mb-1">{t("산 것", "What was bought")}</Eyebrow>
+          <Eyebrow className="mt-8 mb-1">{t("호출 목록", "Calls")}</Eyebrow>
           <ul>
             {s.paths.map((p) => (
               <li key={p.path} className={cn("grid grid-cols-[minmax(0,1fr)_auto_72px] gap-x-4 items-center py-2.5 border-b last:border-b-0 text-md", hairline)}>
@@ -157,7 +157,7 @@ export function SellersPage({
               </li>
             ))}
           </ul>
-          <Eyebrow className="mt-8">{t("결제", "Payments")}</Eyebrow>
+          <Eyebrow className="mt-8">{t("결제 목록", "Payments")}</Eyebrow>
         </>
       )}
     </div>
