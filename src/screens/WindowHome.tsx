@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useChain } from "@/lib/chain";
-import { accountName, fmtExact, shortenAddress } from "@/lib/format";
+import { accountName, fmtExact } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { balanceText, limitKind, minusDec, money, ratio } from "@/lib/ledger";
 import { JobPanel } from "@/screens/ledger/JobPanel";
@@ -148,7 +148,6 @@ function RailButton({
 
 export function WindowHome({
   account,
-  address,
   balances,
   balanceError,
   refreshing,
@@ -169,7 +168,6 @@ export function WindowHome({
   locked,
 }: {
   account: Account;
-  address: string;
   balances: Balances | null;
   balanceError: string | null;
   refreshing: boolean;
@@ -302,7 +300,7 @@ export function WindowHome({
         <div className="mt-auto pt-10">
           {notices && <div className={cn("mb-6 flex flex-col gap-3 [&>*]:max-w-none", GAUGE_W)}>{notices}</div>}
           <div>
-            <AddressLine address={address} sol={balances?.sol} onReceive={onReceive} onSend={onSend} />
+            <AddressLine sol={balances?.sol} onReceive={onReceive} onSend={onSend} />
           </div>
         </div>
       </section>
@@ -325,17 +323,15 @@ export function WindowHome({
 const GAUGE_W = "w-full max-w-[520px]";
 
 function AddressLine({
-  address,
   sol,
   onReceive,
   onSend,
 }: {
-  address: string;
   sol: string | undefined;
   onReceive: () => void;
   onSend: () => void;
 }) {
-  // SOL · 받는 주소 아래에 받기·보내기를 나란히 — 게이지 단과 같은 왼쪽 선.
+  // SOL 아래에 받기·보내기를 나란히 (주소·QR 은 받기 시트에) — 게이지 단과 같은 왼쪽 선.
   return (
     <div className={cn("flex flex-col gap-5 min-w-0", GAUGE_W)}>
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4 min-w-0">
@@ -343,12 +339,6 @@ function AddressLine({
         <div className="min-w-0">
           <span className="block text-sm text-[var(--color-ink-500)]">SOL</span>
           <span className="block mt-0.5 num text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2]">{sol != null ? fmtExact(sol) : "—"}</span>
-        </div>
-        <div className="min-w-0">
-          <span className="block text-sm text-[var(--color-ink-500)]">{t("받는 주소", "Receiving address")}</span>
-          <span className="block mt-0.5 font-mono text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2] truncate" title={address}>
-            {shortenAddress(address)}
-          </span>
         </div>
       </div>
       <div className="flex items-center gap-2">

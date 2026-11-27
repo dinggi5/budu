@@ -701,7 +701,6 @@ export function WalletScreen({
         {framed(
           <WindowHome
             account={account}
-            address={address}
             balances={balances}
             balanceError={balanceError}
             refreshing={refreshing}

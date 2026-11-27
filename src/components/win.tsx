@@ -265,13 +265,7 @@ export function RenameField({
           <X size={15} />
         </IconButton>
       </div>
-      <p className={cn("mt-1 text-sm", err ? "text-[var(--color-danger)]" : muted)}>
-        {err ??
-          t(
-            `화면에만 보이는 이름이에요. AI 가 붙인 «${placeholder}» 는 그대로라 예산은 그대로 이어져요. 비우면 원래 이름으로.`,
-            `Only changes what you see. The AI's label «${placeholder}» stays, so the budget carries on. Leave empty to go back.`,
-          )}
-      </p>
+      {err && <p className="mt-1 text-sm text-[var(--color-danger)]">{err}</p>}
     </div>
   );
 }
