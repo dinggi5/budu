@@ -79,7 +79,7 @@ pub(crate) fn is_trusted(addr: &str) -> bool {
     read_trusted().contains(&normalize_addr(addr))
 }
 
-/// 승인 팝업 표시용 — 이 주소가 이전에 비번으로 승인된 적 있는지.
+/// 승인 창 표시용 — 이 주소가 (지금 저장된 체인의) 화이트리스트에 있는지.
 #[tauri::command]
 pub(crate) fn is_trusted_addr(to: String) -> bool {
     is_trusted(&to)
@@ -99,7 +99,7 @@ fn check_chain(chain_id: Option<u64>) -> Result<(), String> {
     }
 }
 
-/// 설정 화면 관리용 화이트리스트 목록과 그 목록의 체인. 받는 주소 = 공개 정보라 비번 불필요.
+/// 설정 화면 관리용 화이트리스트 목록(지금 저장된 체인 것). 받는 주소 = 공개 정보라 비번 불필요.
 #[tauri::command]
 pub(crate) fn get_trusted_addrs() -> Vec<String> {
     read_trusted()

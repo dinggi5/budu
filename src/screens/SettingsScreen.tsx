@@ -105,10 +105,14 @@ export function SettingsScreen({
   // 화이트리스트는 체인별 — 저장된 네트워크가 바뀌면(이 창의 저장이든 다른 창이든) 다시 읽는다.
   const savedChain = current?.chain_id;
   useEffect(() => {
+    let live = true; // 네트워크가 연달아 바뀌면 늦게 온 옛 목록을 버린다
     setTrusted(null);
     invoke<string[]>("get_trusted_addrs")
-      .then(setTrusted)
-      .catch(() => setTrusted([]));
+      .then((a) => live && setTrusted(a))
+      .catch(() => live && setTrusted([]));
+    return () => {
+      live = false;
+    };
   }, [savedChain]);
 
   useEffect(() => {
