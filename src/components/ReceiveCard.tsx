@@ -80,14 +80,10 @@ export function ReceiveCard({ address, onClose }: { address: string; onClose: ()
           <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-ink-300)]">
             {t(
               <>
-                거래소·다른 지갑에서 이 주소로 보낼 때 반드시 <b>{chain.depositNetwork ?? chain.name}</b>{" "}
-                네트워크를 고르세요. 다른 네트워크로 보내면 자금을 잃을 수 있어요. USDC 만 받으면 돼요 — 결제 수수료는
-                판매자 쪽이 내서 SOL 은 없어도 돼요. 에이전트 운영 예산만 소액 충전하세요.
+                거래소나 다른 지갑에서 보낼 때는 반드시 <b>솔라나</b> 네트워크를 고르세요.
               </>,
               <>
-                When sending from an exchange or another wallet, you must pick the{" "}
-                <b>{chain.depositNetwork ?? chain.name}</b> network. Sending over a different network can lose the funds. USDC is all you
-                need — the seller's side pays the network fee, so no SOL is required. Top up only what the agent needs to spend.
+                When sending from an exchange or another wallet, always pick the <b>{chain.depositNetwork ?? chain.name}</b> network.
               </>,
             )}
           </p>
