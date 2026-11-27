@@ -219,7 +219,7 @@ export function WindowHome({
         <div className="flex items-center gap-2 text-md text-[var(--color-ink-500)] min-w-0">
           <span className="truncate text-[var(--color-ink-700)] dark:text-[#B5AFA2]">{accountName(account)}</span>
           <span aria-hidden>·</span>
-          <span className={cn("shrink-0", !chain.testnet && "text-[var(--color-ok)] font-medium")}>{chain.name}</span>
+          <span className={cn("shrink-0", !chain.testnet && "text-[var(--color-danger)] font-medium")}>{chain.name}</span>
           <span aria-hidden>·</span>
           <button
             type="button"

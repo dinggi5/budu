@@ -739,6 +739,7 @@ export function WalletScreen({
           {mode === "send" && (
             <SendSheet
               key="send"
+              from={address}
               sol={balances?.sol}
               usdc={balances?.usdc}
               onClose={() => setMode("balance")}
@@ -770,7 +771,7 @@ export function WalletScreen({
             <span
               className={cn(
                 "shrink-0 font-normal",
-                chain.testnet ? "text-[var(--color-ink-500)]" : "text-[var(--color-ok)] font-medium",
+                chain.testnet ? "text-[var(--color-ink-500)]" : "text-[var(--color-danger)] font-medium",
               )}
             >
               · {chain.name}

@@ -116,6 +116,10 @@ pub(crate) struct SolSend {
     pub(crate) detail: String,
     /// 이 블록해시의 마지막 유효 높이 — 만료 판정의 열쇠.
     pub(crate) valid_until: u64,
+    /// 블록해시를 받은 슬롯. «체인에 없음 → 만료» 는 RPC 가 이 슬롯부터의 기록을 갖고 있을 때만 믿는다
+    /// (기록을 지운 노드는 나간 송금도 «없음» 이라고 답한다). 옛 기록은 0.
+    #[serde(default)]
+    pub(crate) slot: u64,
 }
 
 // ── 금액 ─────────────────────────────────────────────────────────────────────────────────
@@ -396,7 +400,8 @@ pub(crate) fn build_usdc_message(
 /// 헤더3 + 1 + 32×8 + 32 + 1 + (1+1+6+1+1) + (1+1+4+1+10) = 320
 const USDC_MSG_LEN: usize = 320;
 
-/// 만든 바이트를 다시 읽어 «내가 승인한 그 USDC 송금 하나뿐» 인지 본다. 계정 표는 여기서 **따로 다시 파생**해 대조한다.
+/// 만든 바이트를 다시 읽어 «내가 승인한 그 USDC 송금 하나뿐» 인지 본다. 계정 표는 조립과 같은 파생 함수로 다시 만들어 대조한다
+/// (조립 코드의 순서·플래그·명령 바이트 실수를 잡는다). 파생 자체의 정답은 테스트가 체인에서 읽은 실제 ATA 로 고정한다.
 pub(crate) fn verify_usdc_message(
     m: &[u8],
     from: &[u8; 32],
@@ -541,6 +546,7 @@ pub(crate) async fn send_funds(
     to: String,
     amount: String,
     expected_chain_id: u64,
+    expected_from: String,
 ) -> Result<SolSendResult, String> {
     let password = Zeroizing::new(password);
     let token = Token::parse(&token)?;
@@ -557,7 +563,7 @@ pub(crate) async fn send_funds(
     // 대조한 그 체인으로 고정한다(설정을 다시 읽지 않는다).
     with_pinned_chain(
         expected_chain_id,
-        with_pinned_account(active_account_index(), async move { send_inner(&password, token, &to, &amount).await }),
+        with_pinned_account(active_account_index(), async move { send_inner(&password, token, &to, &amount, &expected_from).await }),
     )
     .await
 }
@@ -593,7 +599,9 @@ fn wallet_account_exists(info: &Value) -> Result<bool, String> {
     };
     let owner_prog = a.get("owner").and_then(Value::as_str).unwrap_or("");
     let executable = a.get("executable").and_then(Value::as_bool).unwrap_or(false);
-    if executable || owner_prog != SYSTEM_PROGRAM {
+    // System 소유라도 데이터가 있으면(nonce 계정 등) 지갑이 아니다.
+    let has_data = a.pointer("/data/0").and_then(Value::as_str).is_some_and(|d| !d.is_empty());
+    if executable || owner_prog != SYSTEM_PROGRAM || has_data {
         return Err(ts!(
             "받는 주소가 일반 지갑이 아니에요(토큰 계정이나 프로그램). 여기로 보낸 돈은 꺼낼 수 없을 수 있어 보내지 않았어요.",
             "That address isn't a regular wallet (a token account or a program). Funds sent there may be stuck, so nothing was sent."
@@ -605,13 +613,13 @@ fn wallet_account_exists(info: &Value) -> Result<bool, String> {
 
 fn not_wallet_msg() -> String {
     ts!(
-        "받는 주소가 지갑 주소가 아니에요(프로그램이 만든 주소). USDC 는 지갑 주소로만 보내요.",
-        "That isn't a wallet address (it's program-derived). USDC goes to wallet addresses only."
+        "받는 주소가 지갑 주소가 아니에요(프로그램이 만든 주소). 지갑 주소로만 보내요.",
+        "That isn't a wallet address (it's program-derived). Send to wallet addresses only."
     )
     .into()
 }
 
-async fn send_inner(password: &str, token: Token, to: &str, amount: &str) -> Result<SolSendResult, String> {
+async fn send_inner(password: &str, token: Token, to: &str, amount: &str, expected_from: &str) -> Result<SolSendResult, String> {
     let chain = active_chain();
     let units = match token {
         Token::Sol => parse_sol(amount)?,
@@ -639,6 +647,14 @@ async fn send_inner(password: &str, token: Token, to: &str, amount: &str) -> Res
     }
     // 12단어는 바로 버린다(Zeroizing) — 보내기는 작업 예산처럼 키를 들고 있지 않는다.
     let (signer, _phrase) = unlock_signer_keep(password)?;
+    // 사람이 시트에서 본 «보내는 계정» 과 지금 서명할 계정이 같아야 한다(x402 의 ensure_request_account 와 같은 뜻).
+    if signer.address() != expected_from.trim() {
+        return Err(ts!(
+            "시트를 연 뒤 계정이 바뀌었어요. 보내지 않았어요 — 시트를 다시 여세요.",
+            "The account changed after you opened this sheet. Nothing was sent — reopen it."
+        )
+        .into());
+    }
     if to == signer.address() {
         return Err(ts!("받는 주소가 이 지갑 주소예요", "That's this wallet's own address").into());
     }
@@ -655,6 +671,10 @@ async fn send_inner(password: &str, token: Token, to: &str, amount: &str) -> Res
         fetch_rent(&c, &rpc),
     );
     let to_exists = wallet_account_exists(&info.map_err(|e| not_sent(e.to_string()))?)?;
+    // 아직 없는 곡선 밖 주소(만들어지기 전의 PDA·토큰 계좌 주소)는 개인키가 없다 — 여기로 간 SOL 은 꺼낼 수 없다.
+    if !to_exists && !solana::is_on_curve(&to_key) {
+        return Err(not_wallet_msg());
+    }
 
     let (tx, sig) = match token {
         Token::Sol => {
@@ -711,6 +731,7 @@ async fn send_inner(password: &str, token: Token, to: &str, amount: &str) -> Res
         status: "sending".into(),
         detail: String::new(),
         valid_until: latest.last_valid_block_height,
+        slot: latest.slot,
     })
     .map_err(|_| {
         String::from(ts!(
@@ -787,7 +808,11 @@ pub(crate) async fn usdc_send_quote(to: String) -> Result<UsdcQuote, String> {
             solana::token_account_exists(&c, &rpc, chain.genesis_hash, &to, chain.usdc_mint, chain.usdc_decimals),
             fetch_rent(&c, &rpc),
         );
-        wallet_account_exists(&info.map_err(|e| not_sent(e.to_string()))?)?;
+        let lookup_failed = |e: String| -> String {
+            let e = redact_urls(&e);
+            tf!("받는 주소를 확인하지 못했어요 ({e})", "Couldn't check the recipient ({e})")
+        };
+        wallet_account_exists(&info.map_err(|e| lookup_failed(e.to_string()))?)?;
         let ata_exists = ata.map_err(|e| {
             let e = redact_urls(&e);
             tf!("받는 쪽 USDC 계좌를 확인하지 못했어요 ({e})", "Couldn't check the recipient's USDC account ({e})")
@@ -848,6 +873,8 @@ async fn check_inner() -> bool {
     else {
         return false;
     };
+    // RPC 가 기록을 어디부터 갖고 있나. 모르면 만료를 내리지 않는다(«보내는 중» 으로 남는 쪽이 이중 송금보다 낫다).
+    let min_ledger = rpc_call(&c, &rpc, "minimumLedgerSlot", json!([])).await.ok().and_then(|v| v.as_u64());
     let mut changed = false;
     for r in pending {
         match signature_status(&c, &rpc, &r.signature).await {
@@ -855,7 +882,7 @@ async fn check_inner() -> bool {
                 update(&r.signature, if ok { "confirmed" } else { "failed" }, "");
                 changed = true;
             }
-            Ok(None) if finalized > r.valid_until.saturating_add(EXPIRY_MARGIN) => {
+            Ok(None) if finalized > r.valid_until.saturating_add(EXPIRY_MARGIN) && ledger_covers(min_ledger, r.slot) => {
                 update(&r.signature, "expired", "");
                 changed = true;
             }
@@ -863,6 +890,14 @@ async fn check_inner() -> bool {
         }
     }
     changed
+}
+
+/// «체인에 없음» 을 믿어도 되나 — RPC 의 가장 오래된 슬롯이 송금 슬롯 이하일 때만. 옛 기록(slot 0)은 예전 판정을 따른다.
+fn ledger_covers(min_ledger: Option<u64>, slot: u64) -> bool {
+    if slot == 0 {
+        return true;
+    }
+    min_ledger.is_some_and(|m| m <= slot)
 }
 
 /// 화면에 쓸 값(수수료·최소 잔액) — 시트가 «전부 보내기» 와 안내를 같은 값으로 계산하게. rent 는 실측(못 읽으면 옛 값).
@@ -981,7 +1016,7 @@ mod tests {
     fn records_round_trip_and_refuse_broken_file() {
         let _d = crate::store::test_dir::use_temp("sol-sends");
         assert!(get_sends().is_empty());
-        let row = SolSend { ts: 1, to: "a".into(), token: "SOL".into(), units: 2, signature: "s".into(), status: "sending".into(), detail: String::new(), valid_until: 9 };
+        let row = SolSend { ts: 1, to: "a".into(), token: "SOL".into(), units: 2, signature: "s".into(), status: "sending".into(), detail: String::new(), valid_until: 9, slot: 0 };
         prepend(row.clone()).unwrap();
         update("s", "confirmed", "");
         assert_eq!(get_sends()[0].status, "confirmed");
@@ -1064,9 +1099,29 @@ mod tests {
     }
 
     #[test]
+    fn expiry_needs_rpc_history() {
+        assert!(ledger_covers(None, 0), "옛 기록은 예전 판정");
+        assert!(!ledger_covers(None, 100), "RPC 기록 범위를 모르면 만료 안 함");
+        assert!(ledger_covers(Some(100), 100));
+        assert!(!ledger_covers(Some(101), 100), "지운 노드의 «없음» 은 안 믿음");
+    }
+
+    const REAL_DEVNET_USDC_ATA: &str = "6yNun9THHtHWrvk9KAVVmtUDpWhQFsAUtStG7j2makHQ";
+
+    #[test]
+    fn ata_matches_a_real_devnet_account() {
+        // 데브넷에서 getTokenAccountsByOwner 로 읽은 실제 USDC 계좌(2026-11-27) — 우리 파생과 독립인 정답.
+        let owner = parse_pubkey("CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5").unwrap();
+        let k = usdc_keys(&owner, &parse_pubkey("2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4").unwrap(), &usdc_mint()).unwrap();
+        assert_eq!(encode_pubkey(&k.0[1]), REAL_DEVNET_USDC_ATA);
+    }
+
+    #[test]
     fn wallet_account_rule() {
         assert!(!wallet_account_exists(&json!({"value": null})).unwrap());
         assert!(wallet_account_exists(&json!({"value": {"owner": SYSTEM_PROGRAM, "executable": false}})).unwrap());
+        assert!(wallet_account_exists(&json!({"value": {"owner": SYSTEM_PROGRAM, "executable": false, "data": ["", "base64"]}})).unwrap());
+        assert!(wallet_account_exists(&json!({"value": {"owner": SYSTEM_PROGRAM, "executable": false, "data": ["AQAAAA==", "base64"]}})).is_err(), "nonce 계정");
         assert!(wallet_account_exists(&json!({"value": {"owner": solana::TOKEN_PROGRAM_ID, "executable": false}})).is_err());
         assert!(wallet_account_exists(&json!({"value": {"owner": "BPFLoaderUpgradeab1e11111111111111111111111", "executable": true}})).is_err());
     }

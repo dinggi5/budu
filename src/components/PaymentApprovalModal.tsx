@@ -258,19 +258,19 @@ export function PaymentApprovalModal({
         <div className="mt-3.5 flex items-baseline gap-1.5 min-w-0">
           <span
             className={cn(
-              "balance num font-bold tracking-[-0.02em] leading-none text-[var(--color-ink-900)] dark:text-[#E8E5DD]",
-              amountText.length > 10 ? "text-lg break-all" : "text-lg",
+              "balance num text-lg font-bold tracking-[-0.02em] leading-none break-all text-[var(--color-ink-900)] dark:text-[#E8E5DD]",
             )}
           >
             {amountText}
           </span>
-          <span className="text-lg font-semibold text-[var(--color-ink-500)]">{request.token}</span>
+          {/* 글자는 세 단계뿐(잔액 숫자만 예외) — 금액은 큰 단계 굵게, 단위는 한 단계 낮춰 금액이 주인공이 되게. */}
+          <span className="text-md font-semibold text-[var(--color-ink-500)]">{request.token}</span>
         </div>
         <p className="mt-1.5 text-md text-[var(--color-ink-700)] dark:text-[#B5AFA2] truncate">
           {sellerHost ? t(`${sellerHost} 에게`, `To ${sellerHost}`) : t("받는 곳에게", "To the recipient")}
           <span className="text-[var(--color-ink-500)]"> · </span>
           {/* 메인넷이면 실제 자금 — 보라(돈이 걸린 곳). */}
-          <span className={cn(chain.testnet ? "text-[var(--color-ink-500)]" : "text-[var(--color-ok)] font-medium")}>
+          <span className={cn(chain.testnet ? "text-[var(--color-ink-500)]" : "text-[var(--color-danger)] font-medium")}>
             {chain.name}
             {!chain.testnet && t(" · 실제 자금", " · real funds")}
           </span>

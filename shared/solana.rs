@@ -358,7 +358,7 @@ pub async fn token_account_exists(
     // 모양 검사 **뒤에** 본다(앞에 두면 모양 이상·동결이 「계정 없음」 안내로 가려졌다).
     match info.pointer("/value/data/parsed/info/state").and_then(Value::as_str) {
         Some("initialized") => Ok(true),
-        Some(s) => Err(format!("seller token account is {s}")),
+        Some(s) => Err(format!("token account is {s}")),
         None => Err("token account state missing".into()),
     }
 }
